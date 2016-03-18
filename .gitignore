@@ -11,3 +11,5 @@ ipch/
 tools/backup/
 data/owl/
 data/succub/
+build/
+*.opendb
