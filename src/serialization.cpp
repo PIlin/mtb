@@ -67,7 +67,7 @@ void sGroupMaterial::serialize(Archive& arc) {
 
 template <size_t size>
 static int build_grp_name_tag(char(&buf)[size], cstr name) {
-	return ::sprintf_s(buf, "grp:%s", name);
+	return ::sprintf_s(buf, "grp:%s", name.p);
 }
 
 template <class Archive>

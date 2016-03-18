@@ -1,12 +1,16 @@
 #include <DirectXMath.h>
 
-#define constexpr
+#if _MSC_VER
+# if !_HAS_CONSTEXPR
+#  define constexpr
+# endif
+#endif
 
-inline constexpr float DEG2RAD(float deg) {
+inline constexpr const float DEG2RAD(const float deg) {
 	return deg * DirectX::XM_PI / 180.f;
 }
 
-inline constexpr float RAD2DEG(float rad) {
+inline constexpr const float RAD2DEG(const float rad) {
 	return rad * 180.f / DirectX::XM_PI;
 }
 

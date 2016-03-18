@@ -13,7 +13,7 @@ static const cstr LIGHT_JSON = "light.json";
 
 // See "Stupid Spherical Harmonics (SH) Tricks" by Peter-Pike Sloan, Appendix A10
 void pack_sh_param(sSHCoef::sSHChan const& chan, DirectX::XMVECTOR sh[7], int idx) {
-	static const float spi = (float)sqrt(M_PI);
+	static const float spi = (float)sqrt(DirectX::XM_PI);
 	const float C0 = 1.0f / (2.0f * spi);
 	const float C1 = sqrtf(3.0f) / (3.0f * spi);
 	const float C2 = sqrtf(15.0f) / (8.0f  * spi);

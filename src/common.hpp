@@ -143,10 +143,14 @@ class GlobalSingleton {
 	Storage mData;
 public:
 	struct sScope : noncopyable {
-		GlobalSingleton<T>& obj;
-		sScope(GlobalSingleton<T>& obj) : obj(obj) { }
+		GlobalSingleton<T>* pObj;
+		sScope(GlobalSingleton<T>& obj) : pObj(&obj) { }
+		sScope(sScope&& other) : pObj(other.pObj) { other.pObj = nullptr; }
 		~sScope() {
-			obj.dtor();
+			if (pObj)
+			{
+				pObj->dtor();
+			}
 		}
 	};
 

@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.3)
+
+project(DirectXTK)
+
+set(hdrs 
+	Inc/WICTextureLoader.h
+	Inc/DirectXHelpers.h
+	Inc/DDSTextureLoader.h
+)
+
+set(srcs 
+	Src/pch.h
+	Src/pch.cpp
+	Src/dds.h
+	Src/WICTextureLoader.cpp
+	Src/PlatformHelpers.h
+	Src/DDSTextureLoader.cpp
+)
+
+include_directories(Inc)
+
+add_library(DirectXTK STATIC ${srcs} ${hdrs})
+target_include_directories(DirectXTK INTERFACE "Inc")

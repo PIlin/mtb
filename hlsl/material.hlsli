@@ -111,14 +111,14 @@ float4 combine(CTX ctx) {
 	ctx.clr = ctx.clr * ctx.vclr.rgb;
 	ctx.alpha *= ctx.vclr.a;
 	
-	ctx.clr = pow(ctx.clr, 1.0 / g_gamma);
+	ctx.clr = pow(abs(ctx.clr), 1.0 / g_gamma);
 
 	return float4(ctx.clr, ctx.alpha);
 }
 
 CTX sample_base(CTX ctx) {
 	ctx.base = g_meshDiffTex.Sample(g_meshDiffSmp, ctx.uv).rgb;
-	ctx.base = pow(ctx.base, g_gamma);
+	ctx.base = pow(abs(ctx.base), g_gamma);
 	//ctx.base = float3(1.0, 1.0, 1.0);
 	return ctx;
 }

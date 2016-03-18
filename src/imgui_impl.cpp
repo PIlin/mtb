@@ -13,7 +13,7 @@
 #include <SDL_keycode.h>
 
 static char const* const g_vtxShader = 
-"cbuffer Cam : register(c0) {"
+"cbuffer Cam : register(b0) {"
 "    row_major float4x4 g_MVP; "
 "};"
 "struct sVtx {"

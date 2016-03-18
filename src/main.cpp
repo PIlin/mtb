@@ -142,6 +142,8 @@ public:
 		}
 	}
 	void disp() {
+		if (!(mpVS && mpVS)) return;
+
 		auto pCtx = get_gfx().get_ctx();
 
 		//mConstBuf.mData.wmtx = dx::XMMatrixIdentity();
@@ -168,7 +170,9 @@ private:
 	void state_init() {
 		auto& ss = cShaderStorage::get();
 		mpVS = ss.load_VS("simple.vs.cso");
+		if (!mpVS) return;
 		mpPS = ss.load_PS("simple.ps.cso");
+		if (!mpPS) return;
 
 		D3D11_INPUT_ELEMENT_DESC vdsc[] = {
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sVtx, mPos), D3D11_INPUT_PER_VERTEX_DATA, 0 },

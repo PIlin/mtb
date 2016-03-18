@@ -474,7 +474,7 @@ cAnimationDataList::~cAnimationDataList() {
 
 bool cAnimationDataList::load(cstr path, cstr filename) {
 	char buf[256];
-	::sprintf_s(buf, "%s/%s", path, filename);
+	::sprintf_s(buf, "%s/%s", path.p, filename.p);
 	cAnimListJsonLoader loader(*this, path);
 	return nJsonHelpers::load_file(buf, loader);
 }
