@@ -155,6 +155,7 @@ public:
 
 class cVertexBuffer : public cBufferBase {
 	uint32_t mVtxSize = 0;
+	uint32_t mVtxCount = 0;
 public:
 	cVertexBuffer() = default;
 	cVertexBuffer(cVertexBuffer&& o) : cBufferBase(std::move(o)), mVtxSize(o.mVtxSize) {}
@@ -168,10 +169,14 @@ public:
 	void init_write_only(ID3D11Device* pDev, uint32_t vtxCount, uint32_t vtxSize);
 
 	void set(ID3D11DeviceContext* pCtx, uint32_t slot, uint32_t offset) const;
+
+	uint32_t get_vtx_size() const { return mVtxSize; }
+	uint32_t get_vtx_count() const { return mVtxCount; }
 };
 
 class cIndexBuffer : public cBufferBase {
 	DXGI_FORMAT mFormat;
+	uint32_t mIdxCount = 0;
 public:
 	cIndexBuffer() = default;
 	cIndexBuffer(cIndexBuffer&& o) : cBufferBase(std::move(o)), mFormat(o.mFormat) {}
@@ -182,7 +187,10 @@ public:
 	}
 
 	void init(ID3D11Device* pDev, void const* pIdxData, uint32_t idxCount, DXGI_FORMAT format);
+	void init_write_only(ID3D11Device* pDev, uint32_t idxCount, DXGI_FORMAT format);
 	void set(ID3D11DeviceContext* pCtx, uint32_t offset) const;
+
+	uint32_t get_idx_count() const { return mIdxCount; }
 };
 
 class cConstBufStorage {

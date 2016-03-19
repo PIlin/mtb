@@ -1,6 +1,6 @@
 class cGfx;
 class cShader;
-struct ImDrawList;
+struct ImDrawData;
 struct ID3D11InputLayout;
 
 class cImgui : noncopyable {
@@ -9,6 +9,7 @@ class cImgui : noncopyable {
 	com_ptr<ID3D11InputLayout> mpIL;
 	cTexture mFontTex;
 	cVertexBuffer mVtx;
+	cIndexBuffer mIdx;
 public:
 	cImgui(cGfx& gfx);
 	~cImgui();
@@ -24,8 +25,8 @@ public:
 	static cImgui& get();
 
 protected:
-	static void render_callback_st(ImDrawList** const draw_lists, int count);
-	void render_callback(ImDrawList** const draw_lists, int count);
+	static void render_callback_st(ImDrawData* drawData);
+	void render_callback(ImDrawData* drawData);
 
 	void load_fonts();
 };

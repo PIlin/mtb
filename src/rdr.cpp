@@ -62,11 +62,13 @@ void cConstBufferBase::update(ID3D11DeviceContext* pCtx, void const* pData, size
 void cVertexBuffer::init(ID3D11Device* pDev, void const* pVtxData, uint32_t vtxCount, uint32_t vtxSize) {
 	init_immutable(pDev, pVtxData, vtxCount * vtxSize, D3D11_BIND_VERTEX_BUFFER);
 	mVtxSize = vtxSize;
+	mVtxCount = vtxCount;
 }
 
 void cVertexBuffer::init_write_only(ID3D11Device* pDev, uint32_t vtxCount, uint32_t vtxSize) {
 	cBufferBase::init_write_only(pDev, vtxCount * vtxSize, D3D11_BIND_VERTEX_BUFFER);
 	mVtxSize = vtxSize;
+	mVtxCount = vtxCount;
 }
 
 void cVertexBuffer::set(ID3D11DeviceContext* pCtx, uint32_t slot, uint32_t offset) const {
@@ -82,6 +84,19 @@ void cIndexBuffer::init(ID3D11Device* pDev, void const* pIdxData, uint32_t idxCo
 
 	init_immutable(pDev, pIdxData, size, D3D11_BIND_INDEX_BUFFER);
 	mFormat = format;
+	mIdxCount = idxCount;
+}
+
+void cIndexBuffer::init_write_only(ID3D11Device* pDev, uint32_t idxCount, DXGI_FORMAT format) {
+	uint32_t size = 0;
+	switch (format) {
+	case DXGI_FORMAT_R16_UINT: size = 2 * idxCount; break;
+	case DXGI_FORMAT_R32_UINT: size = 4 * idxCount; break;
+	}
+
+	cBufferBase::init_write_only(pDev, size, D3D11_BIND_INDEX_BUFFER);
+	mFormat = format;
+	mIdxCount = idxCount;
 }
 
 void cIndexBuffer::set(ID3D11DeviceContext* pCtx, uint32_t offset) const {

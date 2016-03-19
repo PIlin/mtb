@@ -48,12 +48,15 @@ static char const* const g_pixShader =
 "}";
 
 
-struct sImguiVtx {
-	vec2f    pos;
-	vec2f    uv;
-	uint32_t clr;
-};
+static void init_imgui_vtx_buffer(ID3D11Device* pDev, cVertexBuffer& vtx, uint32_t vtxCount) {
+	vtx.init_write_only(pDev, vtxCount, sizeof(ImDrawVert));
+}
 
+static void init_imgui_idx_buffer(ID3D11Device* pDev, cIndexBuffer& idx, uint32_t idxCount) {
+	static_assert(sizeof(ImDrawIdx) == sizeof(uint16_t), "ImDrawIdx has unexpected size");
+	static_assert(std::is_same<ImDrawIdx, uint16_t>::value, "ImDrawIdx has unexpected type");
+	idx.init_write_only(pDev, idxCount, DXGI_FORMAT_R16_UINT);
+}
 
 cImgui::cImgui(cGfx& gfx) {
 	auto pDev = gfx.get_dev();
@@ -80,17 +83,22 @@ cImgui::cImgui(cGfx& gfx) {
 	io.KeyMap[ImGuiKey_Y] = SDL_SCANCODE_Y;
 	io.KeyMap[ImGuiKey_Z] = SDL_SCANCODE_Z;
 	io.RenderDrawListsFn = render_callback_st;
-
-	mVtx.init_write_only(pDev, 10000, sizeof(sImguiVtx));
+	
+	init_imgui_vtx_buffer(pDev, mVtx, 10000);
+	init_imgui_idx_buffer(pDev, mIdx, 10000);
 
 	auto& ss = cShaderStorage::get();
 	mpVS = ss.create_VS(g_vtxShader, "imgui_vs");
 	mpPS = ss.create_PS(g_pixShader, "imgui_ps");
 
+	static_assert(sizeof(ImDrawVert::pos) == sizeof(float[2]), "ImDrawVert::pos has unexpected size");
+	static_assert(sizeof(ImDrawVert::uv) == sizeof(float[2]), "ImDrawVert::uv has unexpected size");
+	static_assert(sizeof(ImDrawVert::col) == sizeof(uint32_t), "ImDrawVert::col has unexpected size");
+
 	D3D11_INPUT_ELEMENT_DESC vdsc[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sImguiVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(sImguiVtx, uv), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, offsetof(sImguiVtx, clr), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(ImDrawVert, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(ImDrawVert, uv), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, offsetof(ImDrawVert, col), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	auto& code = mpVS->get_code();
@@ -152,8 +160,8 @@ void cImgui::disp() {
 	ImGui::Render();
 }
 
-void cImgui::render_callback_st(ImDrawList** const draw_lists, int count) {
-	get().render_callback(draw_lists, count);
+void cImgui::render_callback_st(ImDrawData* drawData) {
+	get().render_callback(drawData);
 }
 
 static DirectX::XMMATRIX calc_imgui_ortho(ImGuiIO& io) {
@@ -172,25 +180,57 @@ static DirectX::XMMATRIX calc_imgui_ortho(ImGuiIO& io) {
 	//return DirectX::XMMatrixOrthographicRH(io.DisplaySize.x, io.DisplaySize.y, 0.0f, 1.0f);
 }
 
-void cImgui::render_callback(ImDrawList** const drawLists, int count) {
+void cImgui::render_callback(ImDrawData* pDrawData) {
 	ImGuiIO& io = ImGui::GetIO();
 	auto& gfx = get_gfx();
+	auto pDev = gfx.get_dev();
 	auto pCtx = gfx.get_ctx();
+
+	if (!(mpVS && mpPS))
+		return;
+
+	const int count = pDrawData->CmdListsCount;
+	ImDrawList** const pDrawLists = pDrawData->CmdLists;
+
+	if (mVtx.get_vtx_count() < (uint32_t)pDrawData->TotalVtxCount) {
+		dbg_msg("imgui: reallocate vertex buffer, needs %d, current size %u vetices",
+			pDrawData->TotalVtxCount, mVtx.get_vtx_count());
+		mVtx = cVertexBuffer();
+		init_imgui_vtx_buffer(pDev, mVtx, pDrawData->TotalVtxCount);
+	}
+
+	if (mIdx.get_idx_count() < (uint32_t)pDrawData->TotalIdxCount) {
+		dbg_msg("imgui: reallocate index buffer, needs %d, current size %u indices",
+			pDrawData->TotalIdxCount, mIdx.get_idx_count());
+		mIdx = cIndexBuffer();
+		init_imgui_idx_buffer(pDev, mIdx, pDrawData->TotalIdxCount);
+	}
 
 	{
 		auto vm = mVtx.map(pCtx);
 		if (!vm.is_mapped())
 			return;
 
-		sImguiVtx* pVtx = reinterpret_cast<sImguiVtx*>(vm.data());
-		for (int i = 0; i < count; ++i) {
-			ImDrawList const* list = drawLists[i];
-			ImDrawVert const* imvtx = &list->vtx_buffer[0];
-			static_assert(sizeof(sImguiVtx) == sizeof(imvtx[0]), "Vertices sizes differ");
+		auto im = mIdx.map(pCtx);
+		if (!im.is_mapped())
+			return;
 
-			size_t vtxCount = list->vtx_buffer.size();
+		ImDrawVert* pVtx = reinterpret_cast<ImDrawVert*>(vm.data());
+		ImDrawIdx* pIdx = reinterpret_cast<ImDrawIdx*>(im.data());
+				
+		for (int i = 0; i < count; ++i) {
+			ImDrawList const* pList = pDrawLists[i];
+
+			ImDrawVert const* imvtx = &pList->VtxBuffer[0];
+			ImDrawIdx const* imidx = &pList->IdxBuffer[0];
+			
+			const size_t vtxCount = pList->VtxBuffer.size();
+			const size_t idxCount = pList->IdxBuffer.size();
+
 			::memcpy(pVtx, imvtx, vtxCount * sizeof(pVtx[0]));
+			::memcpy(pIdx, imidx, idxCount * sizeof(pIdx[0]));
 			pVtx += vtxCount;
+			pIdx += idxCount;
 		}
 	}
 
@@ -212,26 +252,34 @@ void cImgui::render_callback(ImDrawList** const drawLists, int count) {
 
 	pCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	mVtx.set(pCtx, 0, 0);
+	mIdx.set(pCtx, 0);
 
 	int vtxOffset = 0;
+	int idxOffset = 0;
 	for (int i = 0; i < count; ++i) {
-		ImDrawList const* list = drawLists[i];
-		for (size_t cmd = 0; cmd < list->commands.size(); ++cmd) {
-			ImDrawCmd const* pCmd = &list->commands[cmd];
+		ImDrawList const* list = pDrawLists[i];
+		for (int cmd = 0; cmd < list->CmdBuffer.size(); ++cmd) {
+			ImDrawCmd const* pCmd = &list->CmdBuffer[cmd];
 			
-			const D3D11_RECT rect = { 
-				(LONG)pCmd->clip_rect.x, (LONG)pCmd->clip_rect.y,
-				(LONG)pCmd->clip_rect.z, (LONG)pCmd->clip_rect.w };
-			pCtx->RSSetScissorRects(1, &rect);
-
-			cTexture* pTex = reinterpret_cast<cTexture*>(pCmd->texture_id);
-			if (pTex) {
-				pTex->set_PS(pCtx, 0);
+			if (pCmd->UserCallback) {
+				pCmd->UserCallback(list, pCmd);
 			}
+			else {
+				const D3D11_RECT rect = {
+					(LONG)pCmd->ClipRect.x, (LONG)pCmd->ClipRect.y,
+					(LONG)pCmd->ClipRect.z, (LONG)pCmd->ClipRect.w };
+				pCtx->RSSetScissorRects(1, &rect);
 
-			pCtx->Draw(pCmd->vtx_count, vtxOffset);
-			vtxOffset += pCmd->vtx_count;
+				cTexture* pTex = reinterpret_cast<cTexture*>(pCmd->TextureId);
+				if (pTex) {
+					pTex->set_PS(pCtx, 0);
+				}
+
+				pCtx->DrawIndexed(pCmd->ElemCount, idxOffset, vtxOffset);
+			}
+			idxOffset += pCmd->ElemCount;
 		}
+		vtxOffset += list->VtxBuffer.size();
 	}
 }
 
@@ -252,7 +300,7 @@ bool ImguiSlideFloat3_1(char const* label, float v[3], float v_min, float v_max,
 				v[i] = v[0];
 			}
 		}
-		ImGui::SameLine(0, (int)style.ItemInnerSpacing.x);
+		ImGui::SameLine(0, style.ItemInnerSpacing.x);
 		ImGui::TextUnformatted(label);
 	}
 	else {
