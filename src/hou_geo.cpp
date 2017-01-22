@@ -4,6 +4,7 @@
 
 #include "math.hpp"
 #include "common.hpp"
+#include "path_helpers.hpp"
 #include "hou_geo.hpp"
 
 #include "json_helpers.hpp"
@@ -449,7 +450,7 @@ protected:
 };
 
 
-bool cHouGeoLoader::load(cstr filepath) {
+bool cHouGeoLoader::load(const fs::path& filepath) {
 	cLoaderImpl loader(*this);
 	if (!nJsonHelpers::load_file(filepath, loader)) {
 		return false;

@@ -2,7 +2,7 @@
 #include "math.hpp"
 #include "gfx.hpp"
 
-#include <SDL_rwops.h>
+#include "path_helpers.hpp"
 
 #include <d3dcompiler.h>
 
@@ -114,23 +114,11 @@ void cGfx::end_frame() {
 
 
 static cShaderBytecode load_shader_file(cstr filepath) {
-	auto rw = SDL_RWFromFile(filepath, "rb");
-	if (!rw) 
-		return cShaderBytecode();
-	struct scope {
-		SDL_RWops* p;
-		scope(SDL_RWops* p) : p(p) {}
-		~scope() { SDL_RWclose(p); }
-	} scp(rw);
+	sInputFile file(cPathManager::get().get_base_path() / filepath.p);
+	if (!file.is_open()) { return cShaderBytecode(); }
 
-	Sint64 size = SDL_RWsize(rw);
-	if (size < 0) 
-		return cShaderBytecode();
-	
-	auto pdata = std::make_unique<char[]>(size);
-	SDL_RWread(rw, pdata.get(), size, 1);
-	
-	return cShaderBytecode(std::move(pdata), size);
+	auto pdata = file.read_all();
+	return cShaderBytecode(std::move(pdata), file.mSize);
 }
 
 static cShaderBytecode load_shader_cstr(cstr code, cstr profile) {

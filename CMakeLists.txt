@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.2)
+﻿cmake_minimum_required(VERSION 3.2)
 
-project(mtb)
+set(SDL_SHARED OFF)
 
 set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party")
 add_subdirectory("${THIRD_PARTY_DIR}/SDL2")
@@ -8,6 +8,8 @@ add_subdirectory("${THIRD_PARTY_DIR}/imgui")
 add_subdirectory("${THIRD_PARTY_DIR}/DirectXTK")
 add_subdirectory("${THIRD_PARTY_DIR}/assimp")
 add_subdirectory("${THIRD_PARTY_DIR}/cereal")
+
+project(mtb)
 
 set(SRC
 	src/texture.hpp
@@ -18,6 +20,8 @@ set(SRC
 	src/rig.cpp
 	src/rdr.hpp
 	src/rdr.cpp
+	src/path_helpers.hpp
+	src/path_helpers.cpp
 	src/model.hpp
 	src/model.cpp
 	src/math.hpp

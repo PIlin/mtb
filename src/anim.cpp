@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "math.hpp"
+#include "path_helpers.hpp"
 #include "anim.hpp"
 #include "rig.hpp"
 #include "assimp_loader.hpp"
@@ -254,15 +255,14 @@ private:
 };
 
 class cAnimListJsonLoader {
-	cstr mPath;
+	const fs::path& mPath;
 	cAnimationDataList& mList;
 public:
-	cAnimListJsonLoader(cAnimationDataList& list, cstr path) : mPath(path), mList(list) {}
+	cAnimListJsonLoader(cAnimationDataList& list, const fs::path& path) : mPath(path), mList(list) {}
 	bool operator()(Value const& doc) {
 		CHECK_SCHEMA(doc.IsArray(), "doc is not an array\n");
 		Size count = doc.Size();
 		
-		char buf[256];
 		auto pAdata = std::make_unique<cAnimationData[]>(count);
 		std::unordered_map<std::string, int32_t> map;
 		int anim = 0;
@@ -276,8 +276,7 @@ public:
 
 			std::string fname(fn.GetString(), fn.GetStringLength());
 
-			::sprintf_s(buf, "%s/%s", mPath.p, fname.c_str());
-			if (pAdata[anim].load(buf)) {
+			if (pAdata[anim].load(mPath / fname)) {
 				map[pAdata[anim].mName] = anim;
 				anim++;
 			}
@@ -407,9 +406,9 @@ cAnimationData::~cAnimationData() {
 	delete[] mpChannels;
 }
 
-bool cAnimationData::load(cstr filepath) {
-	if (!filepath.ends_with(".anim")) {
-		dbg_msg("Unknown animation file extension <%s>", filepath.p);
+bool cAnimationData::load(const fs::path& filepath) {
+	if (filepath.extension() != ".anim") {
+		dbg_msg("Unknown animation file extension <%" PRI_FILE ">", filepath.c_str());
 		return false;
 	}
 
@@ -472,11 +471,9 @@ cAnimationDataList::~cAnimationDataList() {
 	delete[] mpList;
 }
 
-bool cAnimationDataList::load(cstr path, cstr filename) {
-	char buf[256];
-	::sprintf_s(buf, "%s/%s", path.p, filename.p);
+bool cAnimationDataList::load(const fs::path& path, const fs::path& filename) {
 	cAnimListJsonLoader loader(*this, path);
-	return nJsonHelpers::load_file(buf, loader);
+	return nJsonHelpers::load_file(path / filename, loader);
 }
 
 bool cAnimationDataList::load(cAssimpLoader& loader) {

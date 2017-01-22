@@ -3,6 +3,7 @@
 #include "math.hpp"
 #include "common.hpp"
 #include "rdr.hpp"
+#include "path_helpers.hpp"
 #include "texture.hpp"
 #include "model.hpp"
 #include "camera.hpp"
@@ -81,21 +82,17 @@ void serialize(Archive& arc, cModelMaterial& m) {
 	}
 }
 
-bool cModelMaterial::deserialize(cstr filepath) {
-	if (!filepath) { return false; }
-
-	std::ifstream ifs(filepath, std::ios::binary);
+bool cModelMaterial::deserialize(const fs::path& filepath) {
+	sInputFile ifs(filepath);
 	if (!ifs.is_open()) { return false; }
 
-	cereal::JSONInputArchive arc(ifs);
+	cereal::JSONInputArchive arc(ifs.mStream);
 	arc(*this);
 
 	return true;
 }
 
-bool cModelMaterial::serialize(cstr filepath) {
-	if (!filepath) { return false; }
-
+bool cModelMaterial::serialize(const fs::path& filepath) {
 	std::ofstream ofs(filepath, std::ios::binary);
 	if (!ofs.is_open())
 		return false;

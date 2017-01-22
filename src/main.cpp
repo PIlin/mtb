@@ -10,6 +10,7 @@
 #include "math.hpp"
 #include "gfx.hpp"
 #include "rdr.hpp"
+#include "path_helpers.hpp"
 #include "texture.hpp"
 #include "model.hpp"
 #include "rig.hpp"
@@ -98,6 +99,7 @@ struct sGlobals {
 	GlobalSingleton<cDepthStencilStates> depthStates;
 	GlobalSingleton<cImgui> imgui;
 	GlobalSingleton<cLightMgr> lightMgr;
+	GlobalSingleton<cPathManager> pathManager;
 };
 
 sGlobals globals;
@@ -115,7 +117,7 @@ cDepthStencilStates& cDepthStencilStates::get() { return globals.depthStates.get
 cImgui& cImgui::get() { return globals.imgui.get(); }
 cTextureStorage& cTextureStorage::get() { return globals.textureStorage.get(); }
 cLightMgr& cLightMgr::get() { return globals.lightMgr.get(); }
-
+cPathManager& cPathManager::get() { return globals.pathManager.get(); }
 
 class cGnomon {
 	struct sVtx {
@@ -219,8 +221,11 @@ class cLightning : public cSolidModel {
 public:
 	bool init() {
 		bool res = true;
-		res = res && mMdlData.load("../data/lightning.geo");
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, "../data/lightning.mtl");
+
+		const fs::path root = cPathManager::build_data_path("owl");
+
+		res = res && mMdlData.load(root / "lightning.geo");
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "lightning.mtl");
 		res = res && mModel.init(mMdlData, mMtl);
 
 		//mModel.mWmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
@@ -287,20 +292,17 @@ public:
 	bool init() {
 		bool res = true;
 
-//#define OBJPATH "../data/owl/"
-#define OBJPATH "../data/succub/"
+		const fs::path root = cPathManager::build_data_path("owl");
 
-		res = res && mMdlData.load(OBJPATH "def.geo");
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, OBJPATH "def.mtl");
+		res = res && mMdlData.load(root / "def.geo");
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root /"def.mtl");
 		res = res && mModel.init(mMdlData, mMtl);
 
-		mRigData.load(OBJPATH "def.rig");
+		mRigData.load(root / "def.rig");
 		mRig.init(&mRigData);
 
-		mAnimDataList.load(OBJPATH, "def.alist");
+		mAnimDataList.load(root, "def.alist");
 		mAnimList.init(mAnimDataList, mRigData);
-
-#undef OBJPATH
 
 		float scl = 0.01f;
 		mModel.mWmtx = DirectX::XMMatrixScaling(scl, scl, scl);
@@ -318,19 +320,18 @@ class cJumpingSphere : public cSkinnedAnimatedModel {
 public:
 	bool init() {
 		bool res = true;
-#define OBJPATH "../data/jumping_sphere/"
 
-		res = res && mMdlData.load(OBJPATH "def.geo");
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, OBJPATH "def.mtl", true);
+		const fs::path root = cPathManager::build_data_path("jumping_sphere");
+
+		res = res && mMdlData.load(root / "def.geo");
+		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "def.mtl", true);
 		res = res && mModel.init(mMdlData, mMtl);
 
-		mRigData.load(OBJPATH "def.rig");
+		mRigData.load(root / "def.rig");
 		mRig.init(&mRigData);
 
-		mAnimDataList.load(OBJPATH, "def.alist");
+		mAnimDataList.load(root, "def.alist");
 		mAnimList.init(mAnimDataList, mRigData);
-
-#undef OBJPATH
 
 		auto pRootJnt = mRig.get_joint(0);
 		if (pRootJnt) {
@@ -348,12 +349,12 @@ public:
 	bool init() {
 		bool res = true;
 
-#define OBJPATH "../data/unreal_puppet/"
+		const fs::path root = cPathManager::build_data_path("unreal_puppet");
 		{
 			cAssimpLoader loader;
-			res = res && loader.load_unreal_fbx(OBJPATH "SideScrollerSkeletalMesh.FBX");
+			res = res && loader.load_unreal_fbx(root / "SideScrollerSkeletalMesh.FBX");
 			res = res && mMdlData.load_assimp(loader);
-			res = res && mMtl.load(get_gfx().get_dev(), mMdlData, OBJPATH "def.mtl");
+			res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "def.mtl");
 			res = res && mModel.init(mMdlData, mMtl);
 
 			mRigData.load(loader);
@@ -361,14 +362,13 @@ public:
 		}
 		{
 			cAssimpLoader animLoader;
-			animLoader.load_unreal_fbx(OBJPATH "SideScrollerIdle.FBX");
-			//animLoader.load_unreal_fbx(OBJPATH "SideScrollerWalk.FBX");
+			//animLoader.load_unreal_fbx(cPathManager::build_data_path(OBJPATH "SideScrollerIdle.FBX"));
+			animLoader.load_unreal_fbx(root / "SideScrollerWalk.FBX");
 			mAnimDataList.load(animLoader);
 			mAnimList.init(mAnimDataList, mRigData);
 
 			mSpeed = 1.0f / 60.0f;
 		}
-#undef OBJPATH
 
 		float scl = 0.01f;
 		mModel.mWmtx = DirectX::XMMatrixScaling(scl, scl, scl);
@@ -472,6 +472,7 @@ void loop() {
 
 int main(int argc, char* argv[]) {
 	cSDLInit sdl;
+	auto pathManager = globals.pathManager.ctor_scoped();
 	auto win = globals.win.ctor_scoped("TestBed - SPACE + mouse to control camera", 1200, 900, 0);
 	auto input = globals.input.ctor_scoped();
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());

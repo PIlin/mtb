@@ -20,13 +20,13 @@ public:
 	//cRigData() {}
 	~cRigData();
 
-	bool load(cstr filepath);
+	bool load(const fs::path& filepath);
 	bool load(cAssimpLoader& loader);
 	
 	int find_joint_idx(cstr name) const;
 private:
 
-	bool load_json(cstr filepath);
+	bool load_json(const fs::path& filepath);
 
 	friend class cJsonLoaderImpl;
 	friend class cRig;

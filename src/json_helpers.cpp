@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "path_helpers.hpp"
 #include "json_helpers.hpp"
 
 #include <SDL_rwops.h>
@@ -6,19 +7,15 @@
 
 using namespace nJsonHelpers;
 
-bool nJsonHelpers::load_file(cstr filepath, std::function<bool(Value const&)> loader) {
-	auto rw = SDL_RWFromFile(filepath, "rb");
-	if (!rw) { return false; }
-	Sint64 size = SDL_RWsize(rw);
-	if (size <= 0) {
-		SDL_RWclose(rw);
-		return false;
-	}
+bool nJsonHelpers::load_file(const fs::path& filepath, std::function<bool(Value const&)> loader) {
+	sInputFile file(filepath);
+	if (!file.is_open()) { return false; }
+
+	const size_t size = file.mSize;
 	auto pdata = std::make_unique<char[]>(size + 1);
-	SDL_RWread(rw, pdata.get(), size, 1);
-	SDL_RWclose(rw);
 	char* json = pdata.get();
-	json[size] = 0;
+	file.read_buffer(json, size);
+	json[size] = '\0';
 	
 	Document document;
 	if (document.ParseInsitu<0>(json).HasParseError()) {

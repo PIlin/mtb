@@ -2,9 +2,11 @@
 #include "math.hpp"
 #include "rdr.hpp"
 #include "gfx.hpp"
+#include "path_helpers.hpp"
 #include "texture.hpp"
 #include "model.hpp"
 #include "hou_geo.hpp"
+#include "path_helpers.hpp"
 #include "assimp_loader.hpp"
 #include "imgui.hpp"
 
@@ -74,15 +76,15 @@ static vec2f as_vec2f(cHouGeoAttrib const* pa, int idx) {
 	return { tmp[0], tmp[1] };
 }
 
-bool cModelData::load(cstr filepath) {
-	if (filepath.ends_with(".geo")) {
+bool cModelData::load(const fs::path& filepath) {
+	if (filepath.extension() == ".geo") {
 		return load_hou_geo(filepath);
 	} else {
 		return load_assimp(filepath);
 	}
 }
 
-bool cModelData::load_hou_geo(cstr filepath) {
+bool cModelData::load_hou_geo(const fs::path& filepath) {
 	cHouGeoLoader geo;
 	if (!geo.load(filepath))
 		return false;
@@ -225,7 +227,7 @@ struct sReadItr {
 	}
 };
 
-bool cModelData::load_assimp(cstr filepath) {
+bool cModelData::load_assimp(const fs::path& filepath) {
 	cAssimpLoader loader;
 	if (loader.load(filepath)) {
 		return load_assimp(loader);
@@ -522,13 +524,15 @@ void sGroupMaterial::set_default(bool isSkinned) {
 }
 
 
-bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr filepath, bool isSkinnedByDef/* = false*/) {
+bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, const fs::path& filepath, bool isSkinnedByDef/* = false*/) {
 	mpMdlData = &mdlData;
 	auto grpNum = mpMdlData->mGrpNum;
 	mpGrpMtl = std::make_unique<sGroupMaterial[]>(grpNum);
 	mpGrpRes = std::make_unique<sGroupMtlRes[]>(grpNum);
 
-	if (filepath) { mFilepath = filepath; }
+	mFilepath = filepath;
+
+	const fs::path rootPath = filepath.parent_path();
 	
 	if (!deserialize(filepath)) {
 		for (uint32_t i = 0; i < grpNum; ++i) {
@@ -540,10 +544,10 @@ bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr fi
 	auto& ts = cTextureStorage::get();
 	auto& ss = cShaderStorage::get();
 
-	auto loadTex = [&ts, pDev](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp, cTexture* pDefT) {
+	auto loadTex = [&ts, pDev, &rootPath](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp, cTexture* pDefT) {
 		cTexture* p = nullptr;
 		if (!name.empty()) {
-			p = ts.load(pDev, name.c_str());
+			p = ts.load(pDev, rootPath / name);
 		}
 		if (!p) { p = pDefT; }
 		pTex = p;
@@ -580,9 +584,14 @@ bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, cstr fi
 	return true;
 }
 
-bool cModelMaterial::save(cstr filepath) {
+bool cModelMaterial::save(const fs::path& filepath) {
 	if (!mpMdlData || !mpGrpMtl) return false;
-	if (!filepath) { filepath = mFilepath.c_str(); }
-	if (!filepath) { return false; }
-	return serialize(filepath);
+	
+	const fs::path& path = filepath.empty() 
+		? mFilepath 
+		: filepath;
+
+	if (path.empty()) { return false; }
+
+	return serialize(path);
 }

@@ -65,7 +65,7 @@ public:
 	std::string mName;
 public:
 	~cAnimationData();
-	bool load(cstr filepath);
+	bool load(const fs::path& filepath);
 	bool load(aiAnimation const& anim);
 
 private:
@@ -105,7 +105,7 @@ class cAnimationDataList : noncopyable {
 	std::unordered_map<std::string, int32_t> mMap;
 public:
 	~cAnimationDataList();
-	bool load(cstr path, cstr filename);
+	bool load(const fs::path& path, const fs::path& filename);
 	bool load(cAssimpLoader& loader);
 
 	int32_t get_count() const { return mCount; }

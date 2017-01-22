@@ -20,7 +20,7 @@ public:
 
 	bool create2d1_rgba_u8(ID3D11Device* pDev, void* data, uint32_t w, uint32_t h);
 	bool create2d1_rgba_f32(ID3D11Device* pDev, void* data, uint32_t w, uint32_t h);
-	bool load(ID3D11Device* pDev, cstr filepath);
+	bool load(ID3D11Device* pDev, const fs::path& filepath);
 	void unload();
 
 	bool is_ready() const { return !!mpView; }
@@ -43,7 +43,7 @@ public:
 	cTextureStorage(ID3D11Device* pDev);
 	~cTextureStorage();
 
-	cTexture* load(ID3D11Device* pDev, cstr filepath);
+	cTexture* load(ID3D11Device* pDev, const fs::path& filepath);
 
 	cTexture* get_def_nmap() { return &mDefNmap; }
 	cTexture* get_def_white() { return &mDefWhite; }

@@ -29,9 +29,9 @@ private:
 	std::unordered_map<cstr, int32_t> mBonesMap;
 public:
 
-	bool load(cstr filepath, uint32_t flags);
-	bool load(cstr filepath);
-	bool load_unreal_fbx(cstr filepath);
+	bool load(const fs::path& filepath, uint32_t flags);
+	bool load(const fs::path& filepath);
+	bool load_unreal_fbx(const fs::path& filepath);
 
 	aiScene const* get_scene() const { return mpScene; }
 	std::vector<sAIMeshInfo> const& get_mesh_info() const { return mpMeshes; }

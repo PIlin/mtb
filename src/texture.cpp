@@ -4,6 +4,7 @@
 #include <string>
 
 #include "common.hpp"
+#include "path_helpers.hpp"
 #include "texture.hpp"
 
 #include "DDSTextureLoader.h"
@@ -11,23 +12,17 @@
 
 #include <locale>
 
-bool cTexture::load(ID3D11Device* pDev, cstr filepath) {
+bool cTexture::load(ID3D11Device* pDev, const fs::path& filepath) {
 	unload();
 
-	bool isDDS = filepath.ends_with(".dds");
+	const bool isDDS = (filepath.extension() == ".dds");
 	
-	wchar_t buf[512];
-	size_t tmp;
-	if (0 != ::mbstowcs_s(&tmp, buf, filepath, _TRUNCATE)) {
-		return false;
-	}
-
 	HRESULT hr;
 	if (isDDS) {
-		hr = DirectX::CreateDDSTextureFromFile(pDev, buf, mpTex.pp(), mpView.pp());
+		hr = DirectX::CreateDDSTextureFromFile(pDev, filepath.c_str(), mpTex.pp(), mpView.pp());
 	}
 	else {
-		hr = DirectX::CreateWICTextureFromFile(pDev, buf, mpTex.pp(), mpView.pp());
+		hr = DirectX::CreateWICTextureFromFile(pDev, filepath.c_str(), mpTex.pp(), mpView.pp());
 	}
 
 	return SUCCEEDED(hr);
@@ -125,8 +120,8 @@ class cTextureStorage::cStorage {
 	std::vector<std::unique_ptr<cTexture>> mTextures;
 	std::unordered_map<std::string, cTexture*> mNames;
 public:
-	cTexture* load(ID3D11Device* pDev, cstr filepath) {
-		std::string name = filepath;
+	cTexture* load(ID3D11Device* pDev, const fs::path& filepath) {
+		std::string name = filepath.u8string();
 		auto p = find(name);
 		if (p) { return p; }
 
@@ -172,6 +167,6 @@ void cTextureStorage::init_def_white(ID3D11Device* pDev) {
 }
 
 
-cTexture* cTextureStorage::load(ID3D11Device* pDev, cstr filepath) {
+cTexture* cTextureStorage::load(ID3D11Device* pDev, const fs::path& filepath) {
 	return mpImpl->load(pDev, filepath);
 }

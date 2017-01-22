@@ -2,6 +2,7 @@
 
 #include "math.hpp"
 #include "common.hpp"
+#include "path_helpers.hpp"
 #include "texture.hpp"
 #include "rdr.hpp"
 #include "imgui_impl.hpp"

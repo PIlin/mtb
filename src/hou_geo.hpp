@@ -64,7 +64,7 @@ public:
 	std::unique_ptr<int32_t[]> mpVertexMap;
 	std::vector<sHouGeoPrimPoly> mPoly;
 public:
-	bool load(cstr filepath);
+	bool load(const fs::path& filepath);
 
 protected:
 

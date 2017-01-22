@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "common.hpp"
+#include "path_helpers.hpp"
 #include "assimp_loader.hpp"
 
 #include <assimp/Importer.hpp>
@@ -19,13 +20,12 @@ static void list_meshes(aiScene const* pScene, aiNode const* pNode, std::vector<
 	}
 }
 
-
-bool cAssimpLoader::load(cstr filepath, uint32_t flags) {
+bool cAssimpLoader::load(const fs::path& filepath, uint32_t flags) {
 	auto pImporter = std::make_unique<Assimp::Importer>();
 	pImporter->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
 		aiPrimitiveType_LINE | aiPrimitiveType_POINT | aiPrimitiveType_POLYGON);
 
-	aiScene const* pScene = pImporter->ReadFile(filepath, flags);
+	aiScene const* pScene = pImporter->ReadFile(filepath.u8string(), flags);
 	if (!pScene) {
 		dbg_msg("cModelData::load_assimp(): assimp import error: %s\n", pImporter->GetErrorString());
 		return false;
@@ -44,8 +44,8 @@ bool cAssimpLoader::load(cstr filepath, uint32_t flags) {
 	return true;
 }
 
-bool cAssimpLoader::load(cstr filepath) {
-	uint32_t flags = 0
+bool cAssimpLoader::load(const fs::path& filepath) {
+	const uint32_t flags = 0
 		| aiProcess_FlipWindingOrder
 		| aiProcess_SortByPType
 		;
@@ -53,8 +53,8 @@ bool cAssimpLoader::load(cstr filepath) {
 	return load(filepath, flags);
 }
 
-bool cAssimpLoader::load_unreal_fbx(cstr filepath) {
-	uint32_t flags = 0
+bool cAssimpLoader::load_unreal_fbx(const fs::path& filepath) {
+	const uint32_t flags = 0
 		| aiProcess_FlipWindingOrder
 		| aiProcess_SortByPType
 		| aiProcess_LimitBoneWeights

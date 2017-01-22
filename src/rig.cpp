@@ -4,6 +4,7 @@
 
 #include "math.hpp"
 #include "common.hpp"
+#include "path_helpers.hpp"
 #include "rig.hpp"
 #include "rdr.hpp"
 #include "assimp_loader.hpp"
@@ -106,16 +107,16 @@ cRigData::~cRigData() {
 	}
 }
 
-bool cRigData::load(cstr filepath) {
-	if (filepath.ends_with(".rig")) {
+bool cRigData::load(const fs::path& filepath) {
+	if (filepath.extension() == ".rig") {
 		return load_json(filepath);
 	}
 
-	dbg_msg("cRigData::load(): Unknown file extension in <%s>", filepath.p);
+	dbg_msg("cRigData::load(): Unknown file extension in <%" PRI_FILE ">", filepath.c_str());
 	return false;
 }
 
-bool cRigData::load_json(cstr filepath) {
+bool cRigData::load_json(const fs::path& filepath) {
 	cJsonLoaderImpl loader(*this);
 	return nJsonHelpers::load_file(filepath, loader);
 }

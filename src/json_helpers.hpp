@@ -11,6 +11,6 @@ using Document = rapidjson::Document;
 using Value = Document::ValueType;
 using Size = rapidjson::SizeType;
 
-bool load_file(cstr filepath, std::function<bool(Value const&)> loader);
+bool load_file(const fs::path& filepath, std::function<bool(Value const&)> loader);
 
 } // namespace nJsonHelpers

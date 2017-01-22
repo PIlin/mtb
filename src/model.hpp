@@ -39,12 +39,12 @@ public:
 
 	//cModelData& operator=(cModelData&) = delete;
 
-	bool load(cstr filepath);
+	bool load(const fs::path& filepath);
 	void unload();
 
-	bool load_assimp(cstr filepath);
+	bool load_assimp(const fs::path& filepath);
 	bool load_assimp(cAssimpLoader& loader);
-	bool load_hou_geo(cstr filepath);
+	bool load_hou_geo(const fs::path& filepath);
 };
 
 
@@ -87,7 +87,7 @@ public:
 	std::unique_ptr<sGroupMaterial[]> mpGrpMtl;
 	std::unique_ptr<sGroupMtlRes[]> mpGrpRes;
 
-	std::string mFilepath;
+	fs::path mFilepath;
 
 	cModelMaterial() {}
 	cModelMaterial(cModelMaterial&& o) :
@@ -103,14 +103,14 @@ public:
 	void apply(ID3D11DeviceContext* pCtx, int grp);
 
 	bool load(ID3D11Device* pDev, cModelData const& mdlData, 
-		cstr filepath, bool isSkinnedByDef = false);
-	bool save(cstr filepath = nullptr);
+		const fs::path& filepath, bool isSkinnedByDef = false);
+	bool save(const fs::path& filepath = fs::path());
 
 	cstr get_grp_name(uint32_t i) const { return mpMdlData->mpGrpNames[i].c_str(); }
 
 protected:
-	bool serialize(cstr filepath);
-	bool deserialize(cstr filepath);
+	bool serialize(const fs::path& filepath);
+	bool deserialize(const fs::path& filepath);
 };
 
 class cModel {
