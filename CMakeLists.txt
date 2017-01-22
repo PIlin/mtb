@@ -1,6 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.2)
 
 set(SDL_SHARED OFF)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party")
 add_subdirectory("${THIRD_PARTY_DIR}/SDL2")
@@ -76,8 +77,6 @@ include_directories(${SDL2_SOURCE_DIR}/include)
 add_executable(mtb ${SRC} ${HLSL})
 target_link_libraries(mtb SDL2-static SDL2main imgui DirectXTK assimp cereal d3d11 d3dcompiler)
 
-add_custom_command(TARGET mtb POST_BUILD 
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:assimp>" "$<TARGET_FILE_DIR:mtb>")
 
 set (BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
 set_property(TARGET mtb PROPERTY RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BIN_DIR})

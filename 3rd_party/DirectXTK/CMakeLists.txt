@@ -21,3 +21,4 @@ include_directories(Inc)
 
 add_library(DirectXTK STATIC ${srcs} ${hdrs})
 target_include_directories(DirectXTK INTERFACE "Inc")
+set_property(TARGET DirectXTK PROPERTY FOLDER "3rd_party")

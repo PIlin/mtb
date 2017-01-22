@@ -8,3 +8,6 @@
 [submodule "3rd_party/cereal/cereal_git"]
 	path = 3rd_party/cereal/cereal_git
 	url = https://github.com/USCiLab/cereal.git
+[submodule "3rd_party/assimp/assimp_git"]
+	path = 3rd_party/assimp/assimp_git
+	url = https://github.com/assimp/assimp.git

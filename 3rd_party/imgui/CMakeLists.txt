@@ -9,3 +9,4 @@ set(srcs ${root}/imgui.cpp ${root}/imgui_draw.cpp)
 
 add_library(imgui STATIC ${srcs} ${phdrs} ${hdrs})
 target_include_directories(imgui INTERFACE "${root}")
+set_property(TARGET imgui PROPERTY FOLDER "3rd_party")
