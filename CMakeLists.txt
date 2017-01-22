@@ -1,6 +1,5 @@
 ﻿cmake_minimum_required(VERSION 3.2)
 
-set(SDL_SHARED OFF)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party")
@@ -71,8 +70,6 @@ set(HLSL ${HLSL_VS} ${HLSL_PS} ${HLSL_INC})
 set_source_files_properties(${HLSL_VS} PROPERTIES VS_SHADER_TYPE Vertex VS_SHADER_MODEL 4.0 VS_SHADER_ENTRYPOINT "main")
 set_source_files_properties(${HLSL_PS} PROPERTIES VS_SHADER_TYPE Pixel  VS_SHADER_MODEL 4.0 VS_SHADER_ENTRYPOINT "main")
 source_group("hlsl" FILES ${HLSL})
-
-include_directories(${SDL2_SOURCE_DIR}/include)
 
 add_executable(mtb ${SRC} ${HLSL})
 target_link_libraries(mtb SDL2-static SDL2main imgui DirectXTK assimp cereal d3d11 d3dcompiler)
