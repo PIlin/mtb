@@ -22,10 +22,11 @@ static fs::path obtain_base_path() {
 }
 
 
-cPathManager::cPathManager() 
+cPathManager::cPathManager()
 	: mBasePath(obtain_base_path())
 	, mDataPath(fs::absolute("../data/", mBasePath))
 	, mSettingsPath(fs::absolute("../settings/", mBasePath))
+	, mShadersPath(mBasePath)
 {
 	fs::create_directories(mSettingsPath);
 }
