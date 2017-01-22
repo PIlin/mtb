@@ -60,45 +60,23 @@ struct std::hash < cstr > {
 	result_type operator()(argument_type const& s) const;
 };
 
-template <typename T>
-struct moveable_ptr {
+template <typename T, typename TReleaser>
+struct base_ptr {
 	T* p;
-	moveable_ptr(T* p = nullptr) : p(p) {}
+	base_ptr(T* p = nullptr) : p(p) {}
+	~base_ptr() { reset(); }
 
-	moveable_ptr(moveable_ptr& o) = delete;
-	moveable_ptr& operator=(moveable_ptr& o) = delete;
+	base_ptr(base_ptr& o) = delete;
+	base_ptr& operator=(base_ptr& o) = delete;
 
-	moveable_ptr(moveable_ptr&& o) : p(o.p) { o.p = nullptr; }
-	moveable_ptr& operator=(moveable_ptr&& o) { p = o.p; o.p = nullptr; return *this; }
-
-	T* operator->() const { return p; }
-	T& operator*() const { return *p; }
-
-	T** pp() { return &p; }
-
-	operator T*() const { return p; }
-
-	void reset() { p = nullptr; }
-	void reset(T* ptr) { p = ptr; }
-};
-
-template <typename T>
-struct com_ptr {
-	T* p;
-	com_ptr(T* p = nullptr) : p(p) {}
-	~com_ptr() { reset(); }
-
-	com_ptr(com_ptr& o) = delete;
-	com_ptr& operator=(com_ptr& o) = delete;
-
-	com_ptr(com_ptr&& o) {
+	base_ptr(base_ptr&& o) {
 		reset(o.p);
-		o.p = nullptr; 
+		o.p = nullptr;
 	}
-	com_ptr& operator=(com_ptr&& o) {
+	base_ptr& operator=(base_ptr&& o) {
 		reset(o.p);
-		o.p = nullptr; 
-		return *this; 
+		o.p = nullptr;
+		return *this;
 	}
 
 	T* operator->() const { return p; }
@@ -109,13 +87,31 @@ struct com_ptr {
 	operator T*() const { return p; }
 
 	void reset() { reset(nullptr); }
-	void reset(T* ptr) { 
+	void reset(T* ptr) {
 		if (p) {
-			p->Release();
+			TReleaser()(p);
 		}
 		p = ptr;
 	}
 };
+
+struct moveable_ptr_releaser {
+	template <typename T>
+	void operator()(T*) { /*nothing*/ }
+};
+
+template <typename T>
+using moveable_ptr = base_ptr<T, moveable_ptr_releaser>;
+
+struct com_ptr_releaser {
+	template <typename T>
+	void operator()(T* p) { 
+		p->Release();
+	}
+};
+
+template <typename T>
+using com_ptr = base_ptr<T, com_ptr_releaser>;
 
 template <int A> struct aligned;
 template <> struct __declspec(align(1)) aligned < 1 > {};
