@@ -1,7 +1,7 @@
 {
     "value0": {
         "grp:eye": {
-            "texBaseName": "../data/lightning_tex/eye_base.dds",
+            "texBaseName": "lightning_tex/eye_base.dds",
             "texNmap0Name": "",
             "texNmap1Name": "",
             "texMaskName": "",
@@ -20,8 +20,8 @@
             }
         },
         "grp:necklace": {
-            "texBaseName": "../data/lightning_tex/necklace_base.dds",
-            "texNmap0Name": "../data/lightning_tex/necklace_nrm.dds",
+            "texBaseName": "lightning_tex/necklace_base.dds",
+            "texNmap0Name": "lightning_tex/necklace_nrm.dds",
             "texNmap1Name": "",
             "texMaskName": "",
             "vsProg": "model_solid.vs.cso",
@@ -39,10 +39,10 @@
             }
         },
         "grp:hair": {
-            "texBaseName": "../data/lightning_tex/hair_base.dds",
+            "texBaseName": "lightning_tex/hair_base.dds",
             "texNmap0Name": "",
             "texNmap1Name": "",
-            "texMaskName": "../data/lightning_tex/hair_mask.dds",
+            "texMaskName": "lightning_tex/hair_mask.dds",
             "vsProg": "model_solid.vs.cso",
             "psProg": "model.hair.ps.cso",
             "twosided": true,
@@ -58,9 +58,9 @@
             }
         },
         "grp:cloth": {
-            "texBaseName": "../data/lightning_tex/cloth_base.dds",
-            "texNmap0Name": "../data/lightning_tex/cloth_nrm.dds",
-            "texNmap1Name": "../data/lightning_tex/cloth_nrm1.dds",
+            "texBaseName": "lightning_tex/cloth_base.dds",
+            "texNmap0Name": "lightning_tex/cloth_nrm.dds",
+            "texNmap1Name": "lightning_tex/cloth_nrm1.dds",
             "texMaskName": "",
             "vsProg": "model_solid.vs.cso",
             "psProg": "model.ps.cso",
@@ -77,8 +77,8 @@
             }
         },
         "grp:sword": {
-            "texBaseName": "../data/lightning_tex/sword_base.dds",
-            "texNmap0Name": "../data/lightning_tex/sword_nrm.dds",
+            "texBaseName": "lightning_tex/sword_base.dds",
+            "texNmap0Name": "lightning_tex/sword_nrm.dds",
             "texNmap1Name": "",
             "texMaskName": "",
             "vsProg": "model_solid.vs.cso",
@@ -96,9 +96,9 @@
             }
         },
         "grp:skin": {
-            "texBaseName": "../data/lightning_tex/skin_base.dds",
-            "texNmap0Name": "../data/lightning_tex/skin_nrm.dds",
-            "texNmap1Name": "../data/lightning_tex/skin_nrm1.dds",
+            "texBaseName": "lightning_tex/skin_base.dds",
+            "texNmap0Name": "lightning_tex/skin_nrm.dds",
+            "texNmap1Name": "lightning_tex/skin_nrm1.dds",
             "texMaskName": "",
             "vsProg": "model_solid.vs.cso",
             "psProg": "model.ps.cso",
