@@ -145,7 +145,7 @@ protected:
 
 			for (Size i = 0; i < arrSize;) {
 				int n = rle[i++].GetInt();
-				bool s = rle[i++].GetBool_();
+				bool s = rle[i++].GetBool();
 
 				if (s && s != state) {
 					cHouGeoGroup::sInterval in = { cur, cur + n };
