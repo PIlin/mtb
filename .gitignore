@@ -13,3 +13,4 @@ data/owl/
 data/succub/
 build/
 *.opendb
+data/lightning/
