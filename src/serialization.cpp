@@ -113,9 +113,7 @@ void cCamera::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(mFarZ));
 }
 
-bool cCamera::load(cstr filepath) {
-	if (!filepath) { return false; }
-
+bool cCamera::load(const fs::path& filepath) {
 	std::ifstream ifs(filepath, std::ios::binary);
 	if (!ifs.is_open()) { return false; }
 
@@ -125,9 +123,7 @@ bool cCamera::load(cstr filepath) {
 	return true;
 }
 
-bool cCamera::save(cstr filepath) {
-	if (!filepath) { return false; }
-
+bool cCamera::save(const fs::path& filepath) {
 	std::ofstream ofs(filepath, std::ios::binary);
 	if (!ofs.is_open())
 		return false;
@@ -170,9 +166,7 @@ void cLightMgr::serialize(Archive& arc) {
 }
 
 
-bool cLightMgr::load(cstr filepath) {
-	if (!filepath) { return false; }
-
+bool cLightMgr::load(const fs::path& filepath) {
 	std::ifstream ifs(filepath, std::ios::binary);
 	if (!ifs.is_open()) { return false; }
 
@@ -183,9 +177,7 @@ bool cLightMgr::load(cstr filepath) {
 }
 
 
-bool cLightMgr::save(cstr filepath) {
-	if (!filepath) { return false; }
-
+bool cLightMgr::save(const fs::path& filepath) {
 	std::ofstream ofs(filepath, std::ios::binary);
 	if (!ofs.is_open())
 		return false;

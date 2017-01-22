@@ -85,6 +85,10 @@ cImgui::cImgui(cGfx& gfx) {
 	io.KeyMap[ImGuiKey_Z] = SDL_SCANCODE_Z;
 	io.RenderDrawListsFn = render_callback_st;
 	
+	// NOTE: imgui uses ::fopen - no way to pass wchar or utf8
+	mIniFilepath = cPathManager::build_settings_path("imgui.ini").string();
+	io.IniFilename = mIniFilepath.c_str();
+
 	init_imgui_vtx_buffer(pDev, mVtx, 10000);
 	init_imgui_idx_buffer(pDev, mIdx, 10000);
 

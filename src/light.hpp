@@ -21,8 +21,8 @@ public:
 	
 	void set_default();
 
-	bool load(cstr filepath);
-	bool save(cstr filepath);
+	bool load(const fs::path& filepath);
+	bool save(const fs::path& filepath);
 
 	template <class Archive>
 	void serialize(Archive& arc);

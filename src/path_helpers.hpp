@@ -9,6 +9,7 @@ namespace fs = std::experimental::filesystem;
 class cPathManager {
 	fs::path mBasePath;
 	fs::path mDataPath;
+	fs::path mSettingsPath;
 public:
 	static cPathManager& get();
 
@@ -16,10 +17,14 @@ public:
 
 	const fs::path& get_base_path() const { return mBasePath; }
 	const fs::path& get_data_path() const { return mDataPath; }
+	const fs::path& get_settings_path() const { return mSettingsPath; }
 
 
 	static fs::path build_data_path(const fs::path& path) {
 		return cPathManager::get().get_data_path() / path;
+	}
+	static fs::path build_settings_path(const fs::path& path) {
+		return cPathManager::get().get_settings_path() / path;
 	}
 };
 

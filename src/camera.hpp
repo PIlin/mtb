@@ -30,8 +30,8 @@ public:
 	void recalc();
 
 public:
-	bool save(cstr filepath);
-	bool load(cstr filepath);
+	bool save(const fs::path& filepath);
+	bool load(const fs::path& filepath);
 
 	template <class Archive>
 	void serialize(Archive& arc);

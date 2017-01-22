@@ -25,9 +25,10 @@ static fs::path obtain_base_path() {
 cPathManager::cPathManager() 
 	: mBasePath(obtain_base_path())
 	, mDataPath(fs::absolute("../data/", mBasePath))
-{}
-
-
+	, mSettingsPath(fs::absolute("../settings/", mBasePath))
+{
+	fs::create_directories(mSettingsPath);
+}
 
 
 sInputFile::sInputFile(const fs::path& path) {

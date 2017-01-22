@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "math.hpp"
 #include "sh.hpp"
+#include "path_helpers.hpp"
 #include "light.hpp"
 #include "rdr.hpp"
 #include "gfx.hpp"
@@ -8,8 +9,9 @@
 
 namespace dx = DirectX;
 
-
-static const cstr LIGHT_JSON = "light.json";
+static fs::path get_light_settings_path() {
+	return cPathManager::build_settings_path("light.json");
+}
 
 // See "Stupid Spherical Harmonics (SH) Tricks" by Peter-Pike Sloan, Appendix A10
 void pack_sh_param(sSHCoef::sSHChan const& chan, DirectX::XMVECTOR sh[7], int idx) {
@@ -45,7 +47,7 @@ void pack_sh_param(sSHCoef const& coef, DirectX::XMVECTOR sh[7]) {
 
 
 cLightMgr::cLightMgr() {
-	if (!load(LIGHT_JSON)) {
+	if (!load(get_light_settings_path())) {
 		set_default();
 	}
 }
@@ -129,7 +131,7 @@ void cLightMgr::dbg_ui() {
 	}
 
 	if (ImGui::Button("Save")) {
-		save(LIGHT_JSON);
+		save(get_light_settings_path());
 	}
 
 	ImGui::End();

@@ -10,6 +10,7 @@ class cImgui : noncopyable {
 	cTexture mFontTex;
 	cVertexBuffer mVtx;
 	cIndexBuffer mIdx;
+	std::string mIniFilepath;
 public:
 	cImgui(cGfx& gfx);
 	~cImgui();

@@ -1,5 +1,6 @@
 #include "math.hpp"
 #include "common.hpp"
+#include "path_helpers.hpp"
 #include "camera.hpp"
 #include "input.hpp"
 
@@ -20,8 +21,12 @@ void cCamera::sView::calc_viewProj() {
 	mViewProj = mView * mProj;
 }
 
+static fs::path get_camera_settings_path() {
+	return cPathManager::build_settings_path("camera.json");
+}
+
 cCamera::cCamera() {
-	if (load("camera.json")) {
+	if (load(get_camera_settings_path())) {
 		recalc();
 	} else {
 		set_default();
@@ -29,7 +34,7 @@ cCamera::cCamera() {
 }
 
 cCamera::~cCamera() {
-	save("camera.json");
+	save(get_camera_settings_path());
 }
 
 void cCamera::set_default() {
