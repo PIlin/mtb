@@ -16,6 +16,8 @@ set(SRC
 	src/texture.cpp
 	src/sh.hpp
 	src/serialization.cpp
+	src/scene_objects.hpp
+	src/scene_objects.cpp
 	src/rig.hpp
 	src/rig.cpp
 	src/rdr.hpp
