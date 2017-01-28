@@ -60,11 +60,11 @@ private:
 
 class cRig {
 	int mJointsNum;
-	cJoint* mpJoints;
+	std::unique_ptr<cJoint[]> mpJoints;
 	cRigData const* mpRigData;
-	DirectX::XMMATRIX* mpLMtx;
-	DirectX::XMMATRIX* mpWmtx;
-	sXform* mpXforms;
+	std::unique_ptr<DirectX::XMMATRIX[]> mpLMtx;
+	std::unique_ptr<DirectX::XMMATRIX[]> mpWmtx;
+	std::unique_ptr<sXform[]> mpXforms;
 public:
 
 	void init(cRigData const* pRigData);

@@ -267,10 +267,10 @@ void cRig::init(cRigData const* pRigData) {
 	
 	mJointsNum = jointsNum;
 	mpRigData = pRigData;
-	mpJoints = pJoints.release();
-	mpLMtx = pLMtx.release();
-	mpWmtx = pWMtx.release();
-	mpXforms = pXforms.release();
+	mpJoints = std::move(pJoints);
+	mpLMtx = std::move(pLMtx);
+	mpWmtx = std::move(pWMtx);
+	mpXforms = std::move(pXforms);
 
 	calc_world();
 }
