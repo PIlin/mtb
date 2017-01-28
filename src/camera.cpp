@@ -8,6 +8,9 @@
 
 namespace dx = DirectX;
 
+extern vec2i get_window_size();
+
+
 void cCamera::sView::calc_view(dx::XMVECTOR const& pos, dx::XMVECTOR const& tgt, dx::XMVECTOR const& up) {
 	mView = dx::XMMatrixLookAtRH(pos, tgt, up);
 	mPos = pos;
@@ -27,6 +30,7 @@ static fs::path get_camera_settings_path() {
 
 cCamera::cCamera() {
 	if (load(get_camera_settings_path())) {
+		set_aspect_from_window_size(get_window_size());
 		recalc();
 	} else {
 		set_default();
@@ -46,7 +50,9 @@ void cCamera::set_default() {
 
 	mFovY = DEG2RAD(45.0f);
 	//mFovY = dx::XM_PIDIV2;
-	mAspect = 640.0f / 480.0f;
+
+	set_aspect_from_window_size(get_window_size());
+
 	mNearZ = 0.001f;
 	mFarZ = 1000.0f;
 
@@ -59,7 +65,11 @@ void cCamera::recalc() {
 	mView.calc_viewProj();
 }
 
-extern vec2i get_window_size();
+void cCamera::set_aspect_from_window_size(vec2f windowSize) {
+	mAspect = windowSize.x / windowSize.y;
+}
+
+
 void cTrackball::update(vec2i pos, vec2i prev, float r) {
 	vec2f fpos = pos;
 	vec2f fprev = prev;
@@ -120,14 +130,28 @@ void cTrackball::set_home() {
 }
 
 void cTrackballCam::update(cCamera& cam) {
+	bool bNeedsUpdate = false;
+	bool updated = false;
+
+	const vec2f newSize = get_window_size();
+	if (newSize != mWindowSize) {
+		mWindowSize = newSize;
+		cam.set_aspect_from_window_size(newSize);
+		bNeedsUpdate = true;
+		updated = true;
+	}
+	
 	auto& input = get_input_mgr();
 	if (input.kbtn_pressed(SDL_SCANCODE_F1)) {
 		mCatchInput = !mCatchInput;
 	}
-	if (!mCatchInput && !input.kbtn_state(SDL_SCANCODE_SPACE)) {
-		return;
+	if (mCatchInput || input.kbtn_state(SDL_SCANCODE_SPACE)) {
+		bNeedsUpdate = true;
 	}
-	bool updated = false;
+
+	if (!bNeedsUpdate) { return; }
+
+	
 	updated = updated || update_trackball(cam);
 	updated = updated || update_distance(cam);
 	updated = updated || update_translation(cam);
@@ -141,6 +165,7 @@ void cTrackballCam::init(cCamera& cam) {
 	auto angle = dx::XMVector3AngleBetweenVectors(dir, dx::g_XMIdentityR2);
 	auto a = dx::XMVectorGetX(angle);
 	tb.mQuat = dx::XMQuaternionRotationAxis(cam.mUp, a);
+	mWindowSize = get_window_size();
 }
 
 bool cTrackballCam::update_trackball(cCamera& cam) {

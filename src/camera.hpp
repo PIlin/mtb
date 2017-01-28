@@ -29,6 +29,8 @@ public:
 	void set_default();
 	void recalc();
 
+	void set_aspect_from_window_size(vec2f windowSize);
+
 public:
 	bool save(const fs::path& filepath);
 	bool load(const fs::path& filepath);
@@ -56,6 +58,7 @@ public:
 class cTrackballCam {
 	cTrackball tb;
 	bool mCatchInput = false;
+	vec2f mWindowSize;
 public:
 	void init(cCamera& cam);
 	void update(cCamera& cam);
@@ -63,4 +66,15 @@ protected:
 	bool update_trackball(cCamera& cam);
 	bool update_distance(cCamera& cam);
 	bool update_translation(cCamera& cam);
+};
+
+struct sWindowSettings {
+public:
+	vec2i mSize;
+
+	bool save(const fs::path& filepath);
+	bool load(const fs::path& filepath);
+
+	template <class Archive>
+	void serialize(Archive& arc);
 };

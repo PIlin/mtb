@@ -47,7 +47,7 @@ class cGfx : noncopyable {
 		com_ptr<ID3D11DepthStencilView> mpDSView;
 
 		sDepthStencilBuffer() {}
-		sDepthStencilBuffer(sDev& dev, UINT w, UINT h, DXGI_SAMPLE_DESC const& sampleDesc);
+		sDepthStencilBuffer(sDev& dev, uint32_t w, uint32_t h, DXGI_SAMPLE_DESC const& sampleDesc);
 		sDepthStencilBuffer& operator=(sDepthStencilBuffer&& o) {
 			mpTex = std::move(o.mpTex);
 			mpDSView = std::move(o.mpDSView);
@@ -59,14 +59,20 @@ class cGfx : noncopyable {
 	sRTView mRTV;
 	sDepthStencilBuffer mDS;
 
+	bool mbInFrame = false;
 public:
 	cGfx(HWND hwnd);
 
 	void begin_frame();
 	void end_frame();
 
+	void on_window_size_changed(uint32_t w, uint32_t h);
+
 	ID3D11Device* get_dev() { return mDev.mpDev; }
 	ID3D11DeviceContext* get_ctx() { return mDev.mpImmCtx; }
+
+private:
+	void set_viewport(uint32_t w, uint32_t h);
 };
 
 class cShaderBytecode : noncopyable {

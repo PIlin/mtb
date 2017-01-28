@@ -139,6 +139,20 @@ bool cCamera::save(const fs::path& filepath) {
 
 
 template <class Archive>
+void sWindowSettings::serialize(Archive& arc) {
+	ARC(CEREAL_NVP(mSize));
+}
+
+bool sWindowSettings::load(const fs::path& filepath) {
+	return load_from_json(*this, filepath);
+}
+
+bool sWindowSettings::save(const fs::path& filepath) {
+	return save_to_json(*this, filepath);
+}
+
+
+template <class Archive>
 void sSHCoef::sSHChan::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(mSH));
 }

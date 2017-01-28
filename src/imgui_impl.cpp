@@ -137,6 +137,9 @@ static ImVec2 as_ImVec2(vec2i v) {
 void cImgui::update() {
 	ImGuiIO& io = ImGui::GetIO();
 
+	const vec2f winSize = get_window_size();
+	io.DisplaySize = ImVec2(winSize.x, winSize.y);
+
 	auto& input = get_input_mgr();
 
 	io.MousePos = as_ImVec2(input.mMousePos);

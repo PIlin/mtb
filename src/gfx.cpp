@@ -26,7 +26,7 @@ cGfx::sDev::sDev(DXGI_SWAP_CHAIN_DESC& sd, UINT flags) {
 		throw sD3DException(hr, "D3D11CreateDeviceAndSwapChain failed");
 }
 
-cGfx::sDepthStencilBuffer::sDepthStencilBuffer(sDev& dev, UINT w, UINT h, DXGI_SAMPLE_DESC const& sampleDesc) {
+cGfx::sDepthStencilBuffer::sDepthStencilBuffer(sDev& dev, uint32_t w, uint32_t h, DXGI_SAMPLE_DESC const& sampleDesc) {
 	auto desc = D3D11_TEXTURE2D_DESC();
 	desc.Width = w;
 	desc.Height = h;
@@ -91,6 +91,51 @@ cGfx::cGfx(HWND hwnd) {
 	ID3D11DepthStencilView* pdv = mDS.mpDSView;
 	mDev.mpImmCtx->OMSetRenderTargets(1, &pv, pdv);
 
+	set_viewport(w, h);
+}
+
+void cGfx::on_window_size_changed(uint32_t w, uint32_t h) {
+	assert(!mbInFrame);
+
+	mDev.mpImmCtx->OMSetRenderTargets(0, nullptr, nullptr);
+
+	mRTV = sRTView();
+	mDS = sDepthStencilBuffer();
+
+	HRESULT hr = S_OK;
+	{
+		const UINT buffersCount = 0; // 0 to preserve buffers
+		const DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN; // unknown to preserve format
+		const UINT flags = 0;
+		hr = mDev.mpSwapChain->ResizeBuffers(buffersCount, w, h, format, flags);
+		if (!SUCCEEDED(hr))
+			throw sD3DException(hr, "IDXGISpawnChain::ResizeBuffers failed");
+	}
+
+	mRTV = sRTView(mDev);
+	const DXGI_SAMPLE_DESC sd = { 4, 0 };
+	mDS = sDepthStencilBuffer(mDev, w, h, sd);
+
+	ID3D11RenderTargetView* pv = mRTV.mpRTV;
+	ID3D11DepthStencilView* pdv = mDS.mpDSView;
+	mDev.mpImmCtx->OMSetRenderTargets(1, &pv, pdv);
+
+	set_viewport(w, h);
+}
+
+void cGfx::begin_frame() {
+	mbInFrame = true;
+	float clrClr[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	mDev.mpImmCtx->ClearRenderTargetView(mRTV.mpRTV, clrClr);
+	mDev.mpImmCtx->ClearDepthStencilView(mDS.mpDSView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+}
+
+void cGfx::end_frame() {
+	mDev.mpSwapChain->Present(0, 0);
+	mbInFrame = false;
+}
+
+void cGfx::set_viewport(uint32_t w, uint32_t h) {
 	auto vp = D3D11_VIEWPORT();
 	vp.TopLeftX = 0.0f;
 	vp.TopLeftY = 0.0f;
@@ -101,17 +146,6 @@ cGfx::cGfx(HWND hwnd) {
 
 	mDev.mpImmCtx->RSSetViewports(1, &vp);
 }
-
-void cGfx::begin_frame() {
-	float clrClr[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-	mDev.mpImmCtx->ClearRenderTargetView(mRTV.mpRTV, clrClr);
-	mDev.mpImmCtx->ClearDepthStencilView(mDS.mpDSView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-}
-
-void cGfx::end_frame() {
-	mDev.mpSwapChain->Present(0, 0);
-}
-
 
 static cShaderBytecode load_shader_file(cstr filepath) {
 	sInputFile file(cPathManager::build_shaders_path(fs::u8path(filepath.p)));

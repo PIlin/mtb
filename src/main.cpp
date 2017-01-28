@@ -32,7 +32,7 @@ public:
 
 class cSDLWindow {
 	moveable_ptr<SDL_Window> win;
-	vec2i mWindowSize;
+	sWindowSettings mWindowSettings;
 public:
 	cSDLWindow(cstr title, int x, int y, int w, int h, Uint32 flags) {
 		init(title, x, y, w, h, flags);
@@ -59,18 +59,41 @@ public:
 		return hwnd;
 	}
 
-	vec2i get_window_size() const { return mWindowSize; }
+	vec2i get_window_size() const { return mWindowSettings.mSize; }
+
+	void process_window_event(const SDL_WindowEvent& ev) {
+		switch ((SDL_WindowEventID)ev.event) {
+			case SDL_WINDOWEVENT_SIZE_CHANGED: {
+				const int32_t w = ev.data1;
+				const int32_t h = ev.data2;
+
+				mWindowSettings.mSize = { w, h };
+
+				get_gfx().on_window_size_changed(w, h);
+			}
+			break;
+		}
+	}
 
 private:
+	static fs::path get_window_settings_path() {
+		return cPathManager::build_settings_path("window.json");
+	}
+
 	void init(cstr title, int x, int y, int w, int h, Uint32 flags) {
-		win = SDL_CreateWindow(title.p, x, y, w, h, flags);
-		mWindowSize = { w, h };
+		mWindowSettings.mSize = { w, h };
+
+		mWindowSettings.load(get_window_settings_path());
+
+		win = SDL_CreateWindow(title.p, x, y, mWindowSettings.mSize.x, mWindowSettings.mSize.y, flags);
 	}
 	void deinit() {
 		if (!win) return;
 
 		SDL_DestroyWindow(win);
 		win.reset();
+
+		mWindowSettings.save(get_window_settings_path());
 	}
 };
 
@@ -139,32 +162,42 @@ void do_frame() {
 	gfx.end_frame();
 }
 
+bool poll_events(cInputMgr& inputMgr) {
+	SDL_Event ev;
+	bool quit = false;
+	while (SDL_PollEvent(&ev)) {
+		switch (ev.type) {
+		case SDL_QUIT:
+			quit = true;
+			break;
+		case SDL_MOUSEMOTION:
+			inputMgr.on_mouse_motion(ev.motion);
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			inputMgr.on_mouse_button(ev.button);
+			break;
+		case SDL_TEXTINPUT:
+			inputMgr.on_text_input(ev.text);
+			break;
+		case SDL_WINDOWEVENT:
+			globals.win.get().process_window_event(ev.window);
+			break;
+		}
+	}
+	return quit;
+}
+
 void loop() {
 	bool quit = false;
-	SDL_Event ev;
+	
 	auto& inputMgr = get_input_mgr();
 	while (!quit) {
 		Uint32 ticks = SDL_GetTicks();
 		inputMgr.preupdate();
 
-		while (SDL_PollEvent(&ev)) {
-			switch (ev.type) {
-			case SDL_QUIT:
-				quit = true;
-				break;
-			case SDL_MOUSEMOTION:
-				inputMgr.on_mouse_motion(ev.motion);
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-				inputMgr.on_mouse_button(ev.button);
-				break;
-			case SDL_TEXTINPUT:
-				inputMgr.on_text_input(ev.text);
-				break;
-			}
-		}
-
+		quit = poll_events(inputMgr);
+		
 		inputMgr.update();
 
 		if (!quit) {
@@ -179,14 +212,10 @@ void loop() {
 	}
 }
 
-
-
-
-
 int main(int argc, char* argv[]) {
 	cSDLInit sdl;
 	auto pathManager = globals.pathManager.ctor_scoped();
-	auto win = globals.win.ctor_scoped("TestBed - SPACE + mouse to control camera", 1200, 900, 0);
+	auto win = globals.win.ctor_scoped("TestBed - SPACE + mouse to control camera", 1200, 900, SDL_WINDOW_RESIZABLE);
 	auto input = globals.input.ctor_scoped();
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());
 	auto ss = globals.shaderStorage.ctor_scoped();
