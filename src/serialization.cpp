@@ -24,6 +24,28 @@
 		} \
 	} while(0)
 
+template <class T>
+static bool save_to_json(T& object, const fs::path& filepath) {
+	std::ofstream ofs(filepath, std::ios::binary);
+	if (!ofs.is_open()) { return false; }
+
+	cereal::JSONOutputArchive arc(ofs);
+	arc(object);
+
+	return true;
+}
+
+template <class T>
+static bool load_from_json(T& object, const fs::path& filepath) {
+	std::ifstream ifs(filepath, std::ios::binary);
+	if (!ifs.is_open()) { return false; }
+
+	cereal::JSONInputArchive arc(ifs);
+	arc(object);
+
+	return true;
+}
+
 //template <class Archive, typename NVP>
 //void ARCD(Archive& arc, NVP&& nvp, typename NVP::Value const& defVal) try {
 //	arc(std::forward(nvp));
@@ -44,6 +66,11 @@ void load(Archive& arc, DirectX::XMVECTOR& m) {
 	DirectX::XMVECTORF32 tmp;
 	arc(tmp.f);
 	m = tmp.v;
+}
+
+template <class Archive, class T>
+void serialize(Archive& arc, tvec2<T>& vec2) {
+	arc(vec2.x, vec2.y);
 }
 
 template <class Archive>
@@ -83,22 +110,11 @@ void serialize(Archive& arc, cModelMaterial& m) {
 }
 
 bool cModelMaterial::deserialize(const fs::path& filepath) {
-	sInputFile ifs(filepath);
-	if (!ifs.is_open()) { return false; }
-
-	cereal::JSONInputArchive arc(ifs.mStream);
-	arc(*this);
-
-	return true;
+	return load_from_json(*this, filepath);
 }
 
 bool cModelMaterial::serialize(const fs::path& filepath) {
-	std::ofstream ofs(filepath, std::ios::binary);
-	if (!ofs.is_open())
-		return false;
-	cereal::JSONOutputArchive arc(ofs);
-	arc(*this);
-	return true;
+	return save_to_json(*this, filepath);
 }
 
 
@@ -114,22 +130,11 @@ void cCamera::serialize(Archive& arc) {
 }
 
 bool cCamera::load(const fs::path& filepath) {
-	std::ifstream ifs(filepath, std::ios::binary);
-	if (!ifs.is_open()) { return false; }
-
-	cereal::JSONInputArchive arc(ifs);
-	arc(*this);
-
-	return true;
+	return load_from_json(*this, filepath);
 }
 
 bool cCamera::save(const fs::path& filepath) {
-	std::ofstream ofs(filepath, std::ios::binary);
-	if (!ofs.is_open())
-		return false;
-	cereal::JSONOutputArchive arc(ofs);
-	arc(*this);
-	return true;
+	return save_to_json(*this, filepath);
 }
 
 
@@ -167,22 +172,11 @@ void cLightMgr::serialize(Archive& arc) {
 
 
 bool cLightMgr::load(const fs::path& filepath) {
-	std::ifstream ifs(filepath, std::ios::binary);
-	if (!ifs.is_open()) { return false; }
-
-	cereal::JSONInputArchive arc(ifs);
-	arc(*this);
-
-	return true;
+	return load_from_json(*this, filepath);
 }
 
 
 bool cLightMgr::save(const fs::path& filepath) {
-	std::ofstream ofs(filepath, std::ios::binary);
-	if (!ofs.is_open())
-		return false;
-	cereal::JSONOutputArchive arc(ofs);
-	arc(*this);
-	return true;
+	return save_to_json(*this, filepath);
 }
 
