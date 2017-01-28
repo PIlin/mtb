@@ -88,24 +88,14 @@ public:
 
 		mRigData.mJointsNum = jointsNum;
 		mRigData.mIMtxNum = imtxNum;
-		mRigData.mpJoints = pJoints.release();
-		mRigData.mpLMtx = pMtx.release();
-		mRigData.mpIMtx = pImtx.release();
-		mRigData.mpNames = pNames.release();
-		mRigData.mAllocatedArrays = true;
+		mRigData.mpJoints = std::move(pJoints);
+		mRigData.mpLMtx = std::move(pMtx);
+		mRigData.mpIMtx = std::move(pImtx);
+		mRigData.mpNames = std::move(pNames);
 
 		return true;
 	}
 };
-
-cRigData::~cRigData() {
-	if (mAllocatedArrays) {
-		delete[] mpJoints;
-		delete[] mpLMtx;
-		delete[] mpIMtx;
-		delete[] mpNames;
-	}
-}
 
 bool cRigData::load(const fs::path& filepath) {
 	if (filepath.extension() == ".rig") {
@@ -219,11 +209,10 @@ bool cRigData::load(cAssimpLoader& loader) {
 
 	mJointsNum = jointsNum;
 	mIMtxNum = (int32_t)imtxNum;
-	mpJoints = pJoints.release();
-	mpLMtx = pMtx.release();
-	mpIMtx = pImtx.release();
-	mpNames = pNames.release();
-	mAllocatedArrays = true;
+	mpJoints = std::move(pJoints);
+	mpLMtx = std::move(pMtx);
+	mpIMtx = std::move(pImtx);
+	mpNames = std::move(pNames);
 
 	return true;
 }
@@ -238,7 +227,7 @@ void cRig::init(cRigData const* pRigData) {
 	auto pJoints = std::make_unique<cJoint[]>(jointsNum);
 	auto pXforms = std::make_unique<sXform[]>(jointsNum);
 
-	::memcpy(pLMtx.get(), pRigData->mpLMtx, sizeof(pRigData->mpLMtx[0]) * jointsNum);
+	::memcpy(pLMtx.get(), pRigData->mpLMtx.get(), sizeof(pRigData->mpLMtx[0]) * jointsNum);
 
 	for (int i = 0; i < jointsNum; ++i) {
 		auto const& jdata = pRigData->mpJoints[i];
@@ -257,7 +246,6 @@ void cRig::init(cRigData const* pRigData) {
 			jnt.mpIMtx = &pRigData->mpIMtx[jdata.skinIdx];
 		}
 		if (jdata.parIdx >= 0) {
-			//jnt.mpParent = &pJoints[jdata.parIdx];
 			jnt.mpParentMtx = pJoints[jdata.parIdx].mpWMtx;
 		}
 		else {

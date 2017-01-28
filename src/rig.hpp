@@ -10,16 +10,12 @@ struct sJointData {
 class cRigData : public noncopyable {
 	int mJointsNum = 0;
 	int mIMtxNum = 0;
-	sJointData* mpJoints = nullptr;
-	DirectX::XMMATRIX* mpLMtx = nullptr;
-	DirectX::XMMATRIX* mpIMtx = nullptr;
-	std::string* mpNames = nullptr;
-	bool mAllocatedArrays = false;
+	std::unique_ptr<sJointData[]> mpJoints;
+	std::unique_ptr<DirectX::XMMATRIX[]> mpLMtx;
+	std::unique_ptr<DirectX::XMMATRIX[]> mpIMtx;
+	std::unique_ptr<std::string[]> mpNames;
 
 public:
-	//cRigData() {}
-	~cRigData();
-
 	bool load(const fs::path& filepath);
 	bool load(cAssimpLoader& loader);
 	
@@ -40,9 +36,8 @@ class cJoint {
 	DirectX::XMMATRIX* mpWMtx = nullptr;
 	DirectX::XMMATRIX const* mpIMtx = nullptr;
 	DirectX::XMMATRIX const* mpParentMtx = nullptr;
-	//cJoint* mpParent = nullptr;
-public:
 
+public:
 	DirectX::XMMATRIX& get_local_mtx() { return *mpLMtx; }
 	DirectX::XMMATRIX& get_world_mtx() { return *mpWMtx; }
 	DirectX::XMMATRIX const* get_inv_mtx() { return mpIMtx; }
@@ -59,9 +54,9 @@ private:
 };
 
 class cRig {
-	int mJointsNum;
+	int mJointsNum = 0;
 	std::unique_ptr<cJoint[]> mpJoints;
-	cRigData const* mpRigData;
+	cRigData const* mpRigData = nullptr;
 	std::unique_ptr<DirectX::XMMATRIX[]> mpLMtx;
 	std::unique_ptr<DirectX::XMMATRIX[]> mpWmtx;
 	std::unique_ptr<sXform[]> mpXforms;
