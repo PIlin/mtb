@@ -8,7 +8,7 @@
 #include "model.hpp"
 #include "rig.hpp"
 #include "anim.hpp"
-
+#include "update_queue.hpp"
 
 #include <imgui.h>
 
@@ -29,6 +29,8 @@ class cGnomon {
 	com_ptr<ID3D11InputLayout> mpIL;
 	cVertexBuffer mVtxBuf;
 	int mState = 0;
+
+	cUpdateSubscriberScope mDispUpdate;
 public:
 
 	cGnomon() = default;
@@ -81,9 +83,12 @@ public:
 		};
 
 		mVtxBuf.init(pDev, vtx, LENGTHOF_ARRAY(vtx), sizeof(vtx[0]));
+
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cGnomon::disp, this)), mDispUpdate);
 	}
 
 	void deinit() {
+		mDispUpdate.reset();
 		mVtxBuf.deinit();
 		mpIL.reset();
 	}
@@ -97,7 +102,14 @@ protected:
 	cModelData mMdlData;
 	cModelMaterial mMtl;
 
+	cUpdateSubscriberScope mDispUpdate;
+
 public:
+
+	void register_disp_update() {
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cSolidModel::disp, this)), mDispUpdate);
+	}
+
 	void disp() {
 		mModel.dbg_ui();
 		mModel.disp();
@@ -119,6 +131,10 @@ public:
 
 		//mModel.mWmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
 
+		if (res) {
+			register_disp_update();
+		}
+
 		return res;
 	}
 };
@@ -135,7 +151,18 @@ protected:
 
 	cAnimationDataList mAnimDataList;
 	cAnimationList mAnimList;
+
+	cstr mId;
+
+private:
+	cUpdateSubscriberScope mDispUpdate;
+	
 public:
+
+	void register_disp_update() {
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cSkinnedModel::disp, this)), mDispUpdate);
+	}
+
 	void disp() {
 		mRig.calc_local();
 		mRig.calc_world();
@@ -154,8 +181,17 @@ protected:
 	float mFrame = 0.0f;
 	float mSpeed = 1.0f;
 	int mCurAnim = 0;
+
+private:
+	cUpdateSubscriberScope mAnimUpdate;
+
 public:
-	void disp() {
+
+	void register_anim_update() {
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::ScenePreDisp, tUpdateFunc(std::bind(&cSkinnedAnimatedModel::update_anim, this)), mAnimUpdate);
+	}
+	
+	void update_anim() {
 		int32_t animCount = mAnimList.get_count();
 		if (animCount > 0) {
 			auto& anim = mAnimList[mCurAnim];
@@ -166,14 +202,15 @@ public:
 			if (mFrame > lastFrame)
 				mFrame = 0.0f;
 
-			ImGui::Begin("anim");
+			char buf[64];
+			::sprintf_s(buf, "anim %s", mId.p);
+			ImGui::Begin(buf);
 			ImGui::LabelText("name", "%s", anim.get_name());
 			ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
 			ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
 			ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
 			ImGui::End();
 		}
-		cSkinnedModel::disp();
 	}
 };
 
@@ -183,6 +220,7 @@ public:
 	bool init() {
 		bool res = true;
 
+		mId = "owl";
 		const fs::path root = cPathManager::build_data_path("owl");
 
 		res = res && mMdlData.load(root / "def.geo");
@@ -203,6 +241,11 @@ public:
 			pRootJnt->set_parent_mtx(&mModel.mWmtx);
 		}
 
+		if (res) {
+			register_anim_update();
+			register_disp_update();
+		}
+
 		return res;
 	}
 };
@@ -212,6 +255,7 @@ public:
 	bool init() {
 		bool res = true;
 
+		mId = "jumping_sphere";
 		const fs::path root = cPathManager::build_data_path("jumping_sphere");
 
 		res = res && mMdlData.load(root / "def.geo");
@@ -229,6 +273,11 @@ public:
 			pRootJnt->set_parent_mtx(&mModel.mWmtx);
 		}
 
+		if (res) {
+			register_anim_update();
+			register_disp_update();
+		}
+
 		return res;
 	}
 };
@@ -240,6 +289,7 @@ public:
 	bool init() {
 		bool res = true;
 
+		mId = "unreal_puppet";
 		const fs::path root = cPathManager::build_data_path("unreal_puppet");
 		{
 			cAssimpLoader loader;
@@ -270,6 +320,11 @@ public:
 			pRootJnt->set_parent_mtx(&mModel.mWmtx);
 		}
 
+		if (res) {
+			register_anim_update();
+			register_disp_update();
+		}
+
 		return res;
 	}
 };
@@ -286,28 +341,24 @@ class cScene {
 public:
 	cScene() {
 		gnomon.init();
-		//lightning.init();
-		//sphere.init();
-		//owl.init();
+		lightning.init();
+		sphere.init();
+		owl.init();
 		upuppet.init();
-	}
-
-	void disp() {
-		gnomon.disp();
-		//lightning.disp();
-		//sphere.disp();
-		//owl.disp();
-		upuppet.disp();
 	}
 };
 
+//////
 
 cSceneMgr::cSceneMgr()
-	: mpScene(std::make_unique<cScene>())
+	: mpUpdateQueue(std::make_unique<cUpdateQueue>())
+	, mpScene(std::make_unique<cScene>())
 {}
 
 cSceneMgr::~cSceneMgr() {}
 
 void cSceneMgr::disp() {
-	if (mpScene) { mpScene->disp(); }
+	mpUpdateQueue->begin_exec();
+	mpUpdateQueue->advance_exec(eUpdatePriority::End);
+	mpUpdateQueue->end_exec();
 }

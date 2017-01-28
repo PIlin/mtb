@@ -12,6 +12,8 @@ add_subdirectory("${THIRD_PARTY_DIR}/cereal")
 project(mtb)
 
 set(SRC
+	src/update_queue.hpp
+	src/update_queue.cpp
 	src/texture.hpp
 	src/texture.cpp
 	src/sh.hpp
