@@ -1,3 +1,5 @@
+#define NOMINMAX
+
 #include <cstdint>
 #include <algorithm>
 #include <type_traits>
@@ -178,3 +180,24 @@ struct sD3DException : public std::exception {
 
 void dbg_msg1(cstr format);
 void dbg_msg(cstr format, ...);
+
+struct sScopedExecutor {
+	template <typename TStart, typename TEnd>
+	struct sHelper {
+		TEnd mEnd;
+		sHelper(TStart&& start, TEnd&& end) : mEnd(std::move(end)) { start(); }
+		~sHelper() { mEnd(); }
+	};
+
+	template <typename TStart, typename TEnd>
+	static sHelper<TStart, TEnd> create(TStart&& start, TEnd&& end) { return sHelper<TStart, TEnd>(std::forward<TStart>(start), std::forward<TEnd>(end)); }
+};
+
+namespace nFlag {
+	template <typename TFlag>
+	static inline bool check(const TFlag& flag, const TFlag value) { return (flag & value) != 0; }
+	template <typename TFlag>
+	static inline void set(TFlag& flag, const TFlag value) { flag = TFlag(flag | value); }
+	template <typename TFlag>
+	static inline void reset(TFlag& flag, const TFlag value) { flag = TFlag(flag & (~value)); }
+}
