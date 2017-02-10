@@ -118,7 +118,7 @@ cGfx& get_gfx() { return globals.gfx.get(); }
 cShaderStorage& cShaderStorage::get() { return globals.shaderStorage.get(); }
 cInputMgr& get_input_mgr() { return globals.input.get(); }
 vec2i get_window_size() { return globals.win.get().get_window_size(); }
-cConstBufStorage& cConstBufStorage::get() { return globals.cbufStorage.get(); }
+cConstBufStorage& cConstBufStorage::get_global() { return globals.cbufStorage.get(); }
 cSamplerStates& cSamplerStates::get() { return globals.samplerStates.get(); }
 cBlendStates& cBlendStates::get() { return globals.blendStates.get(); }
 cRasterizerStates& cRasterizerStates::get() { return globals.rasterizeStates.get(); }

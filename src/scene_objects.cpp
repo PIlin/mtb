@@ -40,12 +40,17 @@ public:
 	~cGnomon() { deinit(); }
 
 	void disp() {
+		auto ctx = cRdrContext::create_imm();
+		disp_ctx(ctx);
+	}
+
+	void disp_ctx(cRdrContext const& rdrCtx) {
 		if (!(mpVS && mpVS)) return;
 
-		auto pCtx = get_gfx().get_ctx();
+		auto pCtx = rdrCtx.get_ctx();
+		auto& cbuf = rdrCtx.get_cbufs().mMeshCBuf;
 
-		//mConstBuf.mData.wmtx = dx::XMMatrixIdentity();
-		auto& cbuf = cConstBufStorage::get().mMeshCBuf;
+		//cbuf.mData.wmtx = dx::XMMatrixIdentity();
 		cbuf.mData.wmtx = dx::XMMatrixTranslation(0, 0, 0);
 		cbuf.update(pCtx);
 		cbuf.set_VS(pCtx);
@@ -115,7 +120,8 @@ public:
 
 	void disp() {
 		mModel.dbg_ui();
-		mModel.disp();
+		auto ctx = cRdrContext::create_imm();
+		mModel.disp(ctx);
 	}
 };
 
@@ -169,10 +175,12 @@ public:
 	void disp() {
 		mRig.calc_local();
 		mRig.calc_world();
-		mRig.upload_skin(get_gfx().get_ctx());
+
+		auto ctx = cRdrContext::create_imm();
+		mRig.upload_skin(ctx);
 
 		mModel.dbg_ui();
-		mModel.disp();
+		mModel.disp(ctx);
 	}
 };
 
@@ -353,29 +361,36 @@ public:
 
 	void update_cam() {
 		mTrackballCam.update(mCamera);
-		upload_cam();
+		auto ctx = cRdrContext::create_imm();
+		upload_cam(ctx);
 	}
 
-	void upload_cam() {
-		auto& gfx = get_gfx();
-		auto& camCBuf = cConstBufStorage::get().mCameraCBuf;
+	void upload_cam(cRdrContext const& rdrCtx) {
+		auto pCtx = rdrCtx.get_ctx();
+		auto& camCBuf = rdrCtx.get_cbufs().mCameraCBuf;
 		camCBuf.mData.viewProj = mCamera.mView.mViewProj;
 		camCBuf.mData.view = mCamera.mView.mView;
 		camCBuf.mData.proj = mCamera.mView.mProj;
 		camCBuf.mData.camPos = mCamera.mView.mPos;
-		camCBuf.update(gfx.get_ctx());
-		camCBuf.set_VS(gfx.get_ctx());
-		camCBuf.set_PS(gfx.get_ctx());
+		camCBuf.update(pCtx);
+		camCBuf.set_VS(pCtx);
+		camCBuf.set_PS(pCtx);
 	}
 };
 
 ////
 
-class cLightMgrUpdate : public cLightMgr {
+class cLightMgrUpdate {
+	cLightMgr mLightMgr;
 	cUpdateSubscriberScope mLightUpdate;
 public:
 	void init() {
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Light, tUpdateFunc(std::bind(&cLightMgr::update, this)), mLightUpdate);
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Light, tUpdateFunc(std::bind(&cLightMgrUpdate::update, this)), mLightUpdate);
+	}
+
+	void update() {
+		auto ctx = cRdrContext::create_imm();
+		mLightMgr.update(ctx);
 	}
 };
 
@@ -414,8 +429,8 @@ cSceneMgr::cSceneMgr()
 cSceneMgr::~cSceneMgr() {}
 
 void cSceneMgr::update() {
-	cRasterizerStates::get().set_def(get_gfx().get_ctx());
-	cDepthStencilStates::get().set_def(get_gfx().get_ctx());
+	cRasterizerStates::get().set_def(get_gfx().get_imm_ctx());
+	cDepthStencilStates::get().set_def(get_gfx().get_imm_ctx());
 
 	mpUpdateQueue->begin_exec();
 	mpUpdateQueue->advance_exec(eUpdatePriority::End);

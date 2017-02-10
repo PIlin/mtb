@@ -192,7 +192,7 @@ void cImgui::render_callback(ImDrawData* pDrawData) {
 	ImGuiIO& io = ImGui::GetIO();
 	auto& gfx = get_gfx();
 	auto pDev = gfx.get_dev();
-	auto pCtx = gfx.get_ctx();
+	auto pCtx = gfx.get_imm_ctx();
 
 	if (!(mpVS && mpPS))
 		return;
@@ -242,7 +242,7 @@ void cImgui::render_callback(ImDrawData* pDrawData) {
 		}
 	}
 
-	auto& cb = cConstBufStorage::get().mImguiCameraCBuf;
+	auto& cb = cConstBufStorage::get_global().mImguiCameraCBuf;
 	cb.mData.proj = calc_imgui_ortho(io);
 	cb.update(pCtx);
 	cb.set_VS(pCtx);

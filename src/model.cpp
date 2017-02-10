@@ -9,6 +9,7 @@
 #include "path_helpers.hpp"
 #include "assimp_loader.hpp"
 #include "imgui.hpp"
+#include "rdr_queue.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -412,16 +413,12 @@ void cModel::deinit() {
 	}
 }
 
-void cModel::disp() {
+void cModel::disp(cRdrContext const& rdrCtx) {
 	if (!mpData) return;
 
-	auto pCtx = get_gfx().get_ctx();
+	auto pCtx = rdrCtx.get_ctx();
+	auto& meshCBuf = rdrCtx.get_cbufs().mMeshCBuf;
 
-	auto& meshCBuf = cConstBufStorage::get().mMeshCBuf;
-	//meshCBuf.mData.wmtx = dx::XMMatrixIdentity();
-	//meshCBuf.mData.wmtx = DirectX::XMMatrixTranslation(0, 0, 0);
-	//meshCBuf.mData.wmtx = DirectX::XMMatrixRotationY(DEG2RAD(180));
-	//meshCBuf.mData.wmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
 	meshCBuf.mData.wmtx = mWmtx;
 	meshCBuf.update(pCtx);
 	meshCBuf.set_VS(pCtx);
@@ -434,14 +431,13 @@ void cModel::disp() {
 	for (uint32_t i = 0; i < grpNum; ++i) {
 		sGroup const& grp = mpData->mpGroups[i];
 
-		mpMtl->apply(pCtx, i);
+		mpMtl->apply(rdrCtx, i);
 
 		mpData->mVtx.set(pCtx, 0, grp.mVtxOffset);
 		mpData->mIdx.set(pCtx, grp.mIdxOffset);
 		pCtx->IASetPrimitiveTopology((D3D11_PRIMITIVE_TOPOLOGY)grp.mPolyType);
 		//pCtx->Draw(grp.mIdxCount, 0);
 		pCtx->DrawIndexed(grp.mIdxCount, 0, 0);
-
 	}
 
 }
@@ -486,7 +482,8 @@ static void apply_tex(ID3D11DeviceContext* pCtx, cTexture* pTex, ID3D11SamplerSt
 	}
 }
 
-void sGroupMtlRes::apply(ID3D11DeviceContext* pCtx) {
+void sGroupMtlRes::apply(cRdrContext const& rdrCtx) {
+	auto pCtx = rdrCtx.get_ctx();
 	apply_tex(pCtx, mpTexBase, mpSmpBase, 0);
 	apply_tex(pCtx, mpTexNmap0, mpSmpNmap0, 1);
 	apply_tex(pCtx, mpTexNmap1, mpSmpNmap1, 2);
@@ -498,16 +495,16 @@ void sGroupMtlRes::apply(ID3D11DeviceContext* pCtx) {
 	cRasterizerStates::set(pCtx, mpRSState);
 }
 
-void sGroupMaterial::apply(ID3D11DeviceContext* pCtx) const {
-	auto& cbs = cConstBufStorage::get();
+void sGroupMaterial::apply(cRdrContext const& rdrCtx) const {
+	auto& cbs = rdrCtx.get_cbufs();
 	cbs.mTestMtlCBuf.mData = params;
-	cbs.mTestMtlCBuf.update(pCtx);
-	cbs.mTestMtlCBuf.set_PS(pCtx);
+	cbs.mTestMtlCBuf.update(rdrCtx.get_ctx());
+	cbs.mTestMtlCBuf.set_PS(rdrCtx.get_ctx());
 }
 
-void cModelMaterial::apply(ID3D11DeviceContext* pCtx, int i) {
-	mpGrpMtl[i].apply(pCtx);
-	mpGrpRes[i].apply(pCtx);
+void cModelMaterial::apply(cRdrContext const& rdrCtx, int i) {
+	mpGrpMtl[i].apply(rdrCtx);
+	mpGrpRes[i].apply(rdrCtx);
 }
 
 void sGroupMaterial::set_default(bool isSkinned) {

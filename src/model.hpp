@@ -4,6 +4,7 @@
 struct sModelVtx;
 class cShader;
 class cAssimpLoader;
+class cRdrContext;
 
 struct sGroup {
 	uint32_t mVtxOffset;
@@ -58,7 +59,7 @@ struct sGroupMaterial {
 	std::string texMaskName;
 	bool twosided;
 public:
-	void apply(ID3D11DeviceContext* pCtx) const;
+	void apply(cRdrContext const& rdrCtx) const;
 	void set_default(bool isSkinned);
 
 	template <class Archive>
@@ -78,7 +79,7 @@ struct sGroupMtlRes {
 	cShader* mpPS = nullptr;
 	ID3D11RasterizerState* mpRSState = nullptr;
 
-	void apply(ID3D11DeviceContext* pCtx);
+	void apply(cRdrContext const& rdrCtx);
 };
 
 class cModelMaterial {
@@ -100,7 +101,7 @@ public:
 		return *this;
 	}
 
-	void apply(ID3D11DeviceContext* pCtx, int grp);
+	void apply(cRdrContext const& rdrCtx, int grp);
 
 	bool load(ID3D11Device* pDev, cModelData const& mdlData, 
 		const fs::path& filepath, bool isSkinnedByDef = false);
@@ -128,7 +129,7 @@ public:
 	bool init(cModelData const& mdlData, cModelMaterial& mtl);
 	void deinit();
 
-	void disp();
+	void disp(cRdrContext const& rdrCtx);
 
 	void dbg_ui();
 };

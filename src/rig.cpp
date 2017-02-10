@@ -275,8 +275,8 @@ void cRig::calc_world() {
 	}
 }
 
-void cRig::upload_skin(ID3D11DeviceContext* pCtx) {
-	auto& skinCBuf = cConstBufStorage::get().mSkinCBuf;
+void cRig::upload_skin(cRdrContext const& rdrCtx) {
+	auto& skinCBuf = rdrCtx.get_cbufs().mSkinCBuf;
 
 	auto* pSkin = skinCBuf.mData.skin;
 
@@ -290,6 +290,7 @@ void cRig::upload_skin(ID3D11DeviceContext* pCtx) {
 		pSkin[skinIdx] = (*pImtx) * pWmtx;
 	}
 
+	auto pCtx = rdrCtx.get_ctx();
 	skinCBuf.update(pCtx);
 	skinCBuf.set_VS(pCtx);
 }

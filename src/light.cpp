@@ -87,10 +87,10 @@ void cLightMgr::set_default() {
 
 }
 
-void cLightMgr::update() {
+void cLightMgr::update(cRdrContext const& rdrCtx) {
 	dbg_ui();
 
-	auto& lcbuf = cConstBufStorage::get().mLightCBuf;
+	auto& lcbuf = rdrCtx.get_cbufs().mLightCBuf;
 	::memset(&lcbuf.mData, 0, sizeof(lcbuf.mData));
 
 	for (int i = 0, j = 0; i < LENGTHOF_ARRAY(mPointLights); ++i) {
@@ -107,7 +107,7 @@ void cLightMgr::update() {
 
 	pack_sh_param(mSH, lcbuf.mData.sh);
 
-	auto* pCtx = get_gfx().get_ctx();
+	auto* pCtx = rdrCtx.get_ctx();
 	lcbuf.update(pCtx);
 	lcbuf.set_PS(pCtx);
 }

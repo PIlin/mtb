@@ -1,3 +1,6 @@
+class cRdrContext;
+
+
 struct sLightPoint {
 	vec4 pos;
 	vec4 clr;
@@ -14,7 +17,7 @@ class cLightMgr : noncopyable {
 public:
 	cLightMgr();
 
-	void update();
+	void update(cRdrContext const& rdrCtx);
 	void dbg_ui();
 	
 	void set_default();

@@ -203,7 +203,10 @@ public:
 	cConstBufferSlotted<sLightCBuf, 3> mLightCBuf;
 	cConstBufferSlotted<sSkinCBuf, 4> mSkinCBuf;
 
-	cConstBufStorage(ID3D11Device* pDev) {
+	cConstBufStorage() = default;
+	cConstBufStorage(ID3D11Device* pDev) { init(pDev); }
+
+	void init(ID3D11Device* pDev) {
 		mCameraCBuf.init(pDev);
 		mMeshCBuf.init(pDev);
 		mImguiCameraCBuf.init(pDev);
@@ -212,7 +215,7 @@ public:
 		mSkinCBuf.init(pDev);
 	}
 
-	static cConstBufStorage& get();
+	static cConstBufStorage& get_global();
 };
 
 
@@ -288,3 +291,21 @@ public:
 	static D3D11_DEPTH_STENCIL_DESC default_desc();
 	static D3D11_DEPTH_STENCIL_DESC imgui_desc();
 };
+
+
+class cRdrContext {
+	ID3D11DeviceContext* mpCtx = nullptr;
+	cConstBufStorage& mConstBufStorage;
+
+public:
+	static cRdrContext create_imm();
+
+	cRdrContext(ID3D11DeviceContext* pCtx, cConstBufStorage& cbufs)
+		: mpCtx(pCtx)
+		, mConstBufStorage(cbufs)
+	{}
+
+	ID3D11DeviceContext* get_ctx() const { return mpCtx; }
+	cConstBufStorage& get_cbufs() const { return mConstBufStorage; }
+};
+

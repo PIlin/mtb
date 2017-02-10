@@ -243,3 +243,8 @@ D3D11_DEPTH_STENCIL_DESC cDepthStencilStates::imgui_desc() {
 	return desc;
 }
 
+
+
+cRdrContext cRdrContext::create_imm() { 
+	return cRdrContext(get_gfx().get_imm_ctx(), cConstBufStorage::get_global()); 
+}

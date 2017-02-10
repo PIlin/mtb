@@ -1,5 +1,5 @@
-struct ID3D11DeviceContext;
 class cAssimpLoader;
+class cRdrContext;
 
 struct sJointData {
 	int idx;
@@ -67,7 +67,7 @@ public:
 	void calc_local();
 	void calc_world();
 
-	void upload_skin(ID3D11DeviceContext* pCtx);
+	void upload_skin(cRdrContext const& rdrCtx);
 
 	cJoint* get_joint(int idx) const;
 	cJoint* find_joint(cstr name) const;

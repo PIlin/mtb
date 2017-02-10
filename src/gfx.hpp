@@ -69,7 +69,7 @@ public:
 	void on_window_size_changed(uint32_t w, uint32_t h);
 
 	ID3D11Device* get_dev() { return mDev.mpDev; }
-	ID3D11DeviceContext* get_ctx() { return mDev.mpImmCtx; }
+	ID3D11DeviceContext* get_imm_ctx() { return mDev.mpImmCtx; }
 
 private:
 	void set_viewport(uint32_t w, uint32_t h);
