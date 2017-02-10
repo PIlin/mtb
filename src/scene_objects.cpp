@@ -233,8 +233,9 @@ public:
 		mAnimDataList.load(root, "def.alist");
 		mAnimList.init(mAnimDataList, mRigData);
 
-		float scl = 0.01f;
-		mModel.mWmtx = DirectX::XMMatrixScaling(scl, scl, scl);
+		const float scl = 0.01f;
+		mModel.mWmtx = dx::XMMatrixScaling(scl, scl, scl);
+		mModel.mWmtx *= dx::XMMatrixTranslation(1.0f, 0.0f, 0.0f);
 
 		auto pRootJnt = mRig.get_joint(0);
 		if (pRootJnt) {
@@ -267,6 +268,10 @@ public:
 
 		mAnimDataList.load(root, "def.alist");
 		mAnimList.init(mAnimDataList, mRigData);
+
+		const float scl = 1.0f;
+		mModel.mWmtx = dx::XMMatrixScaling(scl, scl, scl);
+		mModel.mWmtx *= dx::XMMatrixTranslation(2.0f, 0.0f, 0.0f);
 
 		auto pRootJnt = mRig.get_joint(0);
 		if (pRootJnt) {
@@ -311,9 +316,10 @@ public:
 			mSpeed = 1.0f / 60.0f;
 		}
 
-		float scl = 0.01f;
-		mModel.mWmtx = DirectX::XMMatrixScaling(scl, scl, scl);
-		mModel.mWmtx *= DirectX::XMMatrixRotationX(DEG2RAD(-90.0f));
+		const float scl = 0.01f;
+		mModel.mWmtx = dx::XMMatrixScaling(scl, scl, scl);
+		mModel.mWmtx *= dx::XMMatrixRotationX(DEG2RAD(-90.0f));
+		mModel.mWmtx *= dx::XMMatrixTranslation(3.0f, 0.0f, 0.0f);
 
 		auto pRootJnt = mRig.get_joint(0);
 		if (pRootJnt) {
