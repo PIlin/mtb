@@ -13,7 +13,7 @@ public:
 	cSceneMgr();
 	~cSceneMgr();
 
-	void disp();
+	void update();
 
 	cUpdateQueue& get_update_queue() { return *mpUpdateQueue.get(); }
 };

@@ -13,8 +13,6 @@
 #include "camera.hpp"
 #include "texture.hpp"
 #include "imgui_impl.hpp"
-#include "sh.hpp"
-#include "light.hpp"
 #include "scene_objects.hpp"
 #include <imgui.h>
 
@@ -104,14 +102,12 @@ struct sGlobals {
 	GlobalSingleton<cShaderStorage> shaderStorage;
 	GlobalSingleton<cTextureStorage> textureStorage;
 	GlobalSingleton<cInputMgr> input;
-	GlobalSingleton<cCamera> camera;
 	GlobalSingleton<cConstBufStorage> cbufStorage;
 	GlobalSingleton<cSamplerStates> samplerStates;
 	GlobalSingleton<cBlendStates> blendStates;
 	GlobalSingleton<cRasterizerStates> rasterizeStates;
 	GlobalSingleton<cDepthStencilStates> depthStates;
 	GlobalSingleton<cImgui> imgui;
-	GlobalSingleton<cLightMgr> lightMgr;
 	GlobalSingleton<cPathManager> pathManager;
 	GlobalSingleton<cSceneMgr> sceneMgr;
 };
@@ -121,7 +117,6 @@ sGlobals globals;
 cGfx& get_gfx() { return globals.gfx.get(); }
 cShaderStorage& cShaderStorage::get() { return globals.shaderStorage.get(); }
 cInputMgr& get_input_mgr() { return globals.input.get(); }
-cCamera& get_camera() { return globals.camera.get(); }
 vec2i get_window_size() { return globals.win.get().get_window_size(); }
 cConstBufStorage& cConstBufStorage::get() { return globals.cbufStorage.get(); }
 cSamplerStates& cSamplerStates::get() { return globals.samplerStates.get(); }
@@ -130,33 +125,15 @@ cRasterizerStates& cRasterizerStates::get() { return globals.rasterizeStates.get
 cDepthStencilStates& cDepthStencilStates::get() { return globals.depthStates.get(); }
 cImgui& cImgui::get() { return globals.imgui.get(); }
 cTextureStorage& cTextureStorage::get() { return globals.textureStorage.get(); }
-cLightMgr& cLightMgr::get() { return globals.lightMgr.get(); }
 cPathManager& cPathManager::get() { return globals.pathManager.get(); }
 cSceneMgr& cSceneMgr::get() { return globals.sceneMgr.get(); }
-
-cTrackballCam trackballCam;
 
 void do_frame() {
 	auto& gfx = get_gfx();
 	gfx.begin_frame();
 	cImgui::get().update();
 
-	cRasterizerStates::get().set_def(get_gfx().get_ctx());
-	cDepthStencilStates::get().set_def(get_gfx().get_ctx());
-
-	auto& cam = get_camera();
-	trackballCam.update(cam);
-	auto& camCBuf = cConstBufStorage::get().mCameraCBuf;
-	camCBuf.mData.viewProj = cam.mView.mViewProj;
-	camCBuf.mData.view = cam.mView.mView;
-	camCBuf.mData.proj = cam.mView.mProj;
-	camCBuf.mData.camPos = cam.mView.mPos;
-	camCBuf.update(gfx.get_ctx());
-	camCBuf.set_VS(gfx.get_ctx());
-	camCBuf.set_PS(gfx.get_ctx());
-
-	cLightMgr::get().update();
-	cSceneMgr::get().disp();
+	cSceneMgr::get().update();
 
 	cImgui::get().disp();
 	gfx.end_frame();
@@ -226,14 +203,7 @@ int main(int argc, char* argv[]) {
 	auto rsst = globals.rasterizeStates.ctor_scoped(get_gfx().get_dev());
 	auto dpts = globals.depthStates.ctor_scoped(get_gfx().get_dev());
 	auto imgui = globals.imgui.ctor_scoped(get_gfx());
-	auto lmgr = globals.lightMgr.ctor_scoped();
-	auto cam = globals.camera.ctor_scoped();
 	auto scene = globals.sceneMgr.ctor_scoped();
-
-	trackballCam.init(get_camera());
-
-	auto& l = cConstBufStorage::get().mLightCBuf; 
-	::memset(&l.mData, 0, sizeof(l.mData));
 
 	loop();
 

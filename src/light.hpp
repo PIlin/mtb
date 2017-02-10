@@ -12,8 +12,6 @@ class cLightMgr : noncopyable {
 	sSHCoef mSH;
 	sLightPoint mPointLights[4];
 public:
-	static cLightMgr& get();
-
 	cLightMgr();
 
 	void update();

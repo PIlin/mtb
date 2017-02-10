@@ -9,6 +9,9 @@
 #include "rig.hpp"
 #include "anim.hpp"
 #include "update_queue.hpp"
+#include "camera.hpp"
+#include "sh.hpp"
+#include "light.hpp"
 
 #include <imgui.h>
 
@@ -335,7 +338,48 @@ public:
 	}
 };
 
+////
 
+class cCameraManager {
+	cCamera mCamera;
+	cTrackballCam mTrackballCam;
+	cUpdateSubscriberScope mCameraUpdate;
+
+public:
+	void init() {
+		mTrackballCam.init(mCamera);
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Camera, tUpdateFunc(std::bind(&cCameraManager::update_cam, this)), mCameraUpdate);
+	}
+
+	void update_cam() {
+		mTrackballCam.update(mCamera);
+		upload_cam();
+	}
+
+	void upload_cam() {
+		auto& gfx = get_gfx();
+		auto& camCBuf = cConstBufStorage::get().mCameraCBuf;
+		camCBuf.mData.viewProj = mCamera.mView.mViewProj;
+		camCBuf.mData.view = mCamera.mView.mView;
+		camCBuf.mData.proj = mCamera.mView.mProj;
+		camCBuf.mData.camPos = mCamera.mView.mPos;
+		camCBuf.update(gfx.get_ctx());
+		camCBuf.set_VS(gfx.get_ctx());
+		camCBuf.set_PS(gfx.get_ctx());
+	}
+};
+
+////
+
+class cLightMgrUpdate : public cLightMgr {
+	cUpdateSubscriberScope mLightUpdate;
+public:
+	void init() {
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Light, tUpdateFunc(std::bind(&cLightMgr::update, this)), mLightUpdate);
+	}
+};
+
+////
 
 class cScene {
 	cGnomon gnomon;
@@ -343,16 +387,22 @@ class cScene {
 	cJumpingSphere sphere;
 	cOwl owl;
 	cUnrealPuppet upuppet;
-
+	cCameraManager cameraMgr;
+	cLightMgrUpdate lightMgr;
 public:
+
 	cScene() {
 		gnomon.init();
 		lightning.init();
 		sphere.init();
 		owl.init();
 		upuppet.init();
+		cameraMgr.init();
+		lightMgr.init();
 	}
 };
+
+
 
 //////
 
@@ -363,7 +413,10 @@ cSceneMgr::cSceneMgr()
 
 cSceneMgr::~cSceneMgr() {}
 
-void cSceneMgr::disp() {
+void cSceneMgr::update() {
+	cRasterizerStates::get().set_def(get_gfx().get_ctx());
+	cDepthStencilStates::get().set_def(get_gfx().get_ctx());
+
 	mpUpdateQueue->begin_exec();
 	mpUpdateQueue->advance_exec(eUpdatePriority::End);
 	mpUpdateQueue->end_exec();
