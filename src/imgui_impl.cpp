@@ -197,6 +197,8 @@ void cImgui::render_callback(ImDrawData* pDrawData) {
 	if (!(mpVS && mpPS))
 		return;
 
+	gfx.apply_default_rt_vp(pCtx);
+
 	const int count = pDrawData->CmdListsCount;
 	ImDrawList** const pDrawLists = pDrawData->CmdLists;
 

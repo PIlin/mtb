@@ -64,8 +64,9 @@ struct std::hash < cstr > {
 
 template <typename T, typename TReleaser>
 struct base_ptr {
-	T* p;
-	base_ptr(T* p = nullptr) : p(p) {}
+	T* p = nullptr;
+	base_ptr() = default;
+	base_ptr(T* p) : p(p) {}
 	~base_ptr() { reset(); }
 
 	base_ptr(base_ptr& o) = delete;

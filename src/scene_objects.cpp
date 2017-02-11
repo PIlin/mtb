@@ -12,6 +12,7 @@
 #include "camera.hpp"
 #include "sh.hpp"
 #include "light.hpp"
+#include "rdr_queue.hpp"
 
 #include <imgui.h>
 
@@ -21,7 +22,7 @@
 namespace dx = DirectX;
 using dx::XMFLOAT4;
 
-class cGnomon {
+class cGnomon : public iRdrJob {
 	struct sVtx {
 		float mPos[3];
 		float mClr[4];
@@ -40,11 +41,10 @@ public:
 	~cGnomon() { deinit(); }
 
 	void disp() {
-		auto ctx = cRdrContext::create_imm();
-		disp_ctx(ctx);
+		cRdrQueueMgr::get().add_model_job(*this);
 	}
 
-	void disp_ctx(cRdrContext const& rdrCtx) {
+	virtual void disp_job(cRdrContext const& rdrCtx) const override {
 		if (!(mpVS && mpVS)) return;
 
 		auto pCtx = rdrCtx.get_ctx();
@@ -104,7 +104,7 @@ public:
 
 
 
-class cSolidModel {
+class cSolidModel : public iRdrJob {
 protected:
 	cModel mModel;
 	cModelData mMdlData;
@@ -120,7 +120,11 @@ public:
 
 	void disp() {
 		mModel.dbg_ui();
-		auto ctx = cRdrContext::create_imm();
+
+		cRdrQueueMgr::get().add_model_job(*this);
+	}
+
+	virtual void disp_job(cRdrContext const& ctx) const override {
 		mModel.disp(ctx);
 	}
 };
@@ -150,7 +154,7 @@ public:
 
 
 
-class cSkinnedModel {
+class cSkinnedModel : public iRdrJob {
 protected:
 	cModel mModel;
 	cModelData mMdlData;
@@ -176,10 +180,13 @@ public:
 		mRig.calc_local();
 		mRig.calc_world();
 
-		auto ctx = cRdrContext::create_imm();
-		mRig.upload_skin(ctx);
-
 		mModel.dbg_ui();
+
+		cRdrQueueMgr::get().add_model_job(*this);
+	}
+
+	virtual void disp_job(cRdrContext const& ctx) const override {
+		mRig.upload_skin(ctx);
 		mModel.disp(ctx);
 	}
 };
@@ -348,7 +355,7 @@ public:
 
 ////
 
-class cCameraManager {
+class cCameraManager : public iRdrJob {
 	cCamera mCamera;
 	cTrackballCam mTrackballCam;
 	cUpdateSubscriberScope mCameraUpdate;
@@ -361,11 +368,14 @@ public:
 
 	void update_cam() {
 		mTrackballCam.update(mCamera);
-		auto ctx = cRdrContext::create_imm();
-		upload_cam(ctx);
+		cRdrQueueMgr::get().add_model_prologue_job(*this);
 	}
 
-	void upload_cam(cRdrContext const& rdrCtx) {
+	virtual void disp_job(cRdrContext const& rdrCtx) const override {
+		upload_cam(rdrCtx);
+	}
+
+	void upload_cam(cRdrContext const& rdrCtx) const {
 		auto pCtx = rdrCtx.get_ctx();
 		auto& camCBuf = rdrCtx.get_cbufs().mCameraCBuf;
 		camCBuf.mData.viewProj = mCamera.mView.mViewProj;
@@ -380,7 +390,7 @@ public:
 
 ////
 
-class cLightMgrUpdate {
+class cLightMgrUpdate : public iRdrJob {
 	cLightMgr mLightMgr;
 	cUpdateSubscriberScope mLightUpdate;
 public:
@@ -389,12 +399,43 @@ public:
 	}
 
 	void update() {
-		auto ctx = cRdrContext::create_imm();
-		mLightMgr.update(ctx);
+		mLightMgr.dbg_ui();
+		cRdrQueueMgr::get().add_model_prologue_job(*this);
+	}
+
+	virtual void disp_job(cRdrContext const& rdrCtx) const override {
+		mLightMgr.disp(rdrCtx);
 	}
 };
 
 ////
+
+class cModelRdrJobs : public iRdrJob {
+	cUpdateSubscriberScope mUpdateBegin;
+	cUpdateSubscriberScope mUpdateEnd;
+public:
+	void init() {
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cModelRdrJobs::update_begin, this)), mUpdateBegin);
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::End, tUpdateFunc(std::bind(&cModelRdrJobs::update_end, this)), mUpdateEnd);
+	}
+
+	void update_begin() {
+		cRdrQueueMgr::get().add_model_prologue_job(*this);
+	}
+	
+	void update_end() {
+		cRdrQueueMgr::get().exec_model_jobs();
+	}
+
+	virtual void disp_job(cRdrContext const& rdrCtx) const override {
+		auto pCtx = rdrCtx.get_ctx();
+		get_gfx().apply_default_rt_vp(pCtx);
+		cRasterizerStates::get().set_def(pCtx);
+		cDepthStencilStates::get().set_def(pCtx);
+	}
+};
+
+
 
 class cScene {
 	cGnomon gnomon;
@@ -404,6 +445,7 @@ class cScene {
 	cUnrealPuppet upuppet;
 	cCameraManager cameraMgr;
 	cLightMgrUpdate lightMgr;
+	cModelRdrJobs modelRdrJobs;
 public:
 
 	cScene() {
@@ -414,6 +456,7 @@ public:
 		upuppet.init();
 		cameraMgr.init();
 		lightMgr.init();
+		modelRdrJobs.init();
 	}
 };
 
@@ -429,9 +472,6 @@ cSceneMgr::cSceneMgr()
 cSceneMgr::~cSceneMgr() {}
 
 void cSceneMgr::update() {
-	cRasterizerStates::get().set_def(get_gfx().get_imm_ctx());
-	cDepthStencilStates::get().set_def(get_gfx().get_imm_ctx());
-
 	mpUpdateQueue->begin_exec();
 	mpUpdateQueue->advance_exec(eUpdatePriority::End);
 	mpUpdateQueue->end_exec();

@@ -101,7 +101,7 @@ public:
 		return *this;
 	}
 
-	void apply(cRdrContext const& rdrCtx, int grp);
+	void apply(cRdrContext const& rdrCtx, int grp) const;
 
 	bool load(ID3D11Device* pDev, cModelData const& mdlData, 
 		const fs::path& filepath, bool isSkinnedByDef = false);
@@ -129,7 +129,7 @@ public:
 	bool init(cModelData const& mdlData, cModelMaterial& mtl);
 	void deinit();
 
-	void disp(cRdrContext const& rdrCtx);
+	void disp(cRdrContext const& rdrCtx) const;
 
 	void dbg_ui();
 };

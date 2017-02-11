@@ -413,7 +413,7 @@ void cModel::deinit() {
 	}
 }
 
-void cModel::disp(cRdrContext const& rdrCtx) {
+void cModel::disp(cRdrContext const& rdrCtx) const {
 	if (!mpData) return;
 
 	auto pCtx = rdrCtx.get_ctx();
@@ -502,7 +502,7 @@ void sGroupMaterial::apply(cRdrContext const& rdrCtx) const {
 	cbs.mTestMtlCBuf.set_PS(rdrCtx.get_ctx());
 }
 
-void cModelMaterial::apply(cRdrContext const& rdrCtx, int i) {
+void cModelMaterial::apply(cRdrContext const& rdrCtx, int i) const {
 	mpGrpMtl[i].apply(rdrCtx);
 	mpGrpRes[i].apply(rdrCtx);
 }

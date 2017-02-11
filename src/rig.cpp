@@ -275,7 +275,7 @@ void cRig::calc_world() {
 	}
 }
 
-void cRig::upload_skin(cRdrContext const& rdrCtx) {
+void cRig::upload_skin(cRdrContext const& rdrCtx) const {
 	auto& skinCBuf = rdrCtx.get_cbufs().mSkinCBuf;
 
 	auto* pSkin = skinCBuf.mData.skin;

@@ -17,7 +17,7 @@ class cLightMgr : noncopyable {
 public:
 	cLightMgr();
 
-	void update(cRdrContext const& rdrCtx);
+	void disp(cRdrContext const& rdrCtx) const;
 	void dbg_ui();
 	
 	void set_default();

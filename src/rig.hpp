@@ -67,7 +67,7 @@ public:
 	void calc_local();
 	void calc_world();
 
-	void upload_skin(cRdrContext const& rdrCtx);
+	void upload_skin(cRdrContext const& rdrCtx) const;
 
 	cJoint* get_joint(int idx) const;
 	cJoint* find_joint(cstr name) const;

@@ -58,6 +58,7 @@ class cGfx : noncopyable {
 	sDev mDev;
 	sRTView mRTV;
 	sDepthStencilBuffer mDS;
+	D3D11_VIEWPORT mDefaultViewport;
 
 	bool mbInFrame = false;
 public:
@@ -66,13 +67,15 @@ public:
 	void begin_frame();
 	void end_frame();
 
+	void apply_default_rt_vp(ID3D11DeviceContext* pCtx);
+
 	void on_window_size_changed(uint32_t w, uint32_t h);
 
 	ID3D11Device* get_dev() { return mDev.mpDev; }
 	ID3D11DeviceContext* get_imm_ctx() { return mDev.mpImmCtx; }
 
 private:
-	void set_viewport(uint32_t w, uint32_t h);
+	void set_default_viewport(uint32_t w, uint32_t h);
 };
 
 class cShaderBytecode : noncopyable {

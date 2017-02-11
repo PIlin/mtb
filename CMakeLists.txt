@@ -22,6 +22,8 @@ set(SRC
 	src/scene_objects.cpp
 	src/rig.hpp
 	src/rig.cpp
+	src/rdr_queue.hpp
+	src/rdr_queue.cpp
 	src/rdr.hpp
 	src/rdr.cpp
 	src/path_helpers.hpp

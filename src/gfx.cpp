@@ -86,12 +86,9 @@ cGfx::cGfx(HWND hwnd) {
 	mDev = sDev(sd, devFlags);
 	mRTV = sRTView(mDev);
 	mDS = sDepthStencilBuffer(mDev, w, h, sd.SampleDesc);
+	set_default_viewport(w, h);
 
-	ID3D11RenderTargetView* pv = mRTV.mpRTV;
-	ID3D11DepthStencilView* pdv = mDS.mpDSView;
-	mDev.mpImmCtx->OMSetRenderTargets(1, &pv, pdv);
-
-	set_viewport(w, h);
+	apply_default_rt_vp(mDev.mpImmCtx);
 }
 
 void cGfx::on_window_size_changed(uint32_t w, uint32_t h) {
@@ -115,12 +112,9 @@ void cGfx::on_window_size_changed(uint32_t w, uint32_t h) {
 	mRTV = sRTView(mDev);
 	const DXGI_SAMPLE_DESC sd = { 4, 0 };
 	mDS = sDepthStencilBuffer(mDev, w, h, sd);
+	set_default_viewport(w, h);
 
-	ID3D11RenderTargetView* pv = mRTV.mpRTV;
-	ID3D11DepthStencilView* pdv = mDS.mpDSView;
-	mDev.mpImmCtx->OMSetRenderTargets(1, &pv, pdv);
-
-	set_viewport(w, h);
+	apply_default_rt_vp(mDev.mpImmCtx);
 }
 
 void cGfx::begin_frame() {
@@ -135,7 +129,7 @@ void cGfx::end_frame() {
 	mbInFrame = false;
 }
 
-void cGfx::set_viewport(uint32_t w, uint32_t h) {
+void cGfx::set_default_viewport(uint32_t w, uint32_t h) {
 	auto vp = D3D11_VIEWPORT();
 	vp.TopLeftX = 0.0f;
 	vp.TopLeftY = 0.0f;
@@ -144,8 +138,16 @@ void cGfx::set_viewport(uint32_t w, uint32_t h) {
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
 
-	mDev.mpImmCtx->RSSetViewports(1, &vp);
+	mDefaultViewport = vp;
 }
+
+void cGfx::apply_default_rt_vp(ID3D11DeviceContext* pCtx) {
+	ID3D11RenderTargetView* pv = mRTV.mpRTV;
+	ID3D11DepthStencilView* pdv = mDS.mpDSView;
+	pCtx->OMSetRenderTargets(1, &pv, pdv);
+	pCtx->RSSetViewports(1, &mDefaultViewport);
+}
+
 
 static cShaderBytecode load_shader_file(cstr filepath) {
 	sInputFile file(cPathManager::build_shaders_path(fs::u8path(filepath.p)));

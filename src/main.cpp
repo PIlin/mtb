@@ -15,6 +15,7 @@
 #include "imgui_impl.hpp"
 #include "scene_objects.hpp"
 #include <imgui.h>
+#include "rdr_queue.hpp"
 
 class cSDLInit {
 public:
@@ -110,6 +111,7 @@ struct sGlobals {
 	GlobalSingleton<cImgui> imgui;
 	GlobalSingleton<cPathManager> pathManager;
 	GlobalSingleton<cSceneMgr> sceneMgr;
+	GlobalSingleton<cRdrQueueMgr> rdrQueueMgr;
 };
 
 sGlobals globals;
@@ -127,6 +129,7 @@ cImgui& cImgui::get() { return globals.imgui.get(); }
 cTextureStorage& cTextureStorage::get() { return globals.textureStorage.get(); }
 cPathManager& cPathManager::get() { return globals.pathManager.get(); }
 cSceneMgr& cSceneMgr::get() { return globals.sceneMgr.get(); }
+cRdrQueueMgr& cRdrQueueMgr::get() { return globals.rdrQueueMgr.get(); }
 
 void do_frame() {
 	auto& gfx = get_gfx();
@@ -202,6 +205,7 @@ int main(int argc, char* argv[]) {
 	auto blnds = globals.blendStates.ctor_scoped(get_gfx().get_dev());
 	auto rsst = globals.rasterizeStates.ctor_scoped(get_gfx().get_dev());
 	auto dpts = globals.depthStates.ctor_scoped(get_gfx().get_dev());
+	auto rdrQueueMgr = globals.rdrQueueMgr.ctor_scoped(get_gfx());
 	auto imgui = globals.imgui.ctor_scoped(get_gfx());
 	auto scene = globals.sceneMgr.ctor_scoped();
 

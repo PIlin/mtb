@@ -87,9 +87,7 @@ void cLightMgr::set_default() {
 
 }
 
-void cLightMgr::update(cRdrContext const& rdrCtx) {
-	dbg_ui();
-
+void cLightMgr::disp(cRdrContext const& rdrCtx) const {
 	auto& lcbuf = rdrCtx.get_cbufs().mLightCBuf;
 	::memset(&lcbuf.mData, 0, sizeof(lcbuf.mData));
 
