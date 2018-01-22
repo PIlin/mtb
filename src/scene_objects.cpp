@@ -530,7 +530,7 @@ class cTexAllocationTest {
 
 		size_t size = mW * mH * 4;
 
-		std::unique_ptr<char[]> pData(new char[size]);
+		
 
 		auto desc = D3D11_TEXTURE2D_DESC();
 		desc.Width = (UINT)mW;
@@ -541,16 +541,22 @@ class cTexAllocationTest {
 		desc.SampleDesc.Count = 1;
 		desc.Usage = D3D11_USAGE_DEFAULT;
 		//desc.Usage = D3D11_USAGE_DYNAMIC;
-		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		//desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
-		
+		D3D11_SUBRESOURCE_DATA* pInitData = nullptr;
+
+		std::unique_ptr<char[]> pData(new char[size]);
+#if 1
 		D3D11_SUBRESOURCE_DATA initData;
 		initData.pSysMem = pData.get();
 		initData.SysMemPitch = desc.Width * 4;
 		initData.SysMemSlicePitch = 0;
+		pInitData = &initData;
+#endif
+
 		tTexPtr pTex;
-		HRESULT hr = pDev->CreateTexture2D(&desc, &initData, pTex.pp());
+		HRESULT hr = pDev->CreateTexture2D(&desc, pInitData, pTex.pp());
 		if (!SUCCEEDED(hr))
 			return sValue{ tTexPtr(), tViewPtr(), 0 };
 
