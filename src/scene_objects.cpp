@@ -19,6 +19,8 @@
 #include <assimp/Importer.hpp>
 #include "assimp_loader.hpp"
 
+#include <deque>
+
 namespace dx = DirectX;
 using dx::XMFLOAT4;
 
@@ -435,6 +437,186 @@ public:
 	}
 };
 
+////
+#include <Psapi.h>
+namespace Cry {
+	template<class T>
+	inline void ZeroStruct(T& t)
+	{
+		memset(&t, 0, sizeof(t));
+	}
+
+	struct SProcessMemInfo
+	{
+		uint64_t PageFaultCount;
+		uint64_t PeakWorkingSetSize;
+		uint64_t WorkingSetSize;
+		uint64_t QuotaPeakPagedPoolUsage;
+		uint64_t QuotaPagedPoolUsage;
+		uint64_t QuotaPeakNonPagedPoolUsage;
+		uint64_t QuotaNonPagedPoolUsage;
+		uint64_t PagefileUsage;
+		uint64_t PeakPagefileUsage;
+
+		uint64_t TotalPhysicalMemory;
+		int64_t  FreePhysicalMemory;
+
+		uint64_t TotalVideoMemory;
+		int64_t  FreeVideoMemory;
+	};
+
+	bool GetProcessMemInfo(SProcessMemInfo& minfo)
+	{
+		ZeroStruct(minfo);
+		MEMORYSTATUSEX mem;
+		mem.dwLength = sizeof(mem);
+		GlobalMemoryStatusEx(&mem);
+
+		minfo.TotalPhysicalMemory = mem.ullTotalPhys;
+		minfo.FreePhysicalMemory = mem.ullAvailPhys;
+
+		//////////////////////////////////////////////////////////////////////////
+		typedef BOOL(WINAPI * GetProcessMemoryInfoProc)(HANDLE, PPROCESS_MEMORY_COUNTERS, DWORD);
+
+		PROCESS_MEMORY_COUNTERS pc;
+		ZeroStruct(pc);
+		pc.cb = sizeof(pc);
+		static HMODULE hPSAPI = LoadLibraryA("psapi.dll");
+		if (hPSAPI)
+		{
+			static GetProcessMemoryInfoProc pGetProcessMemoryInfo = (GetProcessMemoryInfoProc)GetProcAddress(hPSAPI, "GetProcessMemoryInfo");
+			if (pGetProcessMemoryInfo)
+			{
+				if (pGetProcessMemoryInfo(GetCurrentProcess(), &pc, sizeof(pc)))
+				{
+					minfo.PageFaultCount = pc.PageFaultCount;
+					minfo.PeakWorkingSetSize = pc.PeakWorkingSetSize;
+					minfo.WorkingSetSize = pc.WorkingSetSize;
+					minfo.QuotaPeakPagedPoolUsage = pc.QuotaPeakPagedPoolUsage;
+					minfo.QuotaPagedPoolUsage = pc.QuotaPagedPoolUsage;
+					minfo.QuotaPeakNonPagedPoolUsage = pc.QuotaPeakNonPagedPoolUsage;
+					minfo.QuotaNonPagedPoolUsage = pc.QuotaNonPagedPoolUsage;
+					minfo.PagefileUsage = pc.PagefileUsage;
+					minfo.PeakPagefileUsage = pc.PeakPagefileUsage;
+
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+}
+
+class cTexAllocationTest {
+	using tTexPtr = com_ptr<ID3D11Texture2D>;
+	using tViewPtr = com_ptr<ID3D11ShaderResourceView>;
+
+	struct sValue
+	{
+		tTexPtr tex;
+		tViewPtr view;
+		size_t size;
+	};
+
+	cUpdateSubscriberScope mUpdate;
+
+	std::deque<sValue> mTextures;
+	int mW = 1024;
+	int mH = 1024;
+
+	sValue create() {
+		ID3D11Device* pDev = get_gfx().get_dev();
+
+		size_t size = mW * mH * 4;
+
+		std::unique_ptr<char[]> pData(new char[size]);
+
+		auto desc = D3D11_TEXTURE2D_DESC();
+		desc.Width = (UINT)mW;
+		desc.Height = (UINT)mH;
+		desc.MipLevels = 1;
+		desc.ArraySize = 1;
+		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		desc.SampleDesc.Count = 1;
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		//desc.Usage = D3D11_USAGE_DYNAMIC;
+		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+		
+		D3D11_SUBRESOURCE_DATA initData;
+		initData.pSysMem = pData.get();
+		initData.SysMemPitch = desc.Width * 4;
+		initData.SysMemSlicePitch = 0;
+		tTexPtr pTex;
+		HRESULT hr = pDev->CreateTexture2D(&desc, &initData, pTex.pp());
+		if (!SUCCEEDED(hr))
+			return sValue{ tTexPtr(), tViewPtr(), 0 };
+
+		auto srvDesc = D3D11_SHADER_RESOURCE_VIEW_DESC();
+		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = desc.MipLevels;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		tViewPtr pView;
+		hr = pDev->CreateShaderResourceView(pTex, &srvDesc, pView.pp());
+		if (!SUCCEEDED(hr))
+			return sValue{ tTexPtr(), tViewPtr(), 0 };
+
+
+		return sValue{ std::move(pTex), std::move(pView), size };
+	}
+
+	float MB(uint64_t b) { return b / float(1024 * 1024); }
+	float MB(int64_t b) { return b / float(1024 * 1024); }
+
+	void update() {
+		ImGui::Begin("tex allocation test");
+
+		int texturesCount = (int)mTextures.size();
+
+		ImGui::SliderInt("W", &mW, 1, 4096);
+		ImGui::SliderInt("H", &mH, 1, 4096);
+
+		ImGui::SliderInt("Textures Count", &texturesCount, 0, 100);
+
+		while (texturesCount < mTextures.size()) {
+			mTextures.pop_front();
+		}
+		while (texturesCount > mTextures.size()) {
+			mTextures.emplace_back(create());
+		}
+
+		size_t sizeSum = 0;
+		for (const auto& val : mTextures) {
+			sizeSum += val.size;
+		}
+
+		ImGui::LabelText("Mem Estimation", "%.3f", MB(sizeSum));
+
+		Cry::SProcessMemInfo memInfo;
+		if (Cry::GetProcessMemInfo(memInfo)) {
+			ImGui::LabelText("PageFaults", "%zu", memInfo.PageFaultCount);
+			ImGui::LabelText("PagefileUsage", "%.3f ; %.3f", MB(memInfo.PagefileUsage), MB(memInfo.PeakPagefileUsage));
+			ImGui::LabelText("WorkingSet", "%.3f ; %.3f", MB(memInfo.WorkingSetSize), MB(memInfo.PeakWorkingSetSize));
+
+			ImGui::LabelText("DIFF", "%.3f", MB(int64_t(memInfo.PagefileUsage) - int64_t(sizeSum)));
+		}
+
+		ImGui::End();
+	}
+
+
+	
+public:
+
+	void init() {
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cTexAllocationTest::update, this)), mUpdate);
+	}
+};
+
+
 
 
 class cScene {
@@ -446,17 +628,19 @@ class cScene {
 	cCameraManager cameraMgr;
 	cLightMgrUpdate lightMgr;
 	cModelRdrJobs modelRdrJobs;
+	cTexAllocationTest texAllocationTest;
 public:
 
 	cScene() {
 		gnomon.init();
-		lightning.init();
-		sphere.init();
-		owl.init();
-		upuppet.init();
+		//lightning.init();
+		//sphere.init();
+		//owl.init();
+		//upuppet.init();
 		cameraMgr.init();
-		lightMgr.init();
+		//lightMgr.init();
 		modelRdrJobs.init();
+		texAllocationTest.init();
 	}
 };
 
