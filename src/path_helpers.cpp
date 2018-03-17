@@ -2,7 +2,10 @@
 
 #include "common.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL_filesystem.h>
+CLANG_DIAG_POP
 
 // TODO: move somewhere
 struct sdl_ptr_releaser {
@@ -62,7 +65,7 @@ std::unique_ptr<char[]> sInputFile::read_all() {
 	mStream.seekg(0, std::ifstream::beg);
 	mStream.read(buf.get(), mSize);
 
-	return std::move(buf);
+	return buf;
 }
 
 void sInputFile::read_buffer(void* buf, size_t bufSize) {

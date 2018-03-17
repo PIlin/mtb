@@ -80,6 +80,7 @@ void cIndexBuffer::init(ID3D11Device* pDev, void const* pIdxData, uint32_t idxCo
 	switch (format) {
 	case DXGI_FORMAT_R16_UINT: size = 2 * idxCount; break;
 	case DXGI_FORMAT_R32_UINT: size = 4 * idxCount; break;
+	default: throw sD3DException(E_NOTIMPL, "cIndexBuffer unable to select size from provided format");
 	}
 
 	init_immutable(pDev, pIdxData, size, D3D11_BIND_INDEX_BUFFER);
@@ -92,6 +93,7 @@ void cIndexBuffer::init_write_only(ID3D11Device* pDev, uint32_t idxCount, DXGI_F
 	switch (format) {
 	case DXGI_FORMAT_R16_UINT: size = 2 * idxCount; break;
 	case DXGI_FORMAT_R32_UINT: size = 4 * idxCount; break;
+	default: throw sD3DException(E_NOTIMPL, "cIndexBuffer unable to select size from provided format");
 	}
 
 	cBufferBase::init_write_only(pDev, size, D3D11_BIND_INDEX_BUFFER);
@@ -106,7 +108,8 @@ void cIndexBuffer::set(ID3D11DeviceContext* pCtx, uint32_t offset) const {
 
 cSamplerStates::cSamplerStates(ID3D11Device* pDev) {
 	HRESULT hr;
-	hr = pDev->CreateSamplerState(&linear_desc(), mpLinear.pp());
+	const auto& desc = linear_desc();
+	hr = pDev->CreateSamplerState(&desc, mpLinear.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateSamplerState linear failed");
 }
 
@@ -130,9 +133,11 @@ D3D11_SAMPLER_DESC cSamplerStates::linear_desc() {
 
 cBlendStates::cBlendStates(ID3D11Device* pDev) {
 	HRESULT hr;
-	hr = pDev->CreateBlendState(&opaque_desc(), mpOpaque.pp());
+	const auto& desc = opaque_desc();
+	hr = pDev->CreateBlendState(&desc, mpOpaque.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBlendState opaque failed");
-	hr = pDev->CreateBlendState(&imgui_desc(), mpImgui.pp());
+	const auto& imguiDesc = imgui_desc();
+	hr = pDev->CreateBlendState(&imguiDesc, mpImgui.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateBlendState imgui failed");
 }
 
@@ -164,13 +169,16 @@ D3D11_BLEND_DESC cBlendStates::imgui_desc() {
 
 cRasterizerStates::cRasterizerStates(ID3D11Device* pDev) {
 	HRESULT hr;
-	hr = pDev->CreateRasterizerState(&default_desc(), mpDefault.pp());
+	const auto& defDesc = default_desc();
+	hr = pDev->CreateRasterizerState(&defDesc, mpDefault.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState default failed");
 
-	hr = pDev->CreateRasterizerState(&twosided_desc(), mpTwosided.pp());
+	const auto& twosidedDesc = twosided_desc();
+	hr = pDev->CreateRasterizerState(&twosidedDesc, mpTwosided.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState twosided failed");
 
-	hr = pDev->CreateRasterizerState(&imgui_desc(), mpImgui.pp());
+	const auto& imguiDesc = imgui_desc();
+	hr = pDev->CreateRasterizerState(&imguiDesc, mpImgui.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateRasterizerState imgui failed");
 }
 
@@ -217,10 +225,12 @@ D3D11_RASTERIZER_DESC cRasterizerStates::imgui_desc() {
 
 cDepthStencilStates::cDepthStencilStates(ID3D11Device* pDev) {
 	HRESULT hr;
-	hr = pDev->CreateDepthStencilState(&default_desc(), mpDefault.pp());
+	const auto& defDesc = default_desc();
+	hr = pDev->CreateDepthStencilState(&defDesc, mpDefault.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateDepthStencilState default failed");
 
-	hr = pDev->CreateDepthStencilState(&imgui_desc(), mpImgui.pp());
+	const auto& imguiDesc = imgui_desc();
+	hr = pDev->CreateDepthStencilState(&imguiDesc, mpImgui.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateDepthStencilState imgui failed");
 }
 

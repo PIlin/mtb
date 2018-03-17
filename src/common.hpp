@@ -202,3 +202,16 @@ namespace nFlag {
 	template <typename TFlag>
 	static inline void reset(TFlag& flag, const TFlag value) { flag = TFlag(flag & (~value)); }
 }
+
+
+#ifdef __clang__ 
+#define CLANG_DIAG_PUSH       _Pragma("clang diagnostic push")
+#define CLANG_DIAG_POP        _Pragma("clang diagnostic pop")
+#define CLANG_DIAG_IGNORE_HELPER0(x) #x
+#define CLANG_DIAG_IGNORE_HELPER1(x) CLANG_DIAG_IGNORE_HELPER0(clang diagnostic ignored x)
+#define CLANG_DIAG_IGNORE(x) _Pragma(CLANG_DIAG_IGNORE_HELPER1(x))
+#else
+#define CLANG_DIAG_PUSH
+#define CLANG_DIAG_POP
+#define CLANG_DIAG_IGNORE(x)
+#endif

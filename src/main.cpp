@@ -1,10 +1,12 @@
-#define NOMINMAX
+#include "common.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL.h>
 #include <SDL_main.h>
 #include <SDL_syswm.h>
+CLANG_DIAG_POP
 
-#include "common.hpp"
 #include "math.hpp"
 #include "gfx.hpp"
 #include "rdr.hpp"
@@ -71,6 +73,7 @@ public:
 				get_gfx().on_window_size_changed(w, h);
 			}
 			break;
+			default: break;
 		}
 	}
 

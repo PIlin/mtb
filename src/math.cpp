@@ -54,9 +54,9 @@ DirectX::XMVECTOR XM_CALLCONV hermite(
 DirectX::XMVECTOR XM_CALLCONV euler_xyz_to_quat(DirectX::FXMVECTOR xyz) {
 	assert(false && "doesn't work");
 
-	dx::XMVECTOR qx = dx::XMQuaternionRotationNormal(dx::g_XMIdentityR0, xyz.m128_f32[0]);
-	dx::XMVECTOR qy = dx::XMQuaternionRotationNormal(dx::g_XMIdentityR1, xyz.m128_f32[1]);
-	dx::XMVECTOR qz = dx::XMQuaternionRotationNormal(dx::g_XMIdentityR2, xyz.m128_f32[2]);
+	dx::XMVECTOR qx = dx::XMQuaternionRotationNormal(dx::g_XMIdentityR0, dx::XMVectorGetByIndex(xyz, 0));
+	dx::XMVECTOR qy = dx::XMQuaternionRotationNormal(dx::g_XMIdentityR1, dx::XMVectorGetByIndex(xyz, 1));
+	dx::XMVECTOR qz = dx::XMQuaternionRotationNormal(dx::g_XMIdentityR2, dx::XMVectorGetByIndex(xyz, 2));
 
 	dx::XMVECTOR res = dx::XMQuaternionMultiply(qx, qy);
 	return dx::XMQuaternionMultiply(res, qz);

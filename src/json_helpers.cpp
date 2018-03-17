@@ -2,7 +2,11 @@
 #include "path_helpers.hpp"
 #include "json_helpers.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL_rwops.h>
+CLANG_DIAG_POP
+
 #include <memory>
 
 using namespace nJsonHelpers;
@@ -19,7 +23,7 @@ bool nJsonHelpers::load_file(const fs::path& filepath, std::function<bool(Value 
 	
 	Document document;
 	if (document.ParseInsitu<0>(json).HasParseError()) {
-		dbg_msg("nJsonHelpers::load_file(): error parsing json file <%s>: %s\n%d", filepath, document.GetParseError());
+		dbg_msg("nJsonHelpers::load_file(): error parsing json file <%s>: %s\n%d", filepath.c_str(), document.GetParseError());
 		return false;
 	}
 

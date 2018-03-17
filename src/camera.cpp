@@ -4,7 +4,10 @@
 #include "camera.hpp"
 #include "input.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL_keycode.h>
+CLANG_DIAG_POP
 
 namespace dx = DirectX;
 

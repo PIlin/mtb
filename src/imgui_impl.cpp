@@ -11,7 +11,10 @@
 
 #include <imgui.h>
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL_keycode.h>
+CLANG_DIAG_POP
 
 static char const* const g_vtxShader = 
 "cbuffer Cam : register(b0) {"

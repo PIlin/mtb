@@ -1,5 +1,12 @@
 ﻿cmake_minimum_required(VERSION 3.2)
 
+if (${CMAKE_GENERATOR_TOOLSET} MATCHES "LLVM-vs")
+	add_compile_options(-Wno-unused-command-line-argument)
+	# clang-cl silently treats /Zi as /Zi and doesn't output pdb's. MSBuild forces recompilation every time in such case.
+	# See https://bugs.llvm.org/show_bug.cgi?id=36140
+	add_compile_options(/Z7) 
+endif()
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party")
@@ -87,3 +94,8 @@ set_property(TARGET mtb PROPERTY RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BIN_DIR})
 set_property(TARGET mtb PROPERTY RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${BIN_DIR})
 
 set_property(TARGET mtb PROPERTY COMPILE_FLAGS "/MP")
+
+
+if (${CMAKE_GENERATOR_TOOLSET} MATCHES "LLVM-vs")
+	target_compile_options(mtb PRIVATE -Wno-unknown-warning-option) # for cereal
+endif()

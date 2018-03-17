@@ -103,7 +103,7 @@ void cUpdateQueue::begin_exec() {
 }
 
 namespace nEnum {
-	template <typename TEnum> static inline TEnum add(const TEnum& e, int value) { return TEnum(std::underlying_type<TEnum>::type(e) + value); }
+	template <typename TEnum> static inline TEnum add(const TEnum& e, int value) { return TEnum(typename std::underlying_type<TEnum>::type(e) + value); }
 	template <typename TEnum> static inline TEnum incr(TEnum& e) { return (e = add(e, 1)); }
 	template <typename TEnum> static inline TEnum decr(TEnum& e) { return (e = add(e, -1)); }
 }

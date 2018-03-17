@@ -2,7 +2,10 @@
 #include "input.hpp"
 #include "common.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL_events.h>
+CLANG_DIAG_POP
 
 static_assert(SDL_NUM_SCANCODES == cInputMgr::KEYS_COUNT, "SDL_NUM_SCANCODES != cInputMgr::KEYS_COUNT");
 

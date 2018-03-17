@@ -5,10 +5,13 @@
 #include "path_helpers.hpp"
 #include "assimp_loader.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/config.h>
+CLANG_DIAG_POP
 
 
 static void list_meshes(aiScene const* pScene, aiNode const* pNode, std::vector<cAssimpLoader::sAIMeshInfo>& meshes) {

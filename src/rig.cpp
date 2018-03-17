@@ -9,7 +9,10 @@
 #include "rdr.hpp"
 #include "assimp_loader.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <assimp/scene.h>
+CLANG_DIAG_POP
 
 #include "json_helpers.hpp"
 

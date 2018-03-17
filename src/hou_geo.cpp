@@ -256,6 +256,7 @@ protected:
 					iaval[j] = a[j].GetInt();
 				}
 				break;
+			default: break;
 			}
 		}
 

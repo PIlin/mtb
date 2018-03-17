@@ -14,37 +14,37 @@ static fs::path get_light_settings_path() {
 }
 
 // See "Stupid Spherical Harmonics (SH) Tricks" by Peter-Pike Sloan, Appendix A10
+
+namespace nSH {
+static const float spi = (float)sqrt(DirectX::XM_PI);
+static const float C0 = 1.0f / (2.0f * spi);
+static const float C1 = sqrtf(3.0f) / (3.0f * spi);
+static const float C2 = sqrtf(15.0f) / (8.0f  * spi);
+static const float C3 = sqrtf(5.0f) / (16.0f * spi);
+static const float C4 = 0.5f * C2;
+static const dx::XMFLOAT4A mul1(-C1, -C1, C1, C0);
+static const dx::XMFLOAT4A mul2(C2, -C2, 3.0f * C3, -C2);
+
 void pack_sh_param(sSHCoef::sSHChan const& chan, DirectX::XMVECTOR sh[7], int idx) {
-	static const float spi = (float)sqrt(DirectX::XM_PI);
-	const float C0 = 1.0f / (2.0f * spi);
-	const float C1 = sqrtf(3.0f) / (3.0f * spi);
-	const float C2 = sqrtf(15.0f) / (8.0f  * spi);
-	const float C3 = sqrtf(5.0f) / (16.0f * spi);
-	const float C4 = 0.5f * C2;
-
-	dx::XMVECTOR mul1 = dx::XMVectorSet(-C1, -C1, C1, C0);
-	dx::XMVECTOR mul2 = dx::XMVectorSet(C2, -C2, 3.0f * C3, -C2);
-
 	dx::XMVECTOR v = dx::XMVectorSet(chan[3], chan[1], chan[2], chan[0]);
-	v = dx::XMVectorMultiply(v, mul1);
-	v.m128_f32[3] -= C3 * chan[6];
+	v = dx::XMVectorMultiply(v, dx::XMLoadFloat4A(&mul1));
+	v = dx::XMVectorSubtract(v, dx::XMVectorSet(0.0f, 0.0f, 0.0f, C3 * chan[6]));
 	sh[idx] = v;
 
 	v = dx::XMVectorSet(chan[4], chan[5], chan[6], chan[7]);
-	v = dx::XMVectorMultiply(v, mul2);
+	v = dx::XMVectorMultiply(v, dx::XMLoadFloat4A(&mul2));
 	sh[idx + 3] = v;
 
-	sh[6].m128_f32[idx] = C4*chan[8];
+	sh[6] = dx::XMVectorSetByIndex(sh[6], C4*chan[8], idx);
 }
+} // namespace nSH
 
 void pack_sh_param(sSHCoef const& coef, DirectX::XMVECTOR sh[7]) {
-	pack_sh_param(coef.mR, sh, 0);
-	pack_sh_param(coef.mG, sh, 1);
-	pack_sh_param(coef.mB, sh, 2);
-	sh[6].m128_f32[3] = 1.0f;
+	nSH::pack_sh_param(coef.mR, sh, 0);
+	nSH::pack_sh_param(coef.mG, sh, 1);
+	nSH::pack_sh_param(coef.mB, sh, 2);
+	sh[6] = dx::XMVectorSetByIndex(sh[6], 1.0f, 3);
 }
-
-
 
 cLightMgr::cLightMgr() {
 	if (!load(get_light_settings_path())) {

@@ -9,11 +9,16 @@
 #include "assimp_loader.hpp"
 #include "json_helpers.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <assimp/scene.h>
+CLANG_DIAG_POP
 
 using nJsonHelpers::Document;
 using nJsonHelpers::Value;
 using nJsonHelpers::Size;
+
+namespace dx = DirectX;
 
 class cAnimJsonLoaderImpl {
 	cAnimationData& mData;
@@ -61,7 +66,8 @@ private:
 		std::string subName(sn.GetString(), sn.GetStringLength());
 		
 		CHECK_SCHEMA(doc.HasMember("type"), "channel has no type\n");
-		int type = doc["type"].GetInt();
+		uint32_t type = doc["type"].GetUint();
+		CHECK_SCHEMA(type < cChannel::E_CH_LAST, "unknown channel type\n");
 
 		CHECK_SCHEMA(doc.HasMember("rord"), "channel has no rord\n");
 		uint16_t rord = doc["rord"].GetInt();
@@ -113,6 +119,7 @@ private:
 			}
 		}
 
+		ch.mType = (cChannel::eChannelType)type;
 		ch.mpKeyframesNum = pKfrNum.release();
 		ch.mpComponents = pComp.release();
 		pKfr.release();
@@ -270,7 +277,7 @@ public:
 		for (Size i = 0; i < count; ++i) {
 			auto& rec = doc[i];
 			CHECK_SCHEMA(rec.HasMember("name"), "rec has no name\n");
-			auto& n = rec["name"];
+			//auto& n = rec["name"];
 			CHECK_SCHEMA(rec.HasMember("fname"), "rec has no fname\n");
 			auto& fn = rec["fname"];
 
@@ -313,10 +320,11 @@ void cChannel::eval(DirectX::XMVECTOR& vec, float frame) const {
 
 	for (int i = 0; i < mComponentsNum && i < 4; ++i) {
 		find_keyframe(i, frame, pKfrA, pKfrB);
-		a.m128_f32[i] = pKfrA->value;
-		b.m128_f32[i] = pKfrB->value;
-		left.m128_f32[i] = pKfrA->outSlope;
-		right.m128_f32[i] = pKfrB->inSlope;
+		a     = dx::XMVectorSetByIndex(a, pKfrA->value, i);
+		b     = dx::XMVectorSetByIndex(b, pKfrB->value, i);
+		left  = dx::XMVectorSetByIndex(left, pKfrA->outSlope, i);
+		right = dx::XMVectorSetByIndex(right, pKfrB->inSlope, i);
+
 
 		if (pKfrA != pKfrB) {
 			interpolate = true; 
@@ -327,7 +335,8 @@ void cChannel::eval(DirectX::XMVECTOR& vec, float frame) const {
 			float tt = (frame - fa) / (fb - fa);
 			//t = clamp(t, 0.0f, 1.0f);
 			
-			t.m128_f32[i] = tt;
+			//t.m128_f32[i] = tt;
+			t = dx::XMVectorSetByIndex(t, tt, i);
 		}
 	}
 
@@ -341,6 +350,8 @@ void cChannel::eval(DirectX::XMVECTOR& vec, float frame) const {
 
 	switch (mType)
 	{
+	case cChannel::E_CH_COMMON:
+		break;
 	case cChannel::E_CH_EULER:
 		t = DirectX::XMVectorSplatX(t);
 		a = euler_xyz_to_quat(a);
@@ -348,6 +359,9 @@ void cChannel::eval(DirectX::XMVECTOR& vec, float frame) const {
 		break;
 	case cChannel::E_CH_QUATERNION:
 		t = DirectX::XMVectorSplatX(t);
+		break;
+	default: 
+		assert(false && "Unknown channel type");
 		break;
 	}
 
@@ -363,6 +377,9 @@ void cChannel::eval(DirectX::XMVECTOR& vec, float frame) const {
 		break;
 	case E_EXPR_QLINEAR:
 		vec = DirectX::XMQuaternionSlerpV(a, b, t);
+		break;
+	default:
+		assert(false && "Unknown channel expression");
 		break;
 	}
 

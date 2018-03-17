@@ -11,8 +11,11 @@
 #include "imgui.hpp"
 #include "rdr_queue.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
+CLANG_DIAG_POP
 
 #include <cassert>
 
@@ -449,7 +452,7 @@ void cModel::dbg_ui() {
 	char buf[64];
 	ImGui::Begin("model");
 	for (uint32_t i = 0; i < grpNum; ++i) {
-		sGroup const& grp = mpData->mpGroups[i];
+		//sGroup const& grp = mpData->mpGroups[i];
 		auto const& name = mpData->mpGrpNames[i];
 		sGroupMaterial& mtl = mpMtl->mpGrpMtl[i];
 
@@ -550,10 +553,10 @@ bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, const f
 		pTex = p;
 		pSmp = cSamplerStates::get().linear();
 	};
-	auto loadNmap = [&ts, pDev, &loadTex](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp) {
+	auto loadNmap = [&ts, &loadTex](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp) {
 		loadTex(name, pTex, pSmp, ts.get_def_nmap());
 	};
-	auto loadClr = [&ts, pDev, &loadTex](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp) {
+	auto loadClr = [&ts, &loadTex](std::string const& name, cTexture*& pTex, ID3D11SamplerState*& pSmp) {
 		loadTex(name, pTex, pSmp, ts.get_def_white());
 	};
 

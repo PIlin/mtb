@@ -1,6 +1,9 @@
 #include <functional>
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wunused-local-typedef")
 #include <cereal/external/rapidjson/document.h>
+CLANG_DIAG_POP
 
 #define CHECK_SCHEMA(x, msg, ...) do { if (!(x)) { dbg_msg(msg, __VA_ARGS__); return false; } } while(0)
 

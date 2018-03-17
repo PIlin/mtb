@@ -80,7 +80,7 @@ com_ptr<ID3D11CommandList> cRdrQueueMgr::exec_jobs_batch(sJobsQueue const& queue
 
 	com_ptr<ID3D11CommandList> pCL;
 	ctx.get_ctx()->FinishCommandList(FALSE, pCL.pp());
-	return std::move(pCL);
+	return pCL;
 }
 
 void cRdrQueueMgr::exec_prologue_jobs(cRdrContext const& ctx, JobsVector const& prologueJobs) const {

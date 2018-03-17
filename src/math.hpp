@@ -1,10 +1,10 @@
 #include <DirectXMath.h>
 
-inline constexpr const float DEG2RAD(const float deg) {
+inline float DEG2RAD(const float deg) {
 	return deg * DirectX::XM_PI / 180.f;
 }
 
-inline constexpr const float RAD2DEG(const float rad) {
+inline float RAD2DEG(const float rad) {
 	return rad * 180.f / DirectX::XM_PI;
 }
 
@@ -139,4 +139,3 @@ struct sXform {
 	void XM_CALLCONV init(DirectX::FXMMATRIX mtx);
 	DirectX::XMMATRIX XM_CALLCONV build_mtx() const;
 };
-

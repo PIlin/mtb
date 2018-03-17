@@ -16,7 +16,10 @@
 
 #include <imgui.h>
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <assimp/Importer.hpp>
+CLANG_DIAG_POP
 #include "assimp_loader.hpp"
 
 #include <deque>
@@ -34,7 +37,6 @@ class cGnomon : public iRdrJob {
 	cShader* mpPS = nullptr;
 	com_ptr<ID3D11InputLayout> mpIL;
 	cVertexBuffer mVtxBuf;
-	int mState = 0;
 
 	cUpdateSubscriberScope mDispUpdate;
 public:
@@ -57,8 +59,6 @@ public:
 		cbuf.update(pCtx);
 		cbuf.set_VS(pCtx);
 
-		UINT pStride[] = { sizeof(sVtx) };
-		UINT pOffset[] = { 0 };
 		mVtxBuf.set(pCtx, 0, 0);
 		pCtx->IASetInputLayout(mpIL);
 		pCtx->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
@@ -84,12 +84,12 @@ public:
 		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
 		sVtx vtx[6] = {
-			{ 0.0f, 0.0f, 0.0f, 1.0, 0.0f, 0.0f, 1.0f },
-			{ 1.0f, 0.0f, 0.0f, 1.0, 0.0f, 0.0f, 1.0f },
-			{ 0.0f, 0.0f, 0.0f, 0.0, 1.0f, 0.0f, 1.0f },
-			{ 0.0f, 1.0f, 0.0f, 0.0, 1.0f, 0.0f, 1.0f },
-			{ 0.0f, 0.0f, 0.0f, 0.0, 0.0f, 1.0f, 1.0f },
-			{ 0.0f, 0.0f, 1.0f, 0.0, 0.0f, 1.0f, 1.0f },
+			{ { 0.0f, 0.0f, 0.0f }, { 1.0, 0.0f, 0.0f, 1.0f } },
+			{ { 1.0f, 0.0f, 0.0f }, { 1.0, 0.0f, 0.0f, 1.0f } },
+			{ { 0.0f, 0.0f, 0.0f }, { 0.0, 1.0f, 0.0f, 1.0f } },
+			{ { 0.0f, 1.0f, 0.0f }, { 0.0, 1.0f, 0.0f, 1.0f } },
+			{ { 0.0f, 0.0f, 0.0f }, { 0.0, 0.0f, 1.0f, 1.0f } },
+			{ { 0.0f, 0.0f, 1.0f }, { 0.0, 0.0f, 1.0f, 1.0f } },
 		};
 
 		mVtxBuf.init(pDev, vtx, LENGTHOF_ARRAY(vtx), sizeof(vtx[0]));
@@ -225,7 +225,7 @@ public:
 			char buf[64];
 			::sprintf_s(buf, "anim %s", mId.p);
 			ImGui::Begin(buf);
-			ImGui::LabelText("name", "%s", anim.get_name());
+			ImGui::LabelText("name", "%s", anim.get_name().p);
 			ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
 			ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
 			ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
@@ -639,14 +639,14 @@ public:
 
 	cScene() {
 		gnomon.init();
-		//lightning.init();
-		//sphere.init();
-		//owl.init();
-		//upuppet.init();
+		lightning.init();
+		sphere.init();
+		owl.init();
+		upuppet.init();
 		cameraMgr.init();
-		//lightMgr.init();
+		lightMgr.init();
 		modelRdrJobs.init();
-		texAllocationTest.init();
+		//texAllocationTest.init();
 	}
 };
 

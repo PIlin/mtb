@@ -17,6 +17,12 @@ set(srcs
 	Src/DDSTextureLoader.cpp
 )
 
+if (${CMAKE_GENERATOR_TOOLSET} MATCHES "LLVM-vs")
+	add_compile_options(-Wno-missing-braces)
+	add_compile_options(-Wno-switch)
+endif()
+
+
 include_directories(Inc)
 
 add_library(DirectXTK STATIC ${srcs} ${hdrs})

@@ -49,7 +49,7 @@ public:
 	bool mbtn_released(eMouseBtn btn) const { return !mMouseBtn[btn] && mMouseBtnPrev[btn]; }
 	bool mbtn_held(eMouseBtn btn) const { return mMouseBtn[btn] && mMouseBtnPrev[btn]; }
 	bool mbtn_state(eMouseBtn btn) const { return mMouseBtn[btn]; }
-	bool mbtn_state_prev(eMouseBtn btn) const { mMouseBtnPrev[btn]; }
+	bool mbtn_state_prev(eMouseBtn btn) const { return mMouseBtnPrev[btn]; }
 
 	// SDL_Scancode
 	bool kbtn_pressed(int btn) const { return mKeys[btn] && !mKeysPrev[btn]; }

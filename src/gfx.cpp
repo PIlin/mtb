@@ -60,8 +60,6 @@ cGfx::sRTView::sRTView(sDev& dev) {
 }
 
 cGfx::cGfx(HWND hwnd) {
-	HRESULT hr = S_OK;
-
 	RECT rc;
 	GetClientRect(hwnd, &rc);
 	UINT w = rc.right - rc.left;

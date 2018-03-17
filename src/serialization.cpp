@@ -10,7 +10,14 @@
 #include "sh.hpp"
 #include "light.hpp"
 
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wunused-local-typedef")
+CLANG_DIAG_IGNORE("-Wunused-private-field")
+CLANG_DIAG_IGNORE("-Wexceptions")
 #include <cereal/archives/json.hpp>
+CLANG_DIAG_POP
+
+
 #include <fstream>
 
 #define ARC(x) do { auto nvp = (x); try { arc(nvp); } catch (cereal::Exception& ex) { dbg_msg("%s: %s\n", nvp.name, ex.what()); } } while(0)
@@ -54,19 +61,27 @@ static bool load_from_json(T& object, const fs::path& filepath) {
 //	dbg_msg("%s: %s\n", nvp.name, ex.what());
 //}
 
-template <class Archive>
-void save(Archive& arc, DirectX::XMVECTOR const& m) {
-	DirectX::XMVECTORF32 tmp;
-	tmp.v = m;
-	arc(tmp.f);
+// todo: serialziation of XMVECTOR doesn't work with clang-cl
+//template <class Archive>
+//void save(Archive& arc, DirectX::XMVECTOR const& m) {
+//	DirectX::XMVECTORF32 tmp;
+//	tmp.v = m;
+//	arc(tmp.f);
+//}
+//
+//template <class Archive>
+//void load(Archive& arc, DirectX::XMVECTOR& m) {
+//	DirectX::XMVECTORF32 tmp;
+//	arc(tmp.f);
+//	m = tmp.v;
+//}
+
+template<class Archive>
+void serialize(Archive& arc, vec4& v)
+{
+	arc(v[0], v[1], v[2], v[3]);
 }
 
-template <class Archive>
-void load(Archive& arc, DirectX::XMVECTOR& m) {
-	DirectX::XMVECTORF32 tmp;
-	arc(tmp.f);
-	m = tmp.v;
-}
 
 template <class Archive, class T>
 void serialize(Archive& arc, tvec2<T>& vec2) {
@@ -120,9 +135,26 @@ bool cModelMaterial::serialize(const fs::path& filepath) {
 
 template <class Archive>
 void cCamera::serialize(Archive& arc) {
+	// todo: serialziation of XMVECTOR doesn't work with clang-cl
+	vec4 mPos;
+	vec4 mTgt;
+	vec4 mUp;
+	if (Archive::is_saving::value)
+	{
+		DirectX::XMStoreFloat4(&mPos.mVal, this->mPos);
+		DirectX::XMStoreFloat4(&mTgt.mVal, this->mTgt);
+		DirectX::XMStoreFloat4(&mUp.mVal, this->mUp);
+	}
 	ARC(CEREAL_NVP(mPos));
 	ARC(CEREAL_NVP(mTgt));
 	ARC(CEREAL_NVP(mUp));
+	if (Archive::is_loading::value)
+	{
+		this->mPos = DirectX::XMLoadFloat4(&mPos.mVal);
+		this->mTgt = DirectX::XMLoadFloat4(&mTgt.mVal);
+		this->mUp = DirectX::XMLoadFloat4(&mUp.mVal);
+	}
+
 	ARC(CEREAL_NVP(mFovY));
 	ARC(CEREAL_NVP(mAspect));
 	ARC(CEREAL_NVP(mNearZ));
@@ -135,6 +167,7 @@ bool cCamera::load(const fs::path& filepath) {
 
 bool cCamera::save(const fs::path& filepath) {
 	return save_to_json(*this, filepath);
+	return false;
 }
 
 
@@ -162,12 +195,6 @@ void sSHCoef::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(mR));
 	ARC(CEREAL_NVP(mG));
 	ARC(CEREAL_NVP(mB));
-}
-
-template<class Archive>
-void serialize(Archive& arc, vec4& v)
-{
-	arc(v[0], v[1], v[2], v[3]);
 }
 
 template <class Archive>
