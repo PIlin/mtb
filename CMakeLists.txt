@@ -1,10 +1,25 @@
 ﻿cmake_minimum_required(VERSION 3.2)
 
 if (${CMAKE_GENERATOR_TOOLSET} MATCHES "LLVM-vs")
+	set(MTB_CLANG_CL ON)
+endif()
+
+
+if (${MTB_CLANG_CL})
 	add_compile_options(-Wno-unused-command-line-argument)
 	# clang-cl silently treats /Zi as /Zi and doesn't output pdb's. MSBuild forces recompilation every time in such case.
 	# See https://bugs.llvm.org/show_bug.cgi?id=36140
 	add_compile_options(/Z7) 
+
+	option(MTB_ASAN "Build MTB with ASAN" OFF)
+	if (${MTB_ASAN})
+		set(MTB_ASAN_MT ON)
+		if (${MTB_ASAN_MT})
+			add_compile_options(/MT)
+		else()
+			add_compile_options(/MD)
+		endif()
+	endif()
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -85,7 +100,7 @@ set_source_files_properties(${HLSL_PS} PROPERTIES VS_SHADER_TYPE Pixel  VS_SHADE
 source_group("hlsl" FILES ${HLSL})
 
 add_executable(mtb ${SRC} ${HLSL})
-target_link_libraries(mtb SDL2-static SDL2main imgui DirectXTK assimp cereal d3d11 d3dcompiler)
+target_link_libraries(mtb PRIVATE SDL2-static SDL2main imgui DirectXTK assimp cereal d3d11 d3dcompiler)
 
 
 set (BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
@@ -96,6 +111,29 @@ set_property(TARGET mtb PROPERTY RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${BIN_D
 set_property(TARGET mtb PROPERTY COMPILE_FLAGS "/MP")
 
 
-if (${CMAKE_GENERATOR_TOOLSET} MATCHES "LLVM-vs")
+if (${MTB_CLANG_CL})
 	target_compile_options(mtb PRIVATE -Wno-unknown-warning-option) # for cereal
+
+	if (${MTB_ASAN})
+		target_compile_options(mtb PRIVATE -fsanitize=address)
+		target_compile_options(mtb PRIVATE /Od) # disable optimization for easier debugging in release mode
+		# TODO: even if lld-link is used, it seems to ignore -fsanitize=address
+		# See bug: https://bugs.llvm.org/show_bug.cgi?id=35343#c3
+		# Also, see hint there to obtain list of required libraries.
+		# set_target_properties(mtb PROPERTIES LINK_FLAGS "-fsanitize=address")
+		set(LLVM_ROOT_PATH "e:/LLVM")
+		set(LLVM_ASAN_LIB_PATH "${LLVM_ROOT_PATH}/lib/clang/6.0.0/lib/windows")
+		if (${MTB_ASAN_MT})
+			# use "clang-cl -v -fsanitize=address test.cpp" to obtain the list of required 
+			target_link_libraries(mtb PRIVATE "${LLVM_ASAN_LIB_PATH}/clang_rt.asan-x86_64.lib")
+			target_link_libraries(mtb PRIVATE "-wholearchive:${LLVM_ASAN_LIB_PATH}/clang_rt.asan-x86_64.lib")
+			target_link_libraries(mtb PRIVATE "${LLVM_ASAN_LIB_PATH}/clang_rt.asan_cxx-x86_64.lib")
+			target_link_libraries(mtb PRIVATE "-wholearchive:${LLVM_ASAN_LIB_PATH}/clang_rt.asan_cxx-x86_64.lib")
+		else()
+			target_link_libraries(mtb PRIVATE "${LLVM_ASAN_LIB_PATH}/clang_rt.asan_dynamic-x86_64.lib" )
+			target_link_libraries(mtb PRIVATE "${LLVM_ASAN_LIB_PATH}/clang_rt.asan_dynamic_runtime_thunk-x86_64.lib")
+			target_link_libraries(mtb PRIVATE "-include:__asan_seh_interceptor")
+			target_link_libraries(mtb PRIVATE "-wholearchive:${LLVM_ASAN_LIB_PATH}/clang_rt.asan_dynamic_runtime_thunk-x86_64.lib")
+		endif()
+	endif()
 endif()
