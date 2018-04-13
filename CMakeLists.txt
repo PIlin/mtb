@@ -116,7 +116,7 @@ if (${MTB_CLANG_CL})
 
 	if (${MTB_ASAN})
 		target_compile_options(mtb PRIVATE -fsanitize=address)
-		target_compile_options(mtb PRIVATE /Od) # disable optimization for easier debugging in release mode
+		target_compile_options(mtb PRIVATE /Od /Oy- /Ob0) # disable optimization for easier debugging in release mode
 		# TODO: even if lld-link is used, it seems to ignore -fsanitize=address
 		# See bug: https://bugs.llvm.org/show_bug.cgi?id=35343#c3
 		# Also, see hint there to obtain list of required libraries.
