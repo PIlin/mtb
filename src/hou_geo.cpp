@@ -506,5 +506,16 @@ void cHouGeoAttrib::init(cstr name, cstr type, int attribSize, int count) {
 		elemSize = sizeof(int32_t);
 	}
 
-	mpData = std::make_unique<uint8_t[]>(elemSize * attribSize * count);
+	size_t const dataSize = elemSize * attribSize * count;
+	mpData = std::make_unique<uint8_t[]>(dataSize);
+#if 0
+	dbg_msg("cHouGeoAttrib::init %s %s; "
+		"size %zu = %zu * %d * %d; "
+		"p = %p .. %p\n"
+		, name.p
+		, type.p
+		, dataSize, elemSize, attribSize, count
+		, mpData.get(), mpData.get() + dataSize
+	);
+#endif
 }

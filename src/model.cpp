@@ -39,7 +39,8 @@ static vec4 as_vec4(cHouGeoAttrib const* pa, int idx) {
 	float tmp[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	if (pa) {
 		float const* val = pa->get_float_val(idx);
-		for (int i = 0; i < 4 && i < pa->mAttribCount; ++i) {
+		int const size = std::min(pa->mAttribSize, 4);
+		for (int i = 0; i < size; ++i) {
 			tmp[i] = val[i];
 		}
 	}
@@ -50,7 +51,8 @@ static vec4i as_vec4i(cHouGeoAttrib const* pa, int idx) {
 	int32_t tmp[4] = { 0, 0, 0, 0 };
 	if (pa) {
 		int32_t const* val = pa->get_int32_val(idx);
-		for (int i = 0; i < 4 && i < pa->mAttribCount; ++i) {
+		int const size = std::min(pa->mAttribSize, 4);
+		for (int i = 0; i < size; ++i) {
 			tmp[i] = val[i];
 		}
 	}
@@ -62,7 +64,8 @@ static vec3 as_vec3(cHouGeoAttrib const* pa, int idx) {
 	float tmp[3] = { 0.0f, 0.0f, 0.0f };
 	if (pa) {
 		float const* val = pa->get_float_val(idx);
-		for (int i = 0; i < 3 && i < pa->mAttribCount; ++i) {
+		int const size = std::min(pa->mAttribSize, 3);
+		for (int i = 0; i < size; ++i) {
 			tmp[i] = val[i];
 		}
 	}
@@ -73,7 +76,8 @@ static vec2f as_vec2f(cHouGeoAttrib const* pa, int idx) {
 	float tmp[] = { 0.0f, 0.0f };
 	if (pa) {
 		float const* val = pa->get_float_val(idx);
-		for (int i = 0; i < 2 && i < pa->mAttribCount; ++i) {
+		int const size = std::min(pa->mAttribSize, 2);
+		for (int i = 0; i < size; ++i) {
 			tmp[i] = val[i];
 		}
 	}
