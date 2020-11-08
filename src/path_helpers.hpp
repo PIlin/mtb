@@ -1,9 +1,9 @@
 #pragma once
 
-#include <experimental/filesystem>
+#include <filesystem>
 #include <fstream>
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 
 class cPathManager {
