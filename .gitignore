@@ -16,3 +16,4 @@ build/
 data/lightning/
 .vs/
 build_clang/
+build_iwyu/
