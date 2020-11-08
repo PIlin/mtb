@@ -27,8 +27,8 @@ static fs::path obtain_base_path() {
 
 cPathManager::cPathManager()
 	: mBasePath(obtain_base_path())
-	, mDataPath(fs::absolute("../data/", mBasePath))
-	, mSettingsPath(fs::absolute("../settings/", mBasePath))
+	, mDataPath(fs::absolute(mBasePath / "../data/"))
+	, mSettingsPath(fs::absolute(mBasePath / "../settings/"))
 	, mShadersPath(mBasePath)
 {
 	fs::create_directories(mSettingsPath);
