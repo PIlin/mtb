@@ -1,9 +1,11 @@
 class cGfx;
 class cShader;
 struct ImDrawData;
+struct ImGuiContext;
 struct ID3D11InputLayout;
 
 class cImgui : noncopyable {
+	ImGuiContext* mpContext = nullptr;
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;
 	com_ptr<ID3D11InputLayout> mpIL;

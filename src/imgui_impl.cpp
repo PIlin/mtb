@@ -66,6 +66,7 @@ cImgui::cImgui(cGfx& gfx) {
 	auto pDev = gfx.get_dev();
 	vec2f winSize = get_window_size();
 
+	mpContext = ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize = ImVec2(winSize.x, winSize.y);
 	io.DeltaTime = 1.0f / 60.0f;
@@ -129,7 +130,8 @@ void cImgui::load_fonts() {
 }
 
 cImgui::~cImgui() {
-	ImGui::Shutdown();
+	ImGui::DestroyContext(mpContext);
+	mpContext = nullptr;
 }
 
 static ImVec2 as_ImVec2(vec2i v) {
