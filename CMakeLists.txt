@@ -4,6 +4,8 @@ if (${CMAKE_GENERATOR_TOOLSET} MATCHES "LLVM-vs")
 	set(MTB_CLANG_CL ON)
 endif()
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (${MTB_CLANG_CL})
 	add_compile_options(-Wno-unused-command-line-argument)
