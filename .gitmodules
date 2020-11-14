@@ -10,3 +10,6 @@
 [submodule "3rd_party/SDL2/sdl2_git"]
 	path = 3rd_party/SDL2/sdl2_git
 url=git@bitbucket.org:pashkoff/mtb_sdl2.git
+[submodule "3rd_party/entt/entt_git"]
+	path = 3rd_party/entt/entt_git
+	url = https://github.com/skypjack/entt.git
