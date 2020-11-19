@@ -245,66 +245,87 @@ private:
 };
 
 
+class cAnimationComp {
+	const cAnimationList* mpAnimList = nullptr;
+	float mFrame = 0.0f;
+	float mSpeed = 1.0f;
+	int mCurAnim = 0;
+	cstr mId;
+
+public:
+
+	cAnimationComp(const cAnimationList* pAnimList, cstr id, float speed = 1.0f)
+		: mpAnimList(pAnimList)
+		, mId(id)
+		, mSpeed(speed)
+	{}
+
+	void update(cRig& rig) {
+		assert(mpAnimList);
+
+		int32_t animCount = mpAnimList->get_count();
+		if (animCount > 0) {
+			auto& anim = (*mpAnimList)[mCurAnim];
+			float lastFrame = anim.get_last_frame();
+
+			anim.eval(rig, mFrame);
+			mFrame += mSpeed;
+			if (mFrame > lastFrame)
+				mFrame = 0.0f;
+
+			char buf[64];
+			::sprintf_s(buf, "anim %s", mId.p);
+			ImGui::Begin(buf);
+			ImGui::LabelText("name", "%s", anim.get_name().p);
+			ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
+			ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
+			ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
+			ImGui::End();
+		}
+	}
+};
+
+class cAnimationSys {
+	entt::registry& mRegistry;
+	cUpdateSubscriberScope mAnimUpdate;
+public:
+	cAnimationSys(entt::registry& reg) : mRegistry(reg) {}
+
+	void register_anim_update() {
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneAnimUpdate, tUpdateFunc(std::bind(&cAnimationSys::update_anim, this)), mAnimUpdate);
+	}
+
+	void update_anim() {
+		auto view = mRegistry.view<cAnimationComp, cRigComp>();
+		view.each([](cAnimationComp& anim, cRigComp& rig) {
+			anim.update(rig.get());
+		});
+	}
+};
+
 
 class cSkinnedModelData {
 protected:
 	cModelData mMdlData;
 	cModelMaterial mMtl;
 	cRigData mRigData;
-	
-	cstr mId;
 };
 
-class cSkinnedAnimatedModel : public cSkinnedModelData {
+
+class cSkinnedAnimatedModelData : public cSkinnedModelData {
 protected:
 	cAnimationDataList mAnimDataList;
 	cAnimationList mAnimList;
-
-	float mFrame = 0.0f;
-	float mSpeed = 1.0f;
-	int mCurAnim = 0;
-
-private:
-	cUpdateSubscriberScope mAnimUpdate;
-
-public:
-
-	void register_anim_update() {
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneAnimUpdate, tUpdateFunc(std::bind(&cSkinnedAnimatedModel::update_anim, this)), mAnimUpdate);
-	}
-	
-	void update_anim() {
-		// TODO: animation component and system
-		//int32_t animCount = mAnimList.get_count();
-		//if (animCount > 0) {
-		//	auto& anim = mAnimList[mCurAnim];
-		//	float lastFrame = anim.get_last_frame();
-
-		//	anim.eval(mRig, mFrame);
-		//	mFrame += mSpeed;
-		//	if (mFrame > lastFrame)
-		//		mFrame = 0.0f;
-
-		//	char buf[64];
-		//	::sprintf_s(buf, "anim %s", mId.p);
-		//	ImGui::Begin(buf);
-		//	ImGui::LabelText("name", "%s", anim.get_name().p);
-		//	ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
-		//	ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
-		//	ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
-		//	ImGui::End();
-		//}
-	}
 };
 
-class cOwl : public cSkinnedAnimatedModel {
+class cOwl : public cSkinnedAnimatedModelData {
 	entt::entity mEntity;
 public:
 
 	bool init(entt::registry& reg) {
 		bool res = true;
 
-		mId = "owl";
+		cstr id = "owl";
 		const fs::path root = cPathManager::build_data_path("owl");
 
 		res = res && mMdlData.load(root / "def.geo");
@@ -319,6 +340,7 @@ public:
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
 		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
+		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id);
 
 		res = res && mdl.init(mMdlData, mMtl);
 		rig.init(&mRigData);
@@ -327,21 +349,17 @@ public:
 		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
 		pos.wmtx *= dx::XMMatrixTranslation(1.0f, 0.0f, 0.0f);
 
-		if (res) {
-			register_anim_update();
-		}
-
 		return res;
 	}
 };
 
-class cJumpingSphere : public cSkinnedAnimatedModel {
+class cJumpingSphere : public cSkinnedAnimatedModelData {
 	entt::entity mEntity;
 public:
 	bool init(entt::registry& reg) {
 		bool res = true;
 
-		mId = "jumping_sphere";
+		cstr id = "jumping_sphere";
 		const fs::path root = cPathManager::build_data_path("jumping_sphere");
 
 		res = res && mMdlData.load(root / "def.geo");
@@ -356,6 +374,7 @@ public:
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
 		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
+		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id);
 
 		res = res && mdl.init(mMdlData, mMtl);
 		rig.init(&mRigData);
@@ -364,23 +383,19 @@ public:
 		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
 		pos.wmtx *= dx::XMMatrixTranslation(2.0f, 0.0f, 0.0f);
 
-		if (res) {
-			register_anim_update();
-		}
-
 		return res;
 	}
 };
 
 
-class cUnrealPuppet : public cSkinnedAnimatedModel {
+class cUnrealPuppet : public cSkinnedAnimatedModelData {
 	entt::entity mEntity;
 public:
 
 	bool init(entt::registry& reg) {
 		bool res = true;
 
-		mId = "unreal_puppet";
+		cstr id = "unreal_puppet";
 		const fs::path root = cPathManager::build_data_path("unreal_puppet");
 		{
 			cAssimpLoader loader;
@@ -396,14 +411,14 @@ public:
 			animLoader.load_unreal_fbx(root / "SideScrollerWalk.FBX");
 			mAnimDataList.load(animLoader);
 			mAnimList.init(mAnimDataList, mRigData);
-
-			mSpeed = 1.0f / 60.0f;
 		}
 
 		mEntity = reg.create();
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
 		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
+		float speed = 1.0f / 60.0f;
+		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id, speed);
 
 		res = res && mdl.init(mMdlData, mMtl);
 		rig.init(&mRigData);
@@ -412,10 +427,6 @@ public:
 		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
 		pos.wmtx *= dx::XMMatrixRotationX(DEG2RAD(-90.0f));
 		pos.wmtx *= dx::XMMatrixTranslation(3.0f, 0.0f, 0.0f);
-
-		if (res) {
-			register_anim_update();
-		}
 
 		return res;
 	}
@@ -525,10 +536,12 @@ class cScene {
 	cCameraManager cameraMgr;
 	cLightMgrUpdate lightMgr;
 	cModelRdrJobs modelRdrJobs;
+	cAnimationSys animSys;
 public:
 
 	cScene() 
 		: modelRdrJobs(registry)
+		, animSys(registry)
 	{
 		gnomon.init();
 		lightning.init(registry);
@@ -538,6 +551,7 @@ public:
 		cameraMgr.init();
 		lightMgr.init();
 		modelRdrJobs.init();
+		animSys.register_anim_update();
 	}
 };
 
