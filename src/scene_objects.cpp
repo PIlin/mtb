@@ -22,6 +22,8 @@ CLANG_DIAG_IGNORE("-Wpragma-pack")
 CLANG_DIAG_POP
 #include "assimp_loader.hpp"
 
+#include <entt/entt.hpp>
+
 #include <deque>
 
 namespace dx = DirectX;
@@ -105,52 +107,85 @@ public:
 };
 
 
+struct sPositionComp {
+	DirectX::XMMATRIX wmtx;
 
-class cSolidModel : public iRdrJob {
-protected:
+	sPositionComp()
+		: wmtx(DirectX::XMMatrixIdentity())
+	{}
+};
+
+class cSolidModelComp {
 	cModel mModel;
-	cModelData mMdlData;
-	cModelMaterial mMtl;
-
-	DirectX::XMMATRIX mWmtx = dx::XMMatrixIdentity();
-
-	cUpdateSubscriberScope mDispUpdate;
-
 public:
+	cSolidModelComp() = default;
+	cSolidModelComp(cSolidModelComp&& other) : mModel(std::move(other.mModel)) {}
+	cSolidModelComp& operator=(cSolidModelComp&&) = default;
 
-	void register_disp_update() {
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cSolidModel::disp, this)), mDispUpdate);
+	bool init(cModelData& modelData, cModelMaterial& mtl) {
+		return mModel.init(modelData, mtl);
 	}
 
-	void disp() {
-		mModel.dbg_ui();
-
-		cRdrQueueMgr::get().add_model_job(*this);
-	}
-
-	virtual void disp_job(cRdrContext const& ctx) const override {
-		mModel.disp(ctx, mWmtx);
+	void disp(cRdrContext const& rdrCtx, const DirectX::XMMATRIX& wmtx) const {
+		mModel.disp(rdrCtx, wmtx);
 	}
 };
 
 
+class cSolidModel {
+protected:
+	cModelData mMdlData;
+	cModelMaterial mMtl;
+public:
+};
+
+class cSolidModelSys : public iRdrJob {
+	cUpdateSubscriberScope mDispUpdate;
+	entt::registry& mRegistry;
+public:
+
+	cSolidModelSys(entt::registry& reg) : mRegistry(reg) {}
+
+	void register_disp_update() {
+		if (!mDispUpdate) {
+			cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cSolidModelSys::disp, this)), mDispUpdate);
+		}
+	}
+
+	void disp() {
+		if (!mRegistry.empty<cSolidModelComp>()) {
+			cRdrQueueMgr::get().add_model_job(*this);
+		}
+	}
+
+	virtual void disp_job(cRdrContext const& ctx) const override {
+		auto view = mRegistry.view<sPositionComp, cSolidModelComp>();
+		view.each([&ctx](sPositionComp& pos, cSolidModelComp& mdl) {
+			mdl.disp(ctx, pos.wmtx);
+		});
+	}
+};
+
 
 class cLightning : public cSolidModel {
 public:
-	bool init() {
+	bool init(entt::registry& reg) {
 		bool res = true;
 
 		const fs::path root = cPathManager::build_data_path("lightning");
 
 		res = res && mMdlData.load(root / "lightning.geo");
 		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "lightning.mtl");
-		res = res && mModel.init(mMdlData, mMtl);
+
+		static_assert(std::is_move_constructible_v<cSolidModelComp>, "The managed type must be at least move constructible");
+		static_assert(std::is_move_assignable_v<cSolidModelComp>, "The managed type must be at least move assignable");
+		entt::entity en = reg.create();
+		sPositionComp& pos = reg.emplace<sPositionComp>(en);
+		cSolidModelComp& mdl = reg.emplace<cSolidModelComp>(en);
+
+		res = res && mdl.init(mMdlData, mMtl);
 
 		//mModel.mWmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
-
-		if (res) {
-			register_disp_update();
-		}
 
 		return res;
 	}
@@ -419,8 +454,16 @@ public:
 class cModelRdrJobs : public iRdrJob {
 	cUpdateSubscriberScope mUpdateBegin;
 	cUpdateSubscriberScope mUpdateEnd;
+
+	cSolidModelSys mSolidModelSys;
 public:
+	cModelRdrJobs(entt::registry& reg)
+		: mSolidModelSys(reg)
+	{}
+
 	void init() {
+		mSolidModelSys.register_disp_update();
+
 		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cModelRdrJobs::update_begin, this)), mUpdateBegin);
 		cSceneMgr::get().get_update_queue().add(eUpdatePriority::End, tUpdateFunc(std::bind(&cModelRdrJobs::update_end, this)), mUpdateEnd);
 	}
@@ -445,6 +488,8 @@ public:
 
 
 class cScene {
+	entt::registry registry;
+
 	cGnomon gnomon;
 	cLightning lightning;
 	cJumpingSphere sphere;
@@ -455,16 +500,17 @@ class cScene {
 	cModelRdrJobs modelRdrJobs;
 public:
 
-	cScene() {
+	cScene() 
+		: modelRdrJobs(registry)
+	{
 		gnomon.init();
-		lightning.init();
+		lightning.init(registry);
 		sphere.init();
 		owl.init();
 		upuppet.init();
 		cameraMgr.init();
 		lightMgr.init();
 		modelRdrJobs.init();
-		//texAllocationTest.init();
 	}
 };
 

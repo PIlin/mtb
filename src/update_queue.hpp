@@ -11,6 +11,9 @@ public:
 	cUpdateSubscriberScope() = default;
 	~cUpdateSubscriberScope() { reset(); }
 	void reset();
+
+	operator bool() const { return mpUpdateRecord != nullptr; }
+
 private:
 	friend class cUpdateRecord;
 	void set_record(cUpdateRecord* pUpdateRecord) { mpUpdateRecord = pUpdateRecord; }
