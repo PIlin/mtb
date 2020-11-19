@@ -407,8 +407,6 @@ bool cModel::init(cModelData const& mdlData, cModelMaterial& mtl) {
 	HRESULT hr = pDev->CreateInputLayout(vdsc, LENGTHOF_ARRAY(vdsc), code.get_code(), code.get_size(), mpIL.pp());
 	if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
-	mWmtx = DirectX::XMMatrixIdentity();
-
 	return true;
 }
 
@@ -420,13 +418,13 @@ void cModel::deinit() {
 	}
 }
 
-void cModel::disp(cRdrContext const& rdrCtx) const {
+void cModel::disp(cRdrContext const& rdrCtx, const DirectX::XMMATRIX& wmtx) const {
 	if (!mpData) return;
 
 	auto pCtx = rdrCtx.get_ctx();
 	auto& meshCBuf = rdrCtx.get_cbufs().mMeshCBuf;
 
-	meshCBuf.mData.wmtx = mWmtx;
+	meshCBuf.mData.wmtx = wmtx;
 	meshCBuf.update(pCtx);
 	meshCBuf.set_VS(pCtx);
 

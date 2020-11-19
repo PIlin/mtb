@@ -112,6 +112,8 @@ protected:
 	cModelData mMdlData;
 	cModelMaterial mMtl;
 
+	DirectX::XMMATRIX mWmtx = dx::XMMatrixIdentity();
+
 	cUpdateSubscriberScope mDispUpdate;
 
 public:
@@ -127,7 +129,7 @@ public:
 	}
 
 	virtual void disp_job(cRdrContext const& ctx) const override {
-		mModel.disp(ctx);
+		mModel.disp(ctx, mWmtx);
 	}
 };
 
@@ -164,6 +166,8 @@ protected:
 	cRigData mRigData;
 	cRig mRig;
 
+	DirectX::XMMATRIX mWmtx = dx::XMMatrixIdentity();
+
 	cAnimationDataList mAnimDataList;
 	cAnimationList mAnimList;
 
@@ -189,7 +193,7 @@ public:
 
 	virtual void disp_job(cRdrContext const& ctx) const override {
 		mRig.upload_skin(ctx);
-		mModel.disp(ctx);
+		mModel.disp(ctx, mWmtx);
 	}
 };
 
@@ -254,12 +258,12 @@ public:
 		mAnimList.init(mAnimDataList, mRigData);
 
 		const float scl = 0.01f;
-		mModel.mWmtx = dx::XMMatrixScaling(scl, scl, scl);
-		mModel.mWmtx *= dx::XMMatrixTranslation(1.0f, 0.0f, 0.0f);
+		mWmtx = dx::XMMatrixScaling(scl, scl, scl);
+		mWmtx *= dx::XMMatrixTranslation(1.0f, 0.0f, 0.0f);
 
 		auto pRootJnt = mRig.get_joint(0);
 		if (pRootJnt) {
-			pRootJnt->set_parent_mtx(&mModel.mWmtx);
+			pRootJnt->set_parent_mtx(&mWmtx);
 		}
 
 		if (res) {
@@ -290,12 +294,12 @@ public:
 		mAnimList.init(mAnimDataList, mRigData);
 
 		const float scl = 1.0f;
-		mModel.mWmtx = dx::XMMatrixScaling(scl, scl, scl);
-		mModel.mWmtx *= dx::XMMatrixTranslation(2.0f, 0.0f, 0.0f);
+		mWmtx = dx::XMMatrixScaling(scl, scl, scl);
+		mWmtx *= dx::XMMatrixTranslation(2.0f, 0.0f, 0.0f);
 
 		auto pRootJnt = mRig.get_joint(0);
 		if (pRootJnt) {
-			pRootJnt->set_parent_mtx(&mModel.mWmtx);
+			pRootJnt->set_parent_mtx(&mWmtx);
 		}
 
 		if (res) {
@@ -337,13 +341,13 @@ public:
 		}
 
 		const float scl = 0.01f;
-		mModel.mWmtx = dx::XMMatrixScaling(scl, scl, scl);
-		mModel.mWmtx *= dx::XMMatrixRotationX(DEG2RAD(-90.0f));
-		mModel.mWmtx *= dx::XMMatrixTranslation(3.0f, 0.0f, 0.0f);
+		mWmtx = dx::XMMatrixScaling(scl, scl, scl);
+		mWmtx *= dx::XMMatrixRotationX(DEG2RAD(-90.0f));
+		mWmtx *= dx::XMMatrixTranslation(3.0f, 0.0f, 0.0f);
 
 		auto pRootJnt = mRig.get_joint(0);
 		if (pRootJnt) {
-			pRootJnt->set_parent_mtx(&mModel.mWmtx);
+			pRootJnt->set_parent_mtx(&mWmtx);
 		}
 
 		if (res) {

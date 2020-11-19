@@ -121,15 +121,15 @@ class cModel {
 	com_ptr<ID3D11InputLayout> mpIL;
 
 public:
-	DirectX::XMMATRIX mWmtx;
-	
-	cModel() {}
-	~cModel() {}
+	cModel() = default;
+	cModel(cModel&&) = default;
+	cModel& operator=(cModel&&) = default;
+	~cModel() = default;
 
 	bool init(cModelData const& mdlData, cModelMaterial& mtl);
 	void deinit();
 
-	void disp(cRdrContext const& rdrCtx) const;
+	void disp(cRdrContext const& rdrCtx, const DirectX::XMMATRIX& wmtx) const;
 
 	void dbg_ui();
 };
