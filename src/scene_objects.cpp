@@ -115,59 +115,41 @@ struct sPositionComp {
 	{}
 };
 
-class cSolidModelComp {
+class cModelComp {
 	cModel mModel;
 public:
-	cSolidModelComp() = default;
-	cSolidModelComp(cSolidModelComp&& other) : mModel(std::move(other.mModel)) {}
-	cSolidModelComp& operator=(cSolidModelComp&&) = default;
+	cModelComp() = default;
+	cModelComp(cModelComp&& other) : mModel(std::move(other.mModel)) {}
+	cModelComp& operator=(cModelComp&&) = default;
 
 	bool init(cModelData& modelData, cModelMaterial& mtl) {
+		static_assert(std::is_move_constructible_v<cModelComp>, "The managed type must be at least move constructible");
+		static_assert(std::is_move_assignable_v<cModelComp>, "The managed type must be at least move assignable");
+
 		return mModel.init(modelData, mtl);
 	}
 
 	void disp(cRdrContext const& rdrCtx, const DirectX::XMMATRIX& wmtx) const {
 		mModel.disp(rdrCtx, wmtx);
 	}
+
+	void dbg_ui() {
+		mModel.dbg_ui();
+	}
 };
 
 
-class cSolidModel {
+
+class cSolidModelData {
 protected:
 	cModelData mMdlData;
 	cModelMaterial mMtl;
 public:
 };
 
-class cSolidModelSys : public iRdrJob {
-	cUpdateSubscriberScope mDispUpdate;
-	entt::registry& mRegistry;
-public:
 
-	cSolidModelSys(entt::registry& reg) : mRegistry(reg) {}
-
-	void register_disp_update() {
-		if (!mDispUpdate) {
-			cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cSolidModelSys::disp, this)), mDispUpdate);
-		}
-	}
-
-	void disp() {
-		if (!mRegistry.empty<cSolidModelComp>()) {
-			cRdrQueueMgr::get().add_model_job(*this);
-		}
-	}
-
-	virtual void disp_job(cRdrContext const& ctx) const override {
-		auto view = mRegistry.view<sPositionComp, cSolidModelComp>();
-		view.each([&ctx](sPositionComp& pos, cSolidModelComp& mdl) {
-			mdl.disp(ctx, pos.wmtx);
-		});
-	}
-};
-
-
-class cLightning : public cSolidModel {
+class cLightning : public cSolidModelData {
+	entt::entity mEntity;
 public:
 	bool init(entt::registry& reg) {
 		bool res = true;
@@ -177,13 +159,13 @@ public:
 		res = res && mMdlData.load(root / "lightning.geo");
 		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "lightning.mtl");
 
-		static_assert(std::is_move_constructible_v<cSolidModelComp>, "The managed type must be at least move constructible");
-		static_assert(std::is_move_assignable_v<cSolidModelComp>, "The managed type must be at least move assignable");
 		entt::entity en = reg.create();
 		sPositionComp& pos = reg.emplace<sPositionComp>(en);
-		cSolidModelComp& mdl = reg.emplace<cSolidModelComp>(en);
+		cModelComp& mdl = reg.emplace<cModelComp>(en);
 
 		res = res && mdl.init(mMdlData, mMtl);
+
+		mEntity = en;
 
 		//mModel.mWmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
 
@@ -193,46 +175,87 @@ public:
 
 
 
-class cSkinnedModel : public iRdrJob {
-protected:
-	cModel mModel;
-	cModelData mMdlData;
-	cModelMaterial mMtl;
-	cRigData mRigData;
+class cRigComp {
 	cRig mRig;
+public:
+	cRigComp() = default;
+	cRigComp(cRigComp&& other) : mRig(std::move(other.mRig)) {}
+	cRigComp& operator=(cRigComp&&) = default;
 
-	DirectX::XMMATRIX mWmtx = dx::XMMatrixIdentity();
+	void init(cRigData const* pRigData) {
+		mRig.init(pRigData);
+	}
 
-	cAnimationDataList mAnimDataList;
-	cAnimationList mAnimList;
+	void update_rig_mtx(const sPositionComp& pos) {
+		mRig.calc_local();
+		mRig.calc_world(pos.wmtx);
+	}
 
-	cstr mId;
+	void upload_skin(cRdrContext const& ctx) const { mRig.upload_skin(ctx); }
 
-private:
+	cRig& get() { return mRig; }
+};
+
+
+class cModelDispSys : public iRdrJob {
 	cUpdateSubscriberScope mDispUpdate;
-	
+	entt::registry& mRegistry;
 public:
 
+	cModelDispSys(entt::registry& reg) : mRegistry(reg) {}
+
 	void register_disp_update() {
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cSkinnedModel::disp, this)), mDispUpdate);
+		if (!mDispUpdate) {
+			cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cModelDispSys::disp, this)), mDispUpdate);
+		}
 	}
 
 	void disp() {
-		mRig.calc_local();
-		mRig.calc_world();
+		if (!mRegistry.empty<cModelComp>()) {
+			auto view = mRegistry.view<cModelComp>();
+			view.each([](cModelComp& mdl) {
+				mdl.dbg_ui();
+			});
 
-		mModel.dbg_ui();
-
-		cRdrQueueMgr::get().add_model_job(*this);
+			cRdrQueueMgr::get().add_model_job(*this);
+		}
 	}
 
 	virtual void disp_job(cRdrContext const& ctx) const override {
-		mRig.upload_skin(ctx);
-		mModel.disp(ctx, mWmtx);
+		disp_solid(ctx);
+		disp_skinned(ctx);
+	}
+
+private:
+	void disp_solid(cRdrContext const& ctx) const {
+		auto view = mRegistry.view<sPositionComp, cModelComp>();
+		view.each([&ctx](const sPositionComp& pos, const cModelComp& mdl) {
+			mdl.disp(ctx, pos.wmtx);
+		});
+	}
+
+	void disp_skinned(cRdrContext const& ctx) const {
+		auto view = mRegistry.view<sPositionComp, cModelComp, cRigComp>();
+		view.each([&ctx](const sPositionComp& pos, const cModelComp& mdl, cRigComp& rig) {
+			rig.update_rig_mtx(pos); // todo: move to separate step
+			rig.upload_skin(ctx);
+			mdl.disp(ctx, pos.wmtx);
+		});
 	}
 };
 
-class cSkinnedAnimatedModel : public cSkinnedModel {
+
+
+class cSkinnedModelData {
+protected:
+	cModelData mMdlData;
+	cModelMaterial mMtl;
+	cRigData mRigData;
+	
+	cstr mId;
+};
+
+class cSkinnedAnimatedModel : public cSkinnedModelData {
 protected:
 	cAnimationDataList mAnimDataList;
 	cAnimationList mAnimList;
@@ -247,36 +270,38 @@ private:
 public:
 
 	void register_anim_update() {
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::ScenePreDisp, tUpdateFunc(std::bind(&cSkinnedAnimatedModel::update_anim, this)), mAnimUpdate);
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneAnimUpdate, tUpdateFunc(std::bind(&cSkinnedAnimatedModel::update_anim, this)), mAnimUpdate);
 	}
 	
 	void update_anim() {
-		int32_t animCount = mAnimList.get_count();
-		if (animCount > 0) {
-			auto& anim = mAnimList[mCurAnim];
-			float lastFrame = anim.get_last_frame();
+		// TODO: animation component and system
+		//int32_t animCount = mAnimList.get_count();
+		//if (animCount > 0) {
+		//	auto& anim = mAnimList[mCurAnim];
+		//	float lastFrame = anim.get_last_frame();
 
-			anim.eval(mRig, mFrame);
-			mFrame += mSpeed;
-			if (mFrame > lastFrame)
-				mFrame = 0.0f;
+		//	anim.eval(mRig, mFrame);
+		//	mFrame += mSpeed;
+		//	if (mFrame > lastFrame)
+		//		mFrame = 0.0f;
 
-			char buf[64];
-			::sprintf_s(buf, "anim %s", mId.p);
-			ImGui::Begin(buf);
-			ImGui::LabelText("name", "%s", anim.get_name().p);
-			ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
-			ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
-			ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
-			ImGui::End();
-		}
+		//	char buf[64];
+		//	::sprintf_s(buf, "anim %s", mId.p);
+		//	ImGui::Begin(buf);
+		//	ImGui::LabelText("name", "%s", anim.get_name().p);
+		//	ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
+		//	ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
+		//	ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
+		//	ImGui::End();
+		//}
 	}
 };
 
 class cOwl : public cSkinnedAnimatedModel {
+	entt::entity mEntity;
 public:
 
-	bool init() {
+	bool init(entt::registry& reg) {
 		bool res = true;
 
 		mId = "owl";
@@ -284,26 +309,26 @@ public:
 
 		res = res && mMdlData.load(root / "def.geo");
 		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "def.mtl");
-		res = res && mModel.init(mMdlData, mMtl);
 
-		mRigData.load(root / "def.rig");
-		mRig.init(&mRigData);
+		res = res && mRigData.load(root / "def.rig");
 
-		mAnimDataList.load(root, "def.alist");
+		res = res && mAnimDataList.load(root, "def.alist");
 		mAnimList.init(mAnimDataList, mRigData);
 
-		const float scl = 0.01f;
-		mWmtx = dx::XMMatrixScaling(scl, scl, scl);
-		mWmtx *= dx::XMMatrixTranslation(1.0f, 0.0f, 0.0f);
+		mEntity = reg.create();
+		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
+		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
+		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
 
-		auto pRootJnt = mRig.get_joint(0);
-		if (pRootJnt) {
-			pRootJnt->set_parent_mtx(&mWmtx);
-		}
+		res = res && mdl.init(mMdlData, mMtl);
+		rig.init(&mRigData);
+
+		const float scl = 0.01f;
+		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
+		pos.wmtx *= dx::XMMatrixTranslation(1.0f, 0.0f, 0.0f);
 
 		if (res) {
 			register_anim_update();
-			register_disp_update();
 		}
 
 		return res;
@@ -311,8 +336,9 @@ public:
 };
 
 class cJumpingSphere : public cSkinnedAnimatedModel {
+	entt::entity mEntity;
 public:
-	bool init() {
+	bool init(entt::registry& reg) {
 		bool res = true;
 
 		mId = "jumping_sphere";
@@ -320,26 +346,26 @@ public:
 
 		res = res && mMdlData.load(root / "def.geo");
 		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "def.mtl", true);
-		res = res && mModel.init(mMdlData, mMtl);
 
-		mRigData.load(root / "def.rig");
-		mRig.init(&mRigData);
+		res = res && mRigData.load(root / "def.rig");
 
-		mAnimDataList.load(root, "def.alist");
+		res = res && mAnimDataList.load(root, "def.alist");
 		mAnimList.init(mAnimDataList, mRigData);
 
-		const float scl = 1.0f;
-		mWmtx = dx::XMMatrixScaling(scl, scl, scl);
-		mWmtx *= dx::XMMatrixTranslation(2.0f, 0.0f, 0.0f);
+		mEntity = reg.create();
+		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
+		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
+		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
 
-		auto pRootJnt = mRig.get_joint(0);
-		if (pRootJnt) {
-			pRootJnt->set_parent_mtx(&mWmtx);
-		}
+		res = res && mdl.init(mMdlData, mMtl);
+		rig.init(&mRigData);
+
+		const float scl = 1.0f;
+		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
+		pos.wmtx *= dx::XMMatrixTranslation(2.0f, 0.0f, 0.0f);
 
 		if (res) {
 			register_anim_update();
-			register_disp_update();
 		}
 
 		return res;
@@ -348,9 +374,10 @@ public:
 
 
 class cUnrealPuppet : public cSkinnedAnimatedModel {
+	entt::entity mEntity;
 public:
 
-	bool init() {
+	bool init(entt::registry& reg) {
 		bool res = true;
 
 		mId = "unreal_puppet";
@@ -360,10 +387,8 @@ public:
 			res = res && loader.load_unreal_fbx(root / "SideScrollerSkeletalMesh.FBX");
 			res = res && mMdlData.load_assimp(loader);
 			res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "def.mtl");
-			res = res && mModel.init(mMdlData, mMtl);
 
 			mRigData.load(loader);
-			mRig.init(&mRigData);
 		}
 		{
 			cAssimpLoader animLoader;
@@ -375,19 +400,21 @@ public:
 			mSpeed = 1.0f / 60.0f;
 		}
 
-		const float scl = 0.01f;
-		mWmtx = dx::XMMatrixScaling(scl, scl, scl);
-		mWmtx *= dx::XMMatrixRotationX(DEG2RAD(-90.0f));
-		mWmtx *= dx::XMMatrixTranslation(3.0f, 0.0f, 0.0f);
+		mEntity = reg.create();
+		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
+		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
+		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
 
-		auto pRootJnt = mRig.get_joint(0);
-		if (pRootJnt) {
-			pRootJnt->set_parent_mtx(&mWmtx);
-		}
+		res = res && mdl.init(mMdlData, mMtl);
+		rig.init(&mRigData);
+
+		const float scl = 0.01f;
+		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
+		pos.wmtx *= dx::XMMatrixRotationX(DEG2RAD(-90.0f));
+		pos.wmtx *= dx::XMMatrixTranslation(3.0f, 0.0f, 0.0f);
 
 		if (res) {
 			register_anim_update();
-			register_disp_update();
 		}
 
 		return res;
@@ -455,14 +482,14 @@ class cModelRdrJobs : public iRdrJob {
 	cUpdateSubscriberScope mUpdateBegin;
 	cUpdateSubscriberScope mUpdateEnd;
 
-	cSolidModelSys mSolidModelSys;
+	cModelDispSys mModelDispSys;
 public:
 	cModelRdrJobs(entt::registry& reg)
-		: mSolidModelSys(reg)
+		: mModelDispSys(reg)
 	{}
 
 	void init() {
-		mSolidModelSys.register_disp_update();
+		mModelDispSys.register_disp_update();
 
 		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cModelRdrJobs::update_begin, this)), mUpdateBegin);
 		cSceneMgr::get().get_update_queue().add(eUpdatePriority::End, tUpdateFunc(std::bind(&cModelRdrJobs::update_end, this)), mUpdateEnd);
@@ -505,9 +532,9 @@ public:
 	{
 		gnomon.init();
 		lightning.init(registry);
-		sphere.init();
-		owl.init();
-		upuppet.init();
+		sphere.init(registry);
+		owl.init(registry);
+		upuppet.init(registry);
 		cameraMgr.init();
 		lightMgr.init();
 		modelRdrJobs.init();

@@ -26,7 +26,7 @@ enum class eUpdatePriority : int32_t {
 	//Input,
 	Camera,
 	Light,
-	ScenePreDisp,
+	SceneAnimUpdate,
 	SceneDisp,
 	End,
 	Count,

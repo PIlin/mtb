@@ -226,7 +226,7 @@ void cRig::init(cRigData const* pRigData) {
 	
 	const int jointsNum = pRigData->mJointsNum;
 	auto pLMtx = std::make_unique<DirectX::XMMATRIX[]>(jointsNum);
-	auto pWMtx = std::make_unique<DirectX::XMMATRIX[]>(jointsNum);
+	auto pWMtx = std::make_unique<DirectX::XMMATRIX[]>(jointsNum + 1);
 	auto pJoints = std::make_unique<cJoint[]>(jointsNum);
 	auto pXforms = std::make_unique<sXform[]>(jointsNum);
 
@@ -255,6 +255,9 @@ void cRig::init(cRigData const* pRigData) {
 			jnt.mpParentMtx = &nMtx::g_Identity;
 		}
 	}
+	if (jointsNum > 0) {
+		pJoints[0].set_parent_mtx(&pWMtx[jointsNum]);
+	}
 	
 	mJointsNum = jointsNum;
 	mpRigData = pRigData;
@@ -263,16 +266,24 @@ void cRig::init(cRigData const* pRigData) {
 	mpWmtx = std::move(pWMtx);
 	mpXforms = std::move(pXforms);
 
-	calc_world();
+	calc_world(DirectX::XMMatrixIdentity());
 }
 
 void cRig::calc_local() {
+	assert(mJointsNum > 0);
+	assert(mpJoints);
+	
 	for (int i = 0; i < mJointsNum; ++i) {
 		mpJoints[i].calc_local();
 	}
 }
 
-void cRig::calc_world() {
+void cRig::calc_world(DirectX::XMMATRIX rootWMtx) {
+	assert(mJointsNum > 0);
+	assert(mpWmtx);
+	assert(mpJoints);
+
+	mpWmtx[mJointsNum] = rootWMtx;
 	for (int i = 0; i < mJointsNum; ++i) {
 		mpJoints[i].calc_world();
 	}

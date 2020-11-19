@@ -42,7 +42,7 @@ public:
 	DirectX::XMMATRIX& get_world_mtx() { return *mpWMtx; }
 	DirectX::XMMATRIX const* get_inv_mtx() { return mpIMtx; }
 	//void set_inv_mtx(DirectX::XMMATRIX* pMtx) { mpIMtx = pMtx; }
-	void set_parent_mtx(DirectX::XMMATRIX* pMtx) { mpParentMtx = pMtx; }
+	
 
 	sXform& get_xform() { return *mpXform; }
 
@@ -50,6 +50,8 @@ public:
 	void calc_world();
 
 private:
+	void set_parent_mtx(DirectX::XMMATRIX* pMtx) { mpParentMtx = pMtx; }
+
 	friend class cRig;
 };
 
@@ -57,20 +59,21 @@ class cRig {
 	int mJointsNum = 0;
 	std::unique_ptr<cJoint[]> mpJoints;
 	cRigData const* mpRigData = nullptr;
-	std::unique_ptr<DirectX::XMMATRIX[]> mpLMtx;
-	std::unique_ptr<DirectX::XMMATRIX[]> mpWmtx;
-	std::unique_ptr<sXform[]> mpXforms;
+	std::unique_ptr<DirectX::XMMATRIX[]> mpLMtx; // jointsNum 
+	std::unique_ptr<DirectX::XMMATRIX[]> mpWmtx; // jointsNum + 1 for joint 0 parent
+	std::unique_ptr<sXform[]> mpXforms;          // jointsNum 
 public:
 
 	void init(cRigData const* pRigData);
 
 	void calc_local();
-	void calc_world();
+	void calc_world(DirectX::XMMATRIX rootWMtx);
 
 	void upload_skin(cRdrContext const& rdrCtx) const;
 
 	cJoint* get_joint(int idx) const;
 	cJoint* find_joint(cstr name) const;
+
 
 };
 
