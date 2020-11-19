@@ -81,7 +81,6 @@ class cAnimation : noncopyable {
 	};
 
 	cAnimationData const* mpAnimData = nullptr;
-	cRigData const* mpRigData = nullptr;
 	sLink* mpLinks = nullptr;
 	int mLinksNum = 0;
 
@@ -127,11 +126,10 @@ private:
 };
 
 class cAnimationList : noncopyable {
-	cAnimation* mpList = nullptr;
+	std::unique_ptr<cAnimation[]> mpList;
 	int32_t mCount;
 	cAnimationDataList const* mpDataList = nullptr;
 public:
-	~cAnimationList();
 	void init(cAnimationDataList const& dataList, cRigData const& rigData);
 
 	int32_t get_count() const { return mCount; }

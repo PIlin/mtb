@@ -457,7 +457,6 @@ void cAnimation::init(cAnimationData const& animData, cRigData const& rigData) {
 	}
 
 	mpAnimData = &animData;
-	mpRigData = &rigData;
 	mpLinks = pLinks.release();
 	mLinksNum = linksNum;
 }
@@ -521,10 +520,6 @@ bool cAnimationDataList::load(cAssimpLoader& loader) {
 }
 
 
-cAnimationList::~cAnimationList() {
-	delete[] mpList;
-}
-
 void cAnimationList::init(cAnimationDataList const& dataList, cRigData const& rigData) {
 	int32_t count = dataList.get_count();
 	if (count == 0) { return; }
@@ -535,7 +530,7 @@ void cAnimationList::init(cAnimationDataList const& dataList, cRigData const& ri
 		pList[i].init(data, rigData);
 	}
 
-	mpList = pList.release();
+	mpList = std::move(pList);
 	mCount = count;
 	mpDataList = &dataList;
 }
