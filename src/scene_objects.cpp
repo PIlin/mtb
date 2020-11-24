@@ -122,11 +122,11 @@ public:
 	cModelComp(cModelComp&& other) : mModel(std::move(other.mModel)) {}
 	cModelComp& operator=(cModelComp&&) = default;
 
-	bool init(cModelData& modelData, cModelMaterial& mtl) {
+	bool init(ConstModelDataPtr pModelData, cModelMaterial& mtl) {
 		static_assert(std::is_move_constructible_v<cModelComp>, "The managed type must be at least move constructible");
 		static_assert(std::is_move_assignable_v<cModelComp>, "The managed type must be at least move assignable");
 
-		return mModel.init(modelData, mtl);
+		return mModel.init(pModelData, mtl);
 	}
 
 	void disp(cRdrContext const& rdrCtx, const DirectX::XMMATRIX& wmtx) const {
@@ -142,7 +142,6 @@ public:
 
 class cSolidModelData {
 protected:
-	cModelData mMdlData;
 	cModelMaterial mMtl;
 public:
 };
@@ -156,14 +155,19 @@ public:
 
 		const fs::path root = cPathManager::build_data_path("lightning");
 
-		res = res && mMdlData.load(root / "lightning.geo");
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "lightning.mtl");
+		ConstModelDataPtr pMdlData;
+		if (res)
+		{
+			pMdlData = nModelLoader::find_or_load(root / "lightning.geo");
+			res = res && pMdlData;
+		}
+		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "lightning.mtl");
 
 		entt::entity en = reg.create();
 		sPositionComp& pos = reg.emplace<sPositionComp>(en);
 		cModelComp& mdl = reg.emplace<cModelComp>(en);
 
-		res = res && mdl.init(mMdlData, mMtl);
+		res = res && mdl.init(pMdlData, mMtl);
 
 		mEntity = en;
 
@@ -306,7 +310,6 @@ public:
 
 class cSkinnedModelData {
 protected:
-	cModelData mMdlData;
 	cModelMaterial mMtl;
 	cRigData mRigData;
 };
@@ -328,8 +331,13 @@ public:
 		cstr id = "owl";
 		const fs::path root = cPathManager::build_data_path("owl");
 
-		res = res && mMdlData.load(root / "def.geo");
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "def.mtl");
+		ConstModelDataPtr pMdlData;
+		if (res)
+		{
+			pMdlData = nModelLoader::find_or_load(root / "def.geo");
+			res = res && pMdlData;
+		}
+		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl");
 
 		res = res && mRigData.load(root / "def.rig");
 
@@ -342,7 +350,7 @@ public:
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
 		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id);
 
-		res = res && mdl.init(mMdlData, mMtl);
+		res = res && mdl.init(pMdlData, mMtl);
 		rig.init(&mRigData);
 
 		const float scl = 0.01f;
@@ -362,8 +370,13 @@ public:
 		cstr id = "jumping_sphere";
 		const fs::path root = cPathManager::build_data_path("jumping_sphere");
 
-		res = res && mMdlData.load(root / "def.geo");
-		res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "def.mtl", true);
+		ConstModelDataPtr pMdlData;
+		if (res)
+		{
+			pMdlData = nModelLoader::find_or_load(root / "def.geo");
+			res = res && pMdlData;
+		}
+		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl", true);
 
 		res = res && mRigData.load(root / "def.rig");
 
@@ -376,7 +389,7 @@ public:
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
 		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id);
 
-		res = res && mdl.init(mMdlData, mMtl);
+		res = res && mdl.init(pMdlData, mMtl);
 		rig.init(&mRigData);
 
 		const float scl = 1.0f;
@@ -397,14 +410,11 @@ public:
 
 		cstr id = "unreal_puppet";
 		const fs::path root = cPathManager::build_data_path("unreal_puppet");
-		{
-			cAssimpLoader loader;
-			res = res && loader.load_unreal_fbx(root / "SideScrollerSkeletalMesh.FBX");
-			res = res && mMdlData.load_assimp(loader);
-			res = res && mMtl.load(get_gfx().get_dev(), mMdlData, root / "def.mtl");
 
-			mRigData.load(loader);
-		}
+		ConstModelDataPtr pMdlData;
+		res = res && nModelLoader::find_or_load_unreal(root / "SideScrollerSkeletalMesh.FBX", *&pMdlData, &mRigData);
+		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl");
+
 		{
 			cAssimpLoader animLoader;
 			//animLoader.load_unreal_fbx(cPathManager::build_data_path(OBJPATH "SideScrollerIdle.FBX"));
@@ -420,7 +430,7 @@ public:
 		float speed = 1.0f / 60.0f;
 		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id, speed);
 
-		res = res && mdl.init(mMdlData, mMtl);
+		res = res && mdl.init(pMdlData, mMtl);
 		rig.init(&mRigData);
 
 		const float scl = 0.01f;

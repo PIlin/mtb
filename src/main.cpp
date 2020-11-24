@@ -18,6 +18,7 @@ CLANG_DIAG_POP
 #include "scene_objects.hpp"
 #include <imgui.h>
 #include "rdr_queue.hpp"
+#include "resource_mgr.hpp"
 
 class cSDLInit {
 public:
@@ -115,6 +116,7 @@ struct sGlobals {
 	GlobalSingleton<cPathManager> pathManager;
 	GlobalSingleton<cSceneMgr> sceneMgr;
 	GlobalSingleton<cRdrQueueMgr> rdrQueueMgr;
+	GlobalSingleton<cResourceMgr> resourceMgr;
 };
 
 sGlobals globals;
@@ -133,6 +135,7 @@ cTextureStorage& cTextureStorage::get() { return globals.textureStorage.get(); }
 cPathManager& cPathManager::get() { return globals.pathManager.get(); }
 cSceneMgr& cSceneMgr::get() { return globals.sceneMgr.get(); }
 cRdrQueueMgr& cRdrQueueMgr::get() { return globals.rdrQueueMgr.get(); }
+cResourceMgr& cResourceMgr::get() { return globals.resourceMgr.get(); }
 
 void do_frame() {
 	auto& gfx = get_gfx();
@@ -201,6 +204,7 @@ int main(int argc, char* argv[]) {
 	auto win = globals.win.ctor_scoped("TestBed - SPACE + mouse to control camera", 1200, 900, SDL_WINDOW_RESIZABLE);
 	auto input = globals.input.ctor_scoped();
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());
+	auto resourceMgr = globals.resourceMgr.ctor_scoped();
 	auto ss = globals.shaderStorage.ctor_scoped();
 	auto ts = globals.textureStorage.ctor_scoped(get_gfx().get_dev());
 	auto cbuf = globals.cbufStorage.ctor_scoped(get_gfx().get_dev());

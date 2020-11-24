@@ -384,8 +384,8 @@ void cModelData::unload() {
 }
 
 
-bool cModel::init(cModelData const& mdlData, cModelMaterial& mtl) {
-	mpData = &mdlData;
+bool cModel::init(ConstModelDataPtr& pMdlData, cModelMaterial& mtl) {
+	mpData = pMdlData;
 	mpMtl = &mtl;
 
 	auto& ss = cShaderStorage::get();
@@ -526,8 +526,8 @@ void sGroupMaterial::set_default(bool isSkinned) {
 }
 
 
-bool cModelMaterial::load(ID3D11Device* pDev, cModelData const& mdlData, const fs::path& filepath, bool isSkinnedByDef/* = false*/) {
-	mpMdlData = &mdlData;
+bool cModelMaterial::load(ID3D11Device* pDev, const ConstModelDataPtr& pMdlData, const fs::path& filepath, bool isSkinnedByDef/* = false*/) {
+	mpMdlData = pMdlData;
 	auto grpNum = mpMdlData->mGrpNum;
 	mpGrpMtl = std::make_unique<sGroupMaterial[]>(grpNum);
 	mpGrpRes = std::make_unique<sGroupMtlRes[]>(grpNum);
@@ -597,3 +597,4 @@ bool cModelMaterial::save(const fs::path& filepath) {
 
 	return serialize(path);
 }
+

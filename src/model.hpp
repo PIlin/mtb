@@ -1,10 +1,13 @@
 #include <memory>
 #include <string>
 
+#include "resource.hpp"
+
 struct sModelVtx;
 class cShader;
 class cAssimpLoader;
 class cRdrContext;
+class cTexture;
 
 struct sGroup {
 	uint32_t mVtxOffset;
@@ -13,7 +16,7 @@ struct sGroup {
 	uint32_t mPolyType;
 };
 
-class cModelData : noncopyable {
+class cModelData : public sResourceBase {
 public:
 	uint32_t mGrpNum;
 	std::unique_ptr<sGroup[]> mpGroups;
@@ -23,22 +26,9 @@ public:
 	cIndexBuffer mIdx;
 
 public:
-	cModelData() {}
-	cModelData(cModelData&& o) : 
-		mpGroups(std::move(o.mpGroups)),
-		mpGrpNames(std::move(o.mpGrpNames)),
-		mVtx(std::move(o.mVtx)),
-		mIdx(std::move(o.mIdx))
-	{}
-	cModelData& operator=(cModelData&& o) {
-		mpGroups = std::move(o.mpGroups);
-		mpGrpNames = std::move(o.mpGrpNames);
-		mVtx = std::move(o.mVtx);
-		mIdx = std::move(o.mIdx);
-		return *this;
-	}
+	static ResourceTypeId type_id();
 
-	//cModelData& operator=(cModelData&) = delete;
+	cModelData() = default;
 
 	bool load(const fs::path& filepath);
 	void unload();
@@ -47,6 +37,8 @@ public:
 	bool load_assimp(cAssimpLoader& loader);
 	bool load_hou_geo(const fs::path& filepath);
 };
+
+DEF_RES_PTR(cModelData, ModelDataPtr)
 
 
 struct sGroupMaterial {
@@ -84,7 +76,7 @@ struct sGroupMtlRes {
 
 class cModelMaterial {
 public:
-	cModelData const* mpMdlData = nullptr;
+	ConstModelDataPtr mpMdlData = nullptr;
 	std::unique_ptr<sGroupMaterial[]> mpGrpMtl;
 	std::unique_ptr<sGroupMtlRes[]> mpGrpRes;
 
@@ -103,7 +95,7 @@ public:
 
 	void apply(cRdrContext const& rdrCtx, int grp) const;
 
-	bool load(ID3D11Device* pDev, cModelData const& mdlData, 
+	bool load(ID3D11Device* pDev, const ConstModelDataPtr& pMdlData, 
 		const fs::path& filepath, bool isSkinnedByDef = false);
 	bool save(const fs::path& filepath = fs::path());
 
@@ -115,7 +107,7 @@ protected:
 };
 
 class cModel {
-	cModelData const* mpData = nullptr;
+	ConstModelDataPtr mpData = nullptr;
 	cModelMaterial* mpMtl = nullptr;
 
 	com_ptr<ID3D11InputLayout> mpIL;
@@ -126,10 +118,18 @@ public:
 	cModel& operator=(cModel&&) = default;
 	~cModel() = default;
 
-	bool init(cModelData const& mdlData, cModelMaterial& mtl);
+	bool init(ConstModelDataPtr& pMdlData, cModelMaterial& mtl);
 	void deinit();
 
 	void disp(cRdrContext const& rdrCtx, const DirectX::XMMATRIX& wmtx) const;
 
 	void dbg_ui();
 };
+
+
+class cRigData;
+namespace nModelLoader {
+	ModelDataPtr find_or_load(const fs::path& path);
+	bool find_or_load_unreal(const fs::path& path, ModelDataPtr& pOutMdlData, cRigData* pRigData);
+	bool find_or_load_unreal(const fs::path& path, ConstModelDataPtr& pOutMdlData, cRigData* pRigData);
+}

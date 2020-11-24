@@ -47,6 +47,10 @@ set(SRC
 	src/scene_objects.cpp
 	src/rig.hpp
 	src/rig.cpp
+	src/resource.hpp
+	src/resource_mgr.hpp
+	src/resource_mgr.cpp
+	src/resource_load.cpp
 	src/rdr_queue.hpp
 	src/rdr_queue.cpp
 	src/rdr.hpp
