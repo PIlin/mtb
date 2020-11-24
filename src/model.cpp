@@ -379,8 +379,8 @@ bool cModelData::load_assimp(cAssimpLoader& loader) {
 void cModelData::unload() {
 	mVtx.deinit();
 	mIdx.deinit();
-	mpGroups.release();
-	mpGrpNames.release();
+	mpGroups.reset();
+	mpGrpNames.reset();
 }
 
 
