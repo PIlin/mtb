@@ -164,7 +164,7 @@ public:
 		sPositionComp& pos = reg.emplace<sPositionComp>(en);
 		cModelComp& mdl = reg.emplace<cModelComp>(en);
 
-		res = res && mdl.init(pMdlData, mMtl);
+		res = res && mdl.init(std::move(pMdlData), mMtl);
 
 		mEntity = en;
 
@@ -247,7 +247,7 @@ private:
 
 
 class cAnimationComp {
-	const cAnimationList* mpAnimList = nullptr;
+	ConstAnimationListPtr mpAnimList;
 	float mFrame = 0.0f;
 	float mSpeed = 1.0f;
 	int mCurAnim = 0;
@@ -255,7 +255,7 @@ class cAnimationComp {
 
 public:
 
-	cAnimationComp(const cAnimationList* pAnimList, cstr id, float speed = 1.0f)
+	cAnimationComp(ConstAnimationListPtr pAnimList, cstr id, float speed = 1.0f)
 		: mpAnimList(pAnimList)
 		, mId(id)
 		, mSpeed(speed)
@@ -313,7 +313,6 @@ protected:
 
 class cSkinnedAnimatedModelData : public cSkinnedModelData {
 protected:
-	cAnimationList mAnimList;
 };
 
 class cOwl : public cSkinnedAnimatedModelData {
@@ -333,20 +332,16 @@ public:
 
 		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
 
-		ConstAnimationDataListPtr pAnimDataList;
-		res = res && nResLoader::find_or_load(root, "def.alist", *&pAnimDataList);
-		if (res)
-		{
-			mAnimList.init(std::move(pAnimDataList), *pRigData);
-		}
+		ConstAnimationListPtr pAnimList;
+		res = res && nResLoader::find_or_load(root, "def.alist", *pRigData, *&pAnimList);
 
 		mEntity = reg.create();
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
 		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
-		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id);
+		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), id);
 
-		res = res && mdl.init(pMdlData, mMtl);
+		res = res && mdl.init(std::move(pMdlData), mMtl);
 		rig.init(std::move(pRigData));
 
 		const float scl = 0.01f;
@@ -373,20 +368,16 @@ public:
 
 		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
 
-		ConstAnimationDataListPtr pAnimDataList;
-		res = res && nResLoader::find_or_load(root, "def.alist", *&pAnimDataList);
-		if (res)
-		{
-			mAnimList.init(std::move(pAnimDataList), *pRigData);
-		}
+		ConstAnimationListPtr pAnimList;
+		res = res && nResLoader::find_or_load(root, "def.alist", *pRigData, *&pAnimList);
 
 		mEntity = reg.create();
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
 		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
-		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id);
+		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), id);
 
-		res = res && mdl.init(pMdlData, mMtl);
+		res = res && mdl.init(std::move(pMdlData), mMtl);
 		rig.init(std::move(pRigData));
 
 		const float scl = 1.0f;
@@ -413,22 +404,17 @@ public:
 		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerSkeletalMesh.FBX", *&pMdlData, *&pRigData);
 		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl");
 
-		ConstAnimationDataListPtr pAnimDataList;
-		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerWalk.FBX", *&pAnimDataList);
-		//res = res && nResLoader::find_or_load_unreal(root / "SideScrollerRun.FBX", *&pAnimDataList);
-		if (res)
-		{
-			mAnimList.init(std::move(pAnimDataList), *pRigData);
-		}
+		ConstAnimationListPtr pAnimList;
+		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerWalk.FBX", *pRigData, *&pAnimList);
 
 		mEntity = reg.create();
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
 		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
 		float speed = 1.0f / 60.0f;
-		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id, speed);
+		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), id, speed);
 
-		res = res && mdl.init(pMdlData, mMtl);
+		res = res && mdl.init(std::move(pMdlData), mMtl);
 		rig.init(std::move(pRigData));
 
 		const float scl = 0.01f;

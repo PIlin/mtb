@@ -130,11 +130,13 @@ private:
 DEF_RES_PTR(cAnimationDataList, AnimationDataListPtr);
 
 
-class cAnimationList : noncopyable {
+class cAnimationList : public sResourceBase {
 	std::unique_ptr<cAnimation[]> mpList;
 	int32_t mCount;
 	ConstAnimationDataListPtr mpDataList;
 public:
+	static ResourceTypeId type_id();
+
 	void init(ConstAnimationDataListPtr pDataList, cRigData const& rigData);
 
 	int32_t get_count() const { return mCount; }
@@ -150,4 +152,6 @@ public:
 		}
 	}
 };
+
+DEF_RES_PTR(cAnimationList, AnimationListPtr);
 

@@ -17,10 +17,12 @@ CLANG_DIAG_POP
 
 #include <entt/core/type_info.hpp>
 
-ResourceTypeId cModelData::type_id() { return entt::type_info<cModelData>::id(); }
-ResourceTypeId cRigData::type_id() { return entt::type_info<cRigData>::id(); }
-ResourceTypeId cAnimationDataList::type_id() { return entt::type_info<cAnimationDataList>::id(); }
-
+#define IMPL_RES_TYPE_ID_FUNC(TYPE)  ResourceTypeId TYPE::type_id() { return entt::type_info<TYPE>::id(); }
+IMPL_RES_TYPE_ID_FUNC(cModelData)
+IMPL_RES_TYPE_ID_FUNC(cRigData)
+IMPL_RES_TYPE_ID_FUNC(cAnimationDataList)
+IMPL_RES_TYPE_ID_FUNC(cAnimationList)
+#undef IMPL_RES_TYPE_ID_FUNC
 
 namespace nResLoader {
 
@@ -111,9 +113,56 @@ namespace nResLoader {
 		if (animLoader.load_unreal_fbx(path)) {
 			ptr = std::make_shared<cAnimationDataList>();
 			if (ptr->load(animLoader)) {
+				resMgr.insert(id, ptr);
 				pOutAnimDataList = std::move(ptr);
 				return true;
 			}
+		}
+
+		return false;
+	}
+
+	bool find_or_load(const fs::path& path, const fs::path& fname, const cRigData& rigData, ConstAnimationListPtr& pOutAnimList) {
+		const ResourceNameId nameId = (path / fname) / std::to_string(rigData.get_id_hash());
+
+		sResourceId id = sResourceId::make_id<cAnimationList>(nameId);
+		cResourceMgr& resMgr = cResourceMgr::get();
+		AnimationListPtr ptr = resMgr.find<cAnimationList>(id);
+		if (ptr) {
+			pOutAnimList = std::move(ptr);
+			return true;
+		}
+
+		ConstAnimationDataListPtr pAnimDataList;
+		if (nResLoader::find_or_load(path, fname, *&pAnimDataList)) {
+			ptr = std::make_shared<cAnimationList>();
+			ptr->init(std::move(pAnimDataList), rigData);
+			resMgr.insert(id, ptr);
+			pOutAnimList = std::move(ptr);
+			return true;
+		}
+
+		return false;
+	}
+
+	bool find_or_load_unreal(const fs::path& path, const cRigData& rigData, ConstAnimationListPtr& pOutAnimList) {
+		const ResourceNameId nameId = path / std::to_string(rigData.get_id_hash());
+
+		sResourceId id = sResourceId::make_id<cAnimationList>(nameId);
+		cResourceMgr& resMgr = cResourceMgr::get();
+		AnimationListPtr ptr = resMgr.find<cAnimationList>(id);
+		if (ptr) {
+			pOutAnimList = std::move(ptr);
+			return true;
+		}
+
+		ConstAnimationDataListPtr pAnimDataList;
+		if (nResLoader::find_or_load_unreal(path, *&pAnimDataList)) {
+			ptr = std::make_shared<cAnimationList>();
+			ptr->init(std::move(pAnimDataList), rigData);
+			resMgr.insert(id, ptr);
+			pOutAnimList = std::move(ptr);
+			return true;
 		}
 
 		return false;

@@ -24,6 +24,9 @@ void cResourceMgr::insert(const sResourceId& id, ResourceBasePtr ptr) {
 	assert(ptr);
 	if (!ptr) return; // todo: remember failed resources?
 
+	const ResourceIdHash hash = hash_fnv_1a_cwstr(id.name.c_str());
+	ptr->set_id_hash(hash);
+
 	mResMap[id.typeId][id.name] = std::move(ptr);
 }
 

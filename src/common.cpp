@@ -22,19 +22,23 @@ void dbg_msg(cstr format, ...) {
 
 // See http://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 // http://www.isthe.com/chongo/tech/comp/fnv/
-uint32_t hash_fnv_1a_cstr(char const* p) {
+template <typename CHAR>
+uint32_t hash_fnv_1a_str(CHAR const* p) {
 	if (!p) { return 0; }
 	const uint32_t prime = 16777619U;
 	const uint32_t offset = 2166136261U;
 
 	uint32_t val = offset;
-	for (char c = *p; c; c = *(++p)) {
-		val ^= (uint32_t)c;
+	for (CHAR c = *p; c; c = *(++p)) {
+		val ^= static_cast<uint32_t>(c);
 		val *= prime;
 	}
 
 	return val;
 }
+
+uint32_t hash_fnv_1a_cstr(char const* p) { return hash_fnv_1a_str<char>(p); }
+uint32_t hash_fnv_1a_cwstr(wchar_t const* p) { return hash_fnv_1a_str<wchar_t>(p); }
 
 std::hash<cstr>::result_type std::hash<cstr>::operator()(argument_type const& s) const {
 	return hash_fnv_1a_cstr(s.p);

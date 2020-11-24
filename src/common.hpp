@@ -62,6 +62,9 @@ struct std::hash < cstr > {
 	result_type operator()(argument_type const& s) const;
 };
 
+uint32_t hash_fnv_1a_cstr(char const* p);
+uint32_t hash_fnv_1a_cwstr(wchar_t const* p);
+
 template <typename T, typename TReleaser>
 struct base_ptr {
 	T* p = nullptr;
