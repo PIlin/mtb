@@ -99,11 +99,10 @@ public:
 };
 
 class cAnimationDataList : noncopyable {
-	cAnimationData* mpList = nullptr;
+	std::unique_ptr<cAnimationData[]> mpList = nullptr;
 	int32_t mCount = 0;
 	std::unordered_map<std::string, int32_t> mMap;
 public:
-	~cAnimationDataList();
 	bool load(const fs::path& path, const fs::path& filename);
 	bool load(cAssimpLoader& loader);
 

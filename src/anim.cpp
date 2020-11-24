@@ -289,7 +289,7 @@ public:
 			}
 		}
 
-		mList.mpList = pAdata.release();
+		mList.mpList = std::move(pAdata);
 		mList.mCount = anim;
 		mList.mMap = std::move(map);
 
@@ -483,10 +483,6 @@ void cAnimation::eval(cRig& rig, float frame) const {
 }
 
 
-cAnimationDataList::~cAnimationDataList() {
-	delete[] mpList;
-}
-
 bool cAnimationDataList::load(const fs::path& path, const fs::path& filename) {
 	cAnimListJsonLoader loader(*this, path);
 	return nJsonHelpers::load_file(path / filename, loader);
@@ -512,7 +508,7 @@ bool cAnimationDataList::load(cAssimpLoader& loader) {
 		}
 	}
 
-	mpList = pAdata.release();
+	mpList = std::move(pAdata);
 	mCount = anim;
 	mMap = std::move(map);
 
