@@ -13,6 +13,7 @@
 #include "sh.hpp"
 #include "light.hpp"
 #include "rdr_queue.hpp"
+#include "resource_load.hpp"
 
 #include <imgui.h>
 
@@ -156,11 +157,7 @@ public:
 		const fs::path root = cPathManager::build_data_path("lightning");
 
 		ConstModelDataPtr pMdlData;
-		if (res)
-		{
-			pMdlData = nModelLoader::find_or_load(root / "lightning.geo");
-			res = res && pMdlData;
-		}
+		res = res && nResLoader::find_or_load(root / "lightning.geo", *&pMdlData);
 		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "lightning.mtl");
 
 		entt::entity en = reg.create();
@@ -186,8 +183,8 @@ public:
 	cRigComp(cRigComp&& other) : mRig(std::move(other.mRig)) {}
 	cRigComp& operator=(cRigComp&&) = default;
 
-	void init(cRigData const* pRigData) {
-		mRig.init(pRigData);
+	void init(ConstRigDataPtr pRigData) {
+		mRig.init(std::move(pRigData));
 	}
 
 	void update_rig_mtx(const sPositionComp& pos) {
@@ -311,7 +308,6 @@ public:
 class cSkinnedModelData {
 protected:
 	cModelMaterial mMtl;
-	cRigData mRigData;
 };
 
 
@@ -332,17 +328,17 @@ public:
 		const fs::path root = cPathManager::build_data_path("owl");
 
 		ConstModelDataPtr pMdlData;
-		if (res)
-		{
-			pMdlData = nModelLoader::find_or_load(root / "def.geo");
-			res = res && pMdlData;
-		}
+		ConstRigDataPtr pRigData;
+		res = res && nResLoader::find_or_load(root / "def.geo", *&pMdlData);
 		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl");
 
-		res = res && mRigData.load(root / "def.rig");
+		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
 
 		res = res && mAnimDataList.load(root, "def.alist");
-		mAnimList.init(mAnimDataList, mRigData);
+		if (res)
+		{
+			mAnimList.init(mAnimDataList, *pRigData);
+		}
 
 		mEntity = reg.create();
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
@@ -351,7 +347,7 @@ public:
 		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id);
 
 		res = res && mdl.init(pMdlData, mMtl);
-		rig.init(&mRigData);
+		rig.init(std::move(pRigData));
 
 		const float scl = 0.01f;
 		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
@@ -371,17 +367,17 @@ public:
 		const fs::path root = cPathManager::build_data_path("jumping_sphere");
 
 		ConstModelDataPtr pMdlData;
-		if (res)
-		{
-			pMdlData = nModelLoader::find_or_load(root / "def.geo");
-			res = res && pMdlData;
-		}
+		ConstRigDataPtr pRigData;
+		res = res && nResLoader::find_or_load(root / "def.geo", *&pMdlData);
 		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl", true);
 
-		res = res && mRigData.load(root / "def.rig");
+		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
 
 		res = res && mAnimDataList.load(root, "def.alist");
-		mAnimList.init(mAnimDataList, mRigData);
+		if (res)
+		{
+			mAnimList.init(mAnimDataList, *pRigData);
+		}
 
 		mEntity = reg.create();
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
@@ -390,7 +386,7 @@ public:
 		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id);
 
 		res = res && mdl.init(pMdlData, mMtl);
-		rig.init(&mRigData);
+		rig.init(std::move(pRigData));
 
 		const float scl = 1.0f;
 		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
@@ -412,15 +408,18 @@ public:
 		const fs::path root = cPathManager::build_data_path("unreal_puppet");
 
 		ConstModelDataPtr pMdlData;
-		res = res && nModelLoader::find_or_load_unreal(root / "SideScrollerSkeletalMesh.FBX", *&pMdlData, &mRigData);
+		ConstRigDataPtr pRigData;
+		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerSkeletalMesh.FBX", *&pMdlData, *&pRigData);
 		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl");
 
 		{
 			cAssimpLoader animLoader;
 			//animLoader.load_unreal_fbx(cPathManager::build_data_path(OBJPATH "SideScrollerIdle.FBX"));
 			animLoader.load_unreal_fbx(root / "SideScrollerWalk.FBX");
-			mAnimDataList.load(animLoader);
-			mAnimList.init(mAnimDataList, mRigData);
+			if (mAnimDataList.load(animLoader))
+			{
+				mAnimList.init(mAnimDataList, *pRigData);
+			}
 		}
 
 		mEntity = reg.create();
@@ -431,7 +430,7 @@ public:
 		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, &mAnimList, id, speed);
 
 		res = res && mdl.init(pMdlData, mMtl);
-		rig.init(&mRigData);
+		rig.init(std::move(pRigData));
 
 		const float scl = 0.01f;
 		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);

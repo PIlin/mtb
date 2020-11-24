@@ -58,8 +58,9 @@ void cResourceMgr::clear() {
 			anyCleared = true;
 		}
 	} while (anyCleared && !mResMap.empty());
-
+	
 	if (!mResMap.empty()) {
+		assert(mResMap.empty());
 		for (const auto& trPair : mResMap) {
 			const ResourceMap& rm = trPair.second;
 			for (const auto& idResPair : rm) {

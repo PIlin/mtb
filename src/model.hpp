@@ -127,9 +127,3 @@ public:
 };
 
 
-class cRigData;
-namespace nModelLoader {
-	ModelDataPtr find_or_load(const fs::path& path);
-	bool find_or_load_unreal(const fs::path& path, ModelDataPtr& pOutMdlData, cRigData* pRigData);
-	bool find_or_load_unreal(const fs::path& path, ConstModelDataPtr& pOutMdlData, cRigData* pRigData);
-}

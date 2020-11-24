@@ -221,7 +221,7 @@ bool cRigData::load(cAssimpLoader& loader) {
 }
 
 
-void cRig::init(cRigData const* pRigData) {
+void cRig::init(ConstRigDataPtr pRigData) {
 	if (!pRigData) { return; }
 	
 	const int jointsNum = pRigData->mJointsNum;
@@ -260,7 +260,7 @@ void cRig::init(cRigData const* pRigData) {
 	}
 	
 	mJointsNum = jointsNum;
-	mpRigData = pRigData;
+	mpRigData = std::move(pRigData);
 	mpJoints = std::move(pJoints);
 	mpLMtx = std::move(pLMtx);
 	mpWmtx = std::move(pWMtx);

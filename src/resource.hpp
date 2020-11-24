@@ -6,7 +6,7 @@
 using ResourceTypeId = uint32_t;
 
 struct sResourceBase : public std::enable_shared_from_this<sResourceBase>, noncopyable {
-
+	virtual ~sResourceBase() {}
 };
 
 using ResourceBasePtr = std::shared_ptr<sResourceBase>;
