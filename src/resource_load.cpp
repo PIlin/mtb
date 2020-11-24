@@ -6,6 +6,7 @@
 //#include "texture.hpp"
 #include "model.hpp"
 #include "rig.hpp"
+#include "anim.hpp"
 
 CLANG_DIAG_PUSH
 CLANG_DIAG_IGNORE("-Wpragma-pack")
@@ -18,31 +19,36 @@ CLANG_DIAG_POP
 
 ResourceTypeId cModelData::type_id() { return entt::type_info<cModelData>::id(); }
 ResourceTypeId cRigData::type_id() { return entt::type_info<cRigData>::id(); }
+ResourceTypeId cAnimationDataList::type_id() { return entt::type_info<cAnimationDataList>::id(); }
 
 
 namespace nResLoader {
 
-	template <typename TRes>
-	bool find_or_load_simple(const fs::path& path, std::shared_ptr<const TRes>& pOut) {
-		sResourceId id = sResourceId::make_id<TRes>(path);
+	template <typename TRes, typename ...TArgs>
+	bool find_or_load_single(const ResourceNameId nameId, std::shared_ptr<const TRes>& pOut, TArgs... args) {
+		sResourceId id = sResourceId::make_id<TRes>(nameId);
 		cResourceMgr& resMgr = cResourceMgr::get();
 
 		auto ptr = resMgr.find<TRes>(id);
-		if (ptr)
-		{
+		if (ptr) {
 			pOut = std::move(ptr);
 			return true;
 		}
 
 		ptr = std::make_shared<TRes>();
-		if (ptr->load(path))
-		{
+		if (ptr->load(std::forward<TArgs>(args)...)) {
 			resMgr.insert(id, ptr);
 			pOut = std::move(ptr);
 			return true;
 		}
 
 		return false;
+	}
+
+
+	template <typename TRes>
+	bool find_or_load_simple(const fs::path& path, std::shared_ptr<const TRes>& pOut) {
+		return find_or_load_single(path, pOut, path);
 	}
 
 	bool find_or_load(const fs::path& path, ConstModelDataPtr& pOutMdlData) {
@@ -61,8 +67,7 @@ namespace nResLoader {
 
 		ModelDataPtr pMdl = resMgr.find<cModelData>(id);
 
-		if (pMdl)
-		{
+		if (pMdl) {
 			pOutMdlData = std::move(pMdl);
 			pOutRigData = resMgr.find<cRigData>(rigId);
 			return true;
@@ -76,8 +81,7 @@ namespace nResLoader {
 		RigDataPtr pRig = res ? std::make_shared<cRigData>() : nullptr;
 		res = res && pRig->load(loader);
 
-		if (res)
-		{
+		if (res) {
 			resMgr.insert(id, pMdl);
 			resMgr.insert(rigId, pRig);
 
@@ -88,5 +92,31 @@ namespace nResLoader {
 		return false;
 	}
 
+
+	bool find_or_load(const fs::path& path, const fs::path& fname, ConstAnimationDataListPtr& pOutAnimDataList) {
+		const ResourceNameId nameId = path / fname;
+		return find_or_load_single(nameId, pOutAnimDataList, path, fname);
+	}
+
+	bool find_or_load_unreal(const fs::path& path, ConstAnimationDataListPtr& pOutAnimDataList) {
+		sResourceId id = sResourceId::make_id<cAnimationDataList>(path);
+		cResourceMgr& resMgr = cResourceMgr::get();
+		AnimationDataListPtr ptr = resMgr.find<cAnimationDataList>(id);
+		if (ptr) {
+			pOutAnimDataList = std::move(ptr);
+			return true;
+		}
+
+		cAssimpLoader animLoader;
+		if (animLoader.load_unreal_fbx(path)) {
+			ptr = std::make_shared<cAnimationDataList>();
+			if (ptr->load(animLoader)) {
+				pOutAnimDataList = std::move(ptr);
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
 

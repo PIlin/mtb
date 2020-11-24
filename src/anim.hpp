@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include "resource.hpp"
 
 class cRigData;
 class cRig;
@@ -98,11 +99,13 @@ public:
 	}
 };
 
-class cAnimationDataList : noncopyable {
+class cAnimationDataList : public sResourceBase {
 	std::unique_ptr<cAnimationData[]> mpList = nullptr;
 	int32_t mCount = 0;
 	std::unordered_map<std::string, int32_t> mMap;
 public:
+	static ResourceTypeId type_id();
+
 	bool load(const fs::path& path, const fs::path& filename);
 	bool load(cAssimpLoader& loader);
 
@@ -124,12 +127,15 @@ private:
 	friend class cAnimListJsonLoader;
 };
 
+DEF_RES_PTR(cAnimationDataList, AnimationDataListPtr);
+
+
 class cAnimationList : noncopyable {
 	std::unique_ptr<cAnimation[]> mpList;
 	int32_t mCount;
-	cAnimationDataList const* mpDataList = nullptr;
+	ConstAnimationDataListPtr mpDataList;
 public:
-	void init(cAnimationDataList const& dataList, cRigData const& rigData);
+	void init(ConstAnimationDataListPtr pDataList, cRigData const& rigData);
 
 	int32_t get_count() const { return mCount; }
 	cAnimation const& operator[](int32_t idx) const {

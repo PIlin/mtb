@@ -477,8 +477,6 @@ void cAnimation::eval(cRig& rig, float frame) const {
 		else if (ch.mSubname[0] == 'r') {
 			ch.eval(xform.mQuat, frame);
 		}
-
-		
 	}
 }
 
@@ -516,17 +514,18 @@ bool cAnimationDataList::load(cAssimpLoader& loader) {
 }
 
 
-void cAnimationList::init(cAnimationDataList const& dataList, cRigData const& rigData) {
-	int32_t count = dataList.get_count();
+void cAnimationList::init(ConstAnimationDataListPtr pDataList, cRigData const& rigData) {
+	if (!pDataList) { return; }
+	int32_t count = pDataList->get_count();
 	if (count == 0) { return; }
 	auto pList = std::make_unique<cAnimation[]>(count);
 
 	for (int32_t i = 0; i < count; ++i) {
-		auto& data = dataList[i];
+		auto& data = (*pDataList)[i];
 		pList[i].init(data, rigData);
 	}
 
 	mpList = std::move(pList);
 	mCount = count;
-	mpDataList = &dataList;
+	mpDataList = std::move(pDataList);
 }

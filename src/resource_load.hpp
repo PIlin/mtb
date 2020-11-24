@@ -10,6 +10,7 @@
 
 FRWD_RES(cModelData, ModelDataPtr);
 FRWD_RES(cRigData, RigDataPtr);
+FRWD_RES(cAnimationDataList, AnimationDataListPtr);
 
 #undef FRWD_RES
 
@@ -19,4 +20,7 @@ namespace nResLoader {
 	bool find_or_load(const fs::path& path, ConstRigDataPtr& pOutRigData);
 
 	bool find_or_load_unreal(const fs::path& path, ConstModelDataPtr& pOutMdlData, ConstRigDataPtr& pOutRigData);
+
+	bool find_or_load(const fs::path& path, const fs::path& fname, ConstAnimationDataListPtr& pOutAnimDataList);
+	bool find_or_load_unreal(const fs::path& path, ConstAnimationDataListPtr& pOutAnimDataList);
 }

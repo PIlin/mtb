@@ -313,7 +313,6 @@ protected:
 
 class cSkinnedAnimatedModelData : public cSkinnedModelData {
 protected:
-	cAnimationDataList mAnimDataList;
 	cAnimationList mAnimList;
 };
 
@@ -334,10 +333,11 @@ public:
 
 		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
 
-		res = res && mAnimDataList.load(root, "def.alist");
+		ConstAnimationDataListPtr pAnimDataList;
+		res = res && nResLoader::find_or_load(root, "def.alist", *&pAnimDataList);
 		if (res)
 		{
-			mAnimList.init(mAnimDataList, *pRigData);
+			mAnimList.init(std::move(pAnimDataList), *pRigData);
 		}
 
 		mEntity = reg.create();
@@ -373,10 +373,11 @@ public:
 
 		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
 
-		res = res && mAnimDataList.load(root, "def.alist");
+		ConstAnimationDataListPtr pAnimDataList;
+		res = res && nResLoader::find_or_load(root, "def.alist", *&pAnimDataList);
 		if (res)
 		{
-			mAnimList.init(mAnimDataList, *pRigData);
+			mAnimList.init(std::move(pAnimDataList), *pRigData);
 		}
 
 		mEntity = reg.create();
@@ -412,14 +413,12 @@ public:
 		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerSkeletalMesh.FBX", *&pMdlData, *&pRigData);
 		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl");
 
+		ConstAnimationDataListPtr pAnimDataList;
+		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerWalk.FBX", *&pAnimDataList);
+		//res = res && nResLoader::find_or_load_unreal(root / "SideScrollerRun.FBX", *&pAnimDataList);
+		if (res)
 		{
-			cAssimpLoader animLoader;
-			//animLoader.load_unreal_fbx(cPathManager::build_data_path(OBJPATH "SideScrollerIdle.FBX"));
-			animLoader.load_unreal_fbx(root / "SideScrollerWalk.FBX");
-			if (mAnimDataList.load(animLoader))
-			{
-				mAnimList.init(mAnimDataList, *pRigData);
-			}
+			mAnimList.init(std::move(pAnimDataList), *pRigData);
 		}
 
 		mEntity = reg.create();

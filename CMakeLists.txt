@@ -50,6 +50,7 @@ set(SRC
 	src/resource.hpp
 	src/resource_mgr.hpp
 	src/resource_mgr.cpp
+	src/resource_load.hpp
 	src/resource_load.cpp
 	src/rdr_queue.hpp
 	src/rdr_queue.cpp
