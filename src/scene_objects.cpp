@@ -123,11 +123,11 @@ public:
 	cModelComp(cModelComp&& other) : mModel(std::move(other.mModel)) {}
 	cModelComp& operator=(cModelComp&&) = default;
 
-	bool init(ConstModelDataPtr pModelData, cModelMaterial& mtl) {
+	bool init(ConstModelDataPtr pModelData, ConstModelMaterialPtr pMtl) {
 		static_assert(std::is_move_constructible_v<cModelComp>, "The managed type must be at least move constructible");
 		static_assert(std::is_move_assignable_v<cModelComp>, "The managed type must be at least move assignable");
 
-		return mModel.init(pModelData, mtl);
+		return mModel.init(pModelData, pMtl);
 	}
 
 	void disp(cRdrContext const& rdrCtx, const DirectX::XMMATRIX& wmtx) const {
@@ -143,7 +143,6 @@ public:
 
 class cSolidModelData {
 protected:
-	cModelMaterial mMtl;
 public:
 };
 
@@ -157,14 +156,15 @@ public:
 		const fs::path root = cPathManager::build_data_path("lightning");
 
 		ConstModelDataPtr pMdlData;
+		ConstModelMaterialPtr pMtl;
 		res = res && nResLoader::find_or_load(root / "lightning.geo", *&pMdlData);
-		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "lightning.mtl");
+		res = res && nResLoader::find_or_load(root / "lightning.mtl", pMdlData, *&pMtl);
 
 		entt::entity en = reg.create();
 		sPositionComp& pos = reg.emplace<sPositionComp>(en);
 		cModelComp& mdl = reg.emplace<cModelComp>(en);
 
-		res = res && mdl.init(std::move(pMdlData), mMtl);
+		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
 
 		mEntity = en;
 
@@ -307,7 +307,6 @@ public:
 
 class cSkinnedModelData {
 protected:
-	cModelMaterial mMtl;
 };
 
 
@@ -326,9 +325,10 @@ public:
 		const fs::path root = cPathManager::build_data_path("owl");
 
 		ConstModelDataPtr pMdlData;
+		ConstModelMaterialPtr pMtl;
 		ConstRigDataPtr pRigData;
 		res = res && nResLoader::find_or_load(root / "def.geo", *&pMdlData);
-		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl");
+		res = res && nResLoader::find_or_load(root / "def.mtl", pMdlData, *&pMtl);
 
 		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
 
@@ -341,7 +341,7 @@ public:
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
 		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), id);
 
-		res = res && mdl.init(std::move(pMdlData), mMtl);
+		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
 		rig.init(std::move(pRigData));
 
 		const float scl = 0.01f;
@@ -362,10 +362,10 @@ public:
 		const fs::path root = cPathManager::build_data_path("jumping_sphere");
 
 		ConstModelDataPtr pMdlData;
+		ConstModelMaterialPtr pMtl;
 		ConstRigDataPtr pRigData;
 		res = res && nResLoader::find_or_load(root / "def.geo", *&pMdlData);
-		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl", true);
-
+		res = res && nResLoader::find_or_load(root / "def.mtl", pMdlData, *&pMtl, true);
 		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
 
 		ConstAnimationListPtr pAnimList;
@@ -377,7 +377,7 @@ public:
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
 		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), id);
 
-		res = res && mdl.init(std::move(pMdlData), mMtl);
+		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
 		rig.init(std::move(pRigData));
 
 		const float scl = 1.0f;
@@ -401,8 +401,9 @@ public:
 
 		ConstModelDataPtr pMdlData;
 		ConstRigDataPtr pRigData;
+		ConstModelMaterialPtr pMtl;
 		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerSkeletalMesh.FBX", *&pMdlData, *&pRigData);
-		res = res && mMtl.load(get_gfx().get_dev(), pMdlData, root / "def.mtl");
+		res = res && nResLoader::find_or_load(root / "def.mtl", pMdlData, *&pMtl, true);
 
 		ConstAnimationListPtr pAnimList;
 		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerWalk.FBX", *pRigData, *&pAnimList);
@@ -414,7 +415,7 @@ public:
 		float speed = 1.0f / 60.0f;
 		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), id, speed);
 
-		res = res && mdl.init(std::move(pMdlData), mMtl);
+		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
 		rig.init(std::move(pRigData));
 
 		const float scl = 0.01f;

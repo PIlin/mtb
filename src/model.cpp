@@ -384,9 +384,9 @@ void cModelData::unload() {
 }
 
 
-bool cModel::init(ConstModelDataPtr& pMdlData, cModelMaterial& mtl) {
+bool cModel::init(ConstModelDataPtr& pMdlData, ConstModelMaterialPtr& pMtl) {
 	mpData = pMdlData;
-	mpMtl = &mtl;
+	mpMtl = pMtl;
 
 	auto& ss = cShaderStorage::get();
 	auto pVS = ss.load_VS("model_solid.vs.cso");
@@ -411,7 +411,8 @@ bool cModel::init(ConstModelDataPtr& pMdlData, cModelMaterial& mtl) {
 }
 
 void cModel::deinit() {
-	mpData = nullptr;
+	mpData.reset();
+	mpMtl.reset();
 	if (mpIL) {
 		mpIL->Release();
 		mpIL = nullptr;
@@ -586,7 +587,7 @@ bool cModelMaterial::load(ID3D11Device* pDev, const ConstModelDataPtr& pMdlData,
 	return true;
 }
 
-bool cModelMaterial::save(const fs::path& filepath) {
+bool cModelMaterial::save(const fs::path& filepath) const {
 	if (!mpMdlData || !mpGrpMtl) return false;
 	
 	const fs::path& path = filepath.empty() 

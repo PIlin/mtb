@@ -74,13 +74,15 @@ struct sGroupMtlRes {
 	void apply(cRdrContext const& rdrCtx);
 };
 
-class cModelMaterial {
+class cModelMaterial : public sResourceBase {
 public:
 	ConstModelDataPtr mpMdlData = nullptr;
 	std::unique_ptr<sGroupMaterial[]> mpGrpMtl;
 	std::unique_ptr<sGroupMtlRes[]> mpGrpRes;
 
 	fs::path mFilepath;
+
+	static ResourceTypeId type_id();
 
 	cModelMaterial() {}
 	cModelMaterial(cModelMaterial&& o) :
@@ -97,18 +99,20 @@ public:
 
 	bool load(ID3D11Device* pDev, const ConstModelDataPtr& pMdlData, 
 		const fs::path& filepath, bool isSkinnedByDef = false);
-	bool save(const fs::path& filepath = fs::path());
+	bool save(const fs::path& filepath = fs::path()) const;
 
 	cstr get_grp_name(uint32_t i) const { return mpMdlData->mpGrpNames[i].c_str(); }
 
 protected:
-	bool serialize(const fs::path& filepath);
+	bool serialize(const fs::path& filepath) const;
 	bool deserialize(const fs::path& filepath);
 };
 
+DEF_RES_PTR(cModelMaterial, ModelMaterialPtr)
+
 class cModel {
-	ConstModelDataPtr mpData = nullptr;
-	cModelMaterial* mpMtl = nullptr;
+	ConstModelDataPtr mpData;
+	ConstModelMaterialPtr mpMtl;
 
 	com_ptr<ID3D11InputLayout> mpIL;
 
@@ -118,7 +122,7 @@ public:
 	cModel& operator=(cModel&&) = default;
 	~cModel() = default;
 
-	bool init(ConstModelDataPtr& pMdlData, cModelMaterial& mtl);
+	bool init(ConstModelDataPtr& pMdlData, ConstModelMaterialPtr& pMtl);
 	void deinit();
 
 	void disp(cRdrContext const& rdrCtx, const DirectX::XMMATRIX& wmtx) const;

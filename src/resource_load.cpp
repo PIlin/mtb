@@ -2,6 +2,7 @@
 
 #include "resource_mgr.hpp"
 #include "math.hpp"
+#include "gfx.hpp"
 #include "rdr.hpp"
 //#include "texture.hpp"
 #include "model.hpp"
@@ -19,6 +20,7 @@ CLANG_DIAG_POP
 
 #define IMPL_RES_TYPE_ID_FUNC(TYPE)  ResourceTypeId TYPE::type_id() { return entt::type_info<TYPE>::id(); }
 IMPL_RES_TYPE_ID_FUNC(cModelData)
+IMPL_RES_TYPE_ID_FUNC(cModelMaterial)
 IMPL_RES_TYPE_ID_FUNC(cRigData)
 IMPL_RES_TYPE_ID_FUNC(cAnimationDataList)
 IMPL_RES_TYPE_ID_FUNC(cAnimationList)
@@ -94,6 +96,12 @@ namespace nResLoader {
 		return false;
 	}
 
+	bool find_or_load(const fs::path& path, const ConstModelDataPtr& pMdlData, ConstModelMaterialPtr& pOutModelMaterial, bool isSkinnedByDef/* = false*/) {
+		const ResourceNameId nameId = path / std::to_string(pMdlData->get_id_hash());
+
+		ID3D11Device* pDev = get_gfx().get_dev();
+		return find_or_load_single(nameId, pOutModelMaterial, pDev, pMdlData, path, isSkinnedByDef);
+	}
 
 	bool find_or_load(const fs::path& path, const fs::path& fname, ConstAnimationDataListPtr& pOutAnimDataList) {
 		const ResourceNameId nameId = path / fname;

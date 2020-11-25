@@ -128,7 +128,7 @@ bool cModelMaterial::deserialize(const fs::path& filepath) {
 	return load_from_json(*this, filepath);
 }
 
-bool cModelMaterial::serialize(const fs::path& filepath) {
+bool cModelMaterial::serialize(const fs::path& filepath) const {
 	return save_to_json(*this, filepath);
 }
 
