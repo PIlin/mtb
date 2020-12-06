@@ -1,0 +1,44 @@
+{
+    "value0": {
+        "entityIds": [
+            0,
+            1
+        ],
+        "modelParams": {
+            "paramList": [
+                {
+                    "key": 0,
+                    "value": {
+                        "modelPath": {
+                            "value0": "lightning\\lightning.geo"
+                        },
+                        "materialPath": {
+                            "value0": "lightning\\lightning.mtl"
+                        }
+                    }
+                },
+                {
+                    "key": 1,
+                    "value": {
+                        "modelPath": {
+                            "value0": "owl\\def.geo"
+                        },
+                        "materialPath": {
+                            "value0": "owl\\lightning.mtl"
+                        }
+                    }
+                }
+            ],
+            "entityList": [
+                {
+                    "key": 0,
+                    "value": 0
+                },
+                {
+                    "key": 1,
+                    "value": 1
+                }
+            ]
+        }
+    }
+}

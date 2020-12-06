@@ -45,6 +45,7 @@ set(SRC
 	src/serialization.cpp
 	src/scene_objects.hpp
 	src/scene_objects.cpp
+	src/scene_components.hpp
 	src/rig.hpp
 	src/rig.cpp
 	src/resource.hpp

@@ -9,12 +9,16 @@
 #include "camera.hpp"
 #include "sh.hpp"
 #include "light.hpp"
+#include "scene_components.hpp"
 
 CLANG_DIAG_PUSH
 CLANG_DIAG_IGNORE("-Wunused-local-typedef")
 CLANG_DIAG_IGNORE("-Wunused-private-field")
 CLANG_DIAG_IGNORE("-Wexceptions")
 #include <cereal/archives/json.hpp>
+#include <cereal/types/map.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 CLANG_DIAG_POP
 
 
@@ -75,6 +79,35 @@ static bool load_from_json(T& object, const fs::path& filepath) {
 //	arc(tmp.f);
 //	m = tmp.v;
 //}
+
+
+void load(cereal::JSONInputArchive& arc, fs::path& p) {
+	std::string str;
+	arc(str);
+	p = fs::path(str);
+}
+
+void save(cereal::JSONOutputArchive& arc, fs::path const& p) {
+	std::string str = p.u8string();
+	arc(str);
+}
+
+// TODO: why cereal cannot find fs::path save/load functions?
+struct sPathWrapper {
+	fs::path& p;
+};
+
+template<class Archive>
+void load(Archive& arc, sPathWrapper& p) {
+	load(arc, p.p);
+}
+
+template<class Archive>
+void save(Archive& arc, sPathWrapper const& p) {
+	save(arc, p.p);
+}
+#define FILEPATH_NVP(p) ::cereal::make_nvp(#p, sPathWrapper{p})
+
 
 template<class Archive>
 void serialize(Archive& arc, vec4& v)
@@ -221,3 +254,31 @@ bool cLightMgr::save(const fs::path& filepath) {
 	return save_to_json(*this, filepath);
 }
 
+
+template <class Archive>
+void sModelCompParams::serialize(Archive& arc) {
+	arc(FILEPATH_NVP(modelPath));
+	ARC(FILEPATH_NVP(materialPath));
+}
+
+
+template <typename Params>
+template <class Archive>
+void sParamList<Params>::serialize(Archive& arc) {
+	ARC(CEREAL_NVP(paramList));
+	ARC(CEREAL_NVP(entityList));
+}
+
+
+template <class Archive>
+void sSceneSnapshot::serialize(Archive& arc) {
+	ARC(CEREAL_NVP(entityIds));
+	ARC(CEREAL_NVP(modelParams));
+}
+
+bool sSceneSnapshot::load(const fs::path& filepath) {
+	return load_from_json(*this, filepath);
+}
+bool sSceneSnapshot::save(const fs::path& filepath) {
+	return save_to_json(*this, filepath);
+}

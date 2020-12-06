@@ -14,6 +14,7 @@
 #include "light.hpp"
 #include "rdr_queue.hpp"
 #include "resource_load.hpp"
+#include "scene_components.hpp"
 
 #include <imgui.h>
 
@@ -116,6 +117,8 @@ struct sPositionComp {
 	{}
 };
 
+
+
 class cModelComp {
 	cModel mModel;
 public:
@@ -139,15 +142,26 @@ public:
 	}
 };
 
+bool sModelCompParams::create(entt::registry& reg, entt::entity en) const {
+	ConstModelDataPtr pMdlData;
+	ConstModelMaterialPtr pMtl;
+
+	bool res = true;
+	res = res && nResLoader::find_or_load(cPathManager::build_data_path(modelPath), *&pMdlData);
+	res = res && nResLoader::find_or_load(cPathManager::build_data_path(materialPath), pMdlData, *&pMtl);
+
+	if (!res) return res;
+
+	sPositionComp& pos = reg.get_or_emplace<sPositionComp>(en);
+	cModelComp& mdl = reg.emplace<cModelComp>(en);
+	res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
+
+	return res;
+}
 
 
-class cSolidModelData {
-protected:
-public:
-};
 
-
-class cLightning : public cSolidModelData {
+class cLightning {
 	entt::entity mEntity;
 public:
 	bool init(entt::registry& reg) {
@@ -305,16 +319,8 @@ public:
 };
 
 
-class cSkinnedModelData {
-protected:
-};
 
-
-class cSkinnedAnimatedModelData : public cSkinnedModelData {
-protected:
-};
-
-class cOwl : public cSkinnedAnimatedModelData {
+class cOwl {
 	entt::entity mEntity;
 public:
 
@@ -352,7 +358,7 @@ public:
 	}
 };
 
-class cJumpingSphere : public cSkinnedAnimatedModelData {
+class cJumpingSphere {
 	entt::entity mEntity;
 public:
 	bool init(entt::registry& reg) {
@@ -389,7 +395,7 @@ public:
 };
 
 
-class cUnrealPuppet : public cSkinnedAnimatedModelData {
+class cUnrealPuppet {
 	entt::entity mEntity;
 public:
 
@@ -524,14 +530,18 @@ class cScene {
 	entt::registry registry;
 
 	cGnomon gnomon;
-	cLightning lightning;
-	cJumpingSphere sphere;
-	cOwl owl;
-	cUnrealPuppet upuppet;
+	//cLightning lightning;
+	//cJumpingSphere sphere;
+	//cOwl owl;
+	//cUnrealPuppet upuppet;
 	cCameraManager cameraMgr;
 	cLightMgrUpdate lightMgr;
 	cModelRdrJobs modelRdrJobs;
 	cAnimationSys animSys;
+
+	sSceneSnapshot snapshot;
+
+	cUpdateSubscriberScope mDbgUpdate;
 public:
 
 	cScene() 
@@ -539,14 +549,77 @@ public:
 		, animSys(registry)
 	{
 		gnomon.init();
-		lightning.init(registry);
-		sphere.init(registry);
-		owl.init(registry);
-		upuppet.init(registry);
+		//lightning.init(registry);
+		//sphere.init(registry);
+		//owl.init(registry);
+		//upuppet.init(registry);
 		cameraMgr.init();
 		lightMgr.init();
 		modelRdrJobs.init();
 		animSys.register_anim_update();
+
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cScene::dbg_ui, this)), mDbgUpdate);
+
+		load();
+		create_from_snapshot();
+	}
+
+	~cScene() {
+		save();
+	}
+
+	static fs::path get_scene_snapshot_path() { return cPathManager::build_data_path("scene.json"); }
+
+	void create_from_snapshot() {
+		if (!registry.empty()) {
+			registry.clear();
+		}
+
+		for (entt::entity en : snapshot.entityIds) {
+			entt::entity realEn = registry.create(en);
+			if (realEn != en) {
+				__debugbreak();
+			}
+		}
+
+		for (const auto& [en, paramId] : snapshot.modelParams.entityList) {
+			const sModelCompParams& param = snapshot.modelParams.paramList[paramId];
+			param.create(registry, en);
+		}
+	}
+
+	void load() {
+		if (snapshot.load(get_scene_snapshot_path())) {
+
+		}
+		else {
+			fs::path root;
+			root = fs::path("lightning");
+			const uint32_t lightningParamId = (uint32_t)snapshot.modelParams.paramList.size();
+			snapshot.modelParams.paramList.emplace(lightningParamId, sModelCompParams{ root / "lightning.geo", root / "lightning.mtl" });
+
+			root = fs::path("owl");
+			const uint32_t owlParamId = (uint32_t)snapshot.modelParams.paramList.size();
+			snapshot.modelParams.paramList.emplace(owlParamId, sModelCompParams{ root / "def.geo", root / "lightning.mtl" });
+
+
+			entt::entity lightning = registry.create();
+			entt::entity owl = registry.create();
+			snapshot.entityIds.push_back(lightning);
+			snapshot.entityIds.push_back(owl);
+
+			snapshot.modelParams.entityList.emplace(lightning, lightningParamId);
+			snapshot.modelParams.entityList.emplace(owl, owlParamId);
+		}
+	}
+
+	void save() {
+		snapshot.save(get_scene_snapshot_path());
+	}
+
+	void dbg_ui() {
+		//ImGui::Begin("scene");
+		//ImGui::End();
 	}
 };
 
