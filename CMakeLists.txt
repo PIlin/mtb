@@ -29,6 +29,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rd_party")
 add_subdirectory("${THIRD_PARTY_DIR}/SDL2")
 add_subdirectory("${THIRD_PARTY_DIR}/imgui")
+add_subdirectory("${THIRD_PARTY_DIR}/imguizmo")
 add_subdirectory("${THIRD_PARTY_DIR}/DirectXTK")
 add_subdirectory("${THIRD_PARTY_DIR}/assimp")
 add_subdirectory("${THIRD_PARTY_DIR}/cereal")
@@ -109,7 +110,7 @@ set_source_files_properties(${HLSL_PS} PROPERTIES VS_SHADER_TYPE Pixel  VS_SHADE
 source_group("hlsl" FILES ${HLSL})
 
 add_executable(mtb ${SRC} ${HLSL})
-target_link_libraries(mtb PRIVATE SDL2-static SDL2main imgui DirectXTK assimp cereal EnTT d3d11 d3dcompiler)
+target_link_libraries(mtb PRIVATE SDL2-static SDL2main imgui imguizmo DirectXTK assimp cereal EnTT d3d11 d3dcompiler)
 
 
 set (BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
