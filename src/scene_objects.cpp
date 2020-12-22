@@ -652,6 +652,7 @@ class cSceneEditor {
 	struct iComponentReg {
 		std::string name;
 		entt::id_type id;
+		int32_t order = 0;
 
 		const char* ui_name() const { return name.c_str(); }
 		virtual void ui(entt::registry& reg, entt::entity en, sSceneEditCtx& ctx) = 0;
@@ -683,6 +684,7 @@ public:
 	void register_component(const char* szName) {
 		std::unique_ptr<iComponentReg> r = std::make_unique<sComponentReg<TComp>>(szName);
 		entt::id_type id = r->id;
+		r->order = (int32_t)mComponentTypes.size();
 		mComponentTypes[id] = std::move(r);
 	}
 
@@ -746,6 +748,7 @@ public:
 
 		std::vector<entt::id_type> componentTypes;
 		reg.visit(en, [&](entt::id_type t) { componentTypes.push_back(t); });
+		sort_components_by_order(componentTypes);
 
 		for (auto t : componentTypes) {
 			auto it = mComponentTypes.find(t);
@@ -762,6 +765,21 @@ public:
 				}
 			}
 		}
+	}
+
+	void sort_components_by_order(std::vector<entt::id_type>& comp) const {
+		std::sort(comp.begin(), comp.end(), [&](entt::id_type a, entt::id_type b) {
+			auto ait = mComponentTypes.find(a);
+			auto bit = mComponentTypes.find(b);
+			auto eit = mComponentTypes.end();
+			if (ait != eit && bit != eit) {
+				return ait->second->order < bit->second->order;
+			}
+			else if (ait != eit) {
+				return true;
+			}
+			return false;
+		});
 	}
 };
 
