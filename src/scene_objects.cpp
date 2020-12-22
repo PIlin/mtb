@@ -115,8 +115,16 @@ struct sPositionComp {
 	sPositionComp()
 		: wmtx(DirectX::XMMatrixIdentity())
 	{}
+
+	sPositionComp(DirectX::FXMMATRIX wmtx)
+		: wmtx(wmtx)
+	{}
 };
 
+bool sPositionCompParams::create(entt::registry& reg, entt::entity en) const {
+	reg.emplace<sPositionComp>(en, xform.build_mtx());
+	return true;
+}
 
 
 class cModelComp {
@@ -578,14 +586,12 @@ public:
 		for (entt::entity en : snapshot.entityIds) {
 			entt::entity realEn = registry.create(en);
 			if (realEn != en) {
-				__debugbreak();
+				dbg_break();
 			}
 		}
 
-		for (const auto& [en, paramId] : snapshot.modelParams.entityList) {
-			const sModelCompParams& param = snapshot.modelParams.paramList[paramId];
-			param.create(registry, en);
-		}
+		snapshot.posParams.create(registry);
+		snapshot.modelParams.create(registry);
 	}
 
 	void load() {
@@ -596,18 +602,29 @@ public:
 			fs::path root;
 			root = fs::path("lightning");
 			const uint32_t lightningParamId = (uint32_t)snapshot.modelParams.paramList.size();
+			sXform xform;
+			xform.init(nMtx::g_Identity);
+			snapshot.posParams.paramList.emplace(lightningParamId, sPositionCompParams{ xform });
 			snapshot.modelParams.paramList.emplace(lightningParamId, sModelCompParams{ root / "lightning.geo", root / "lightning.mtl" });
 
 			root = fs::path("owl");
 			const uint32_t owlParamId = (uint32_t)snapshot.modelParams.paramList.size();
-			snapshot.modelParams.paramList.emplace(owlParamId, sModelCompParams{ root / "def.geo", root / "lightning.mtl" });
-
+			{
+				const float scl = 0.01f;
+				xform.mPos = dx::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
+				xform.mQuat = dx::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+				xform.mScale = dx::XMVectorSet(scl, scl, scl, 0.0f);
+				snapshot.posParams.paramList.emplace(owlParamId, sPositionCompParams{ xform });
+				snapshot.modelParams.paramList.emplace(owlParamId, sModelCompParams{ root / "def.geo", root / "lightning.mtl" });
+			}
 
 			entt::entity lightning = registry.create();
 			entt::entity owl = registry.create();
 			snapshot.entityIds.push_back(lightning);
 			snapshot.entityIds.push_back(owl);
 
+			snapshot.posParams.entityList.emplace(lightning, lightningParamId);
+			snapshot.posParams.entityList.emplace(owl, owlParamId);
 			snapshot.modelParams.entityList.emplace(lightning, lightningParamId);
 			snapshot.modelParams.entityList.emplace(owl, owlParamId);
 		}

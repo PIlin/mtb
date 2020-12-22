@@ -184,6 +184,7 @@ struct sD3DException : public std::exception {
 
 void dbg_msg1(cstr format);
 void dbg_msg(cstr format, ...);
+inline void dbg_break() { __debugbreak(); }
 
 struct sScopedExecutor {
 	template <typename TStart, typename TEnd>

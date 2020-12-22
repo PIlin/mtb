@@ -122,6 +122,27 @@ void serialize(Archive& arc, tvec2<T>& vec2) {
 }
 
 template <class Archive>
+void serialize(Archive& arc, sXform& xform)
+{
+	vec4 pos, quat, scl;
+	if (Archive::is_saving::value)
+	{
+		DirectX::XMStoreFloat4(&pos.mVal, xform.mPos);
+		DirectX::XMStoreFloat4(&quat.mVal, xform.mQuat);
+		DirectX::XMStoreFloat4(&scl.mVal, xform.mScale);
+	}
+	ARC(CEREAL_NVP(pos));
+	ARC(CEREAL_NVP(quat));
+	ARC(CEREAL_NVP(scl));
+	if (Archive::is_loading::value)
+	{
+		xform.mPos = DirectX::XMLoadFloat4(&pos.mVal);
+		xform.mQuat = DirectX::XMLoadFloat4(&quat.mVal);
+		xform.mScale = DirectX::XMLoadFloat4(&scl.mVal);
+	}
+}
+
+template <class Archive>
 void sTestMtlCBuf::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(fresnel));
 	ARC(CEREAL_NVP(shin));
@@ -256,6 +277,12 @@ bool cLightMgr::save(const fs::path& filepath) {
 
 
 template <class Archive>
+void sPositionCompParams::serialize(Archive& arc) {
+	ARC(CEREAL_NVP(xform));
+}
+
+
+template <class Archive>
 void sModelCompParams::serialize(Archive& arc) {
 	arc(FILEPATH_NVP(modelPath));
 	ARC(FILEPATH_NVP(materialPath));
@@ -273,6 +300,7 @@ void sParamList<Params>::serialize(Archive& arc) {
 template <class Archive>
 void sSceneSnapshot::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(entityIds));
+	ARC(CEREAL_NVP(posParams));
 	ARC(CEREAL_NVP(modelParams));
 }
 

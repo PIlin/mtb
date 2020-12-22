@@ -4,6 +4,70 @@
             0,
             1
         ],
+        "posParams": {
+            "paramList": [
+                {
+                    "key": 0,
+                    "value": {
+                        "xform": {
+                            "pos": {
+                                "value0": 0.0,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 1.0
+                            },
+                            "quat": {
+                                "value0": -0.0,
+                                "value1": 0.0,
+                                "value2": -0.0,
+                                "value3": 1.0
+                            },
+                            "scl": {
+                                "value0": 1.0,
+                                "value1": 1.0,
+                                "value2": 1.0,
+                                "value3": 0.0
+                            }
+                        }
+                    }
+                },
+                {
+                    "key": 1,
+                    "value": {
+                        "xform": {
+                            "pos": {
+                                "value0": 1.0,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 1.0
+                            },
+                            "quat": {
+                                "value0": 0.0,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 1.0
+                            },
+                            "scl": {
+                                "value0": 0.009999999776482582,
+                                "value1": 0.009999999776482582,
+                                "value2": 0.009999999776482582,
+                                "value3": 0.0
+                            }
+                        }
+                    }
+                }
+            ],
+            "entityList": [
+                {
+                    "key": 0,
+                    "value": 0
+                },
+                {
+                    "key": 1,
+                    "value": 1
+                }
+            ]
+        },
         "modelParams": {
             "paramList": [
                 {
