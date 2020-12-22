@@ -63,6 +63,60 @@ DirectX::XMVECTOR XM_CALLCONV euler_xyz_to_quat(DirectX::FXMVECTOR xyz) {
 }
 
 
+
+DirectX::XMVECTOR XM_CALLCONV euler_zyx_to_quat(DirectX::XMFLOAT3 euler) {
+	// from "Technical Concepts Orientation, Rotation, Velocity and Acceleration, and the SRM"
+	// https://www.sedris.org/wg8home/Documents/WG80485.pdf
+	// 3.4.9 Euler angle convention to quaternion
+
+	vec4 tmp = vec4::from_float3(euler, 0.0f);
+	dx::XMVECTOR angles = dx::XMLoadFloat4(&tmp.mVal);
+	angles = dx::XMVectorScale(angles, 0.5f);
+	dx::XMVECTOR vs, vc;
+	dx::XMVectorSinCos(&vs, &vc, angles);
+
+	dx::XMFLOAT4 s, c;
+	dx::XMStoreFloat4(&s, vs);
+	dx::XMStoreFloat4(&c, vc);
+
+	float e0 = (c.z * c.y * c.x) + (s.z * s.y * s.x);
+	float e1 = (c.z * c.y * s.x) - (s.z * s.y * c.x);
+	float e2 = (c.z * s.y * c.x) + (s.z * c.y * s.x);
+	float e3 = (s.z * c.y * c.x) - (c.z * s.y * s.x);
+
+	dx::XMVECTOR quat = dx::XMVectorSet(e1, e2, e3, e0);
+	return quat;
+}
+
+DirectX::XMFLOAT3 XM_CALLCONV quat_to_euler_zyx(DirectX::FXMVECTOR quat) {
+	dx::XMFLOAT4 q;
+	dx::XMStoreFloat4(&q, quat);
+	dx::XMFLOAT3 euler;
+
+	// from "Technical Concepts Orientation, Rotation, Velocity and Acceleration, and the SRM"
+	// https://www.sedris.org/wg8home/Documents/WG80485.pdf
+	// 3.4.10 Quaternion to Euler angle convention
+	float e0 = q.w;
+	float e1 = q.x;
+	float e2 = q.y;
+	float e3 = q.z;
+
+	float pri = 2.0f * (e1 * e3 - e0 * e2);
+	if ((pri >= 1.0f) || (pri <= -1.0f)) {
+		euler.x = 0.0f;
+		euler.y = -copysignf(dx::XM_PIDIV2, pri);
+		float z = atan2f((e1 * e2 - e0 * e3), (e1 * e3 + e0 * e2));
+		euler.z = copysignf(z, pri);
+	}
+	else {
+		euler.x = atan2f((e2 * e3 + e0 * e1), 0.5f - (e1 * e1 + e2 * e2));
+		euler.y = asinf(-pri);
+		euler.z = atan2f((e1 * e2 + e0 * e3), 0.5f - (e2 * e2 + e3 * e3));
+	}
+
+	return euler;
+}
+
 void XM_CALLCONV sXform::init(DirectX::FXMMATRIX mtx) {
 	// dx::XMMatrixDecompose(&mScale, &mQuat, &mPos, mtx) does, probably, too much.
 	mPos = mtx.r[3];

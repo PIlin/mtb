@@ -32,6 +32,11 @@ CLANG_DIAG_POP
 namespace dx = DirectX;
 using dx::XMFLOAT4;
 
+struct sSceneEditCtx
+{
+	cCamera::sView camView;
+};
+
 class cGnomon : public iRdrJob {
 	struct sVtx {
 		float mPos[3];
@@ -121,37 +126,8 @@ struct sPositionComp {
 		: wmtx(wmtx)
 	{}
 
-	void dbg_ui() {
-		sXform xform;
-		//xform.init(wmtx);
-		dx::XMMatrixDecompose(&xform.mScale, &xform.mQuat, &xform.mPos, wmtx);
-		dx::XMVECTOR rotOrig = xform.mQuat;
-
-		vec4 tmp;
-		float* tmpArr = reinterpret_cast<float*>(&tmp.mVal);
-
-		bool changed = false;
-
-		dx::XMStoreFloat4(&tmp.mVal, xform.mPos);
-		if (ImGui::DragFloat3("Pos", tmpArr)) {
-			xform.mPos = dx::XMLoadFloat4(&tmp.mVal);
-			changed = true;
-		}
-		dx::XMStoreFloat4(&tmp.mVal, xform.mQuat);
-		if (ImGui::DragFloat4("Qaut", tmpArr)) {
-			xform.mQuat = dx::XMLoadFloat4(&tmp.mVal);
-			xform.mQuat = dx::XMQuaternionNormalize(xform.mQuat);
-			changed = true;
-		}
-		dx::XMStoreFloat4(&tmp.mVal, xform.mScale);
-		if (ImguiDragFloat3_1("Scl", tmpArr, 0.01f)) {
-			xform.mScale = dx::XMLoadFloat4(&tmp.mVal);
-			changed = true;
-		}
-
-		if (changed) {
-			wmtx = xform.build_mtx();
-		}
+	void dbg_ui(sSceneEditCtx& ctx) {
+		ImguiGizmoEditTransform(&wmtx, ctx.camView, true);
 	}
 };
 
@@ -179,7 +155,7 @@ public:
 		mModel.disp(rdrCtx, wmtx);
 	}
 
-	void dbg_ui() {
+	void dbg_ui(sSceneEditCtx& ctx) {
 		mModel.dbg_ui();
 	}
 };
@@ -508,6 +484,8 @@ public:
 		camCBuf.set_VS(pCtx);
 		camCBuf.set_PS(pCtx);
 	}
+
+	const cCamera& get_cam() const { return mCamera; }
 };
 
 ////
@@ -676,7 +654,7 @@ class cSceneEditor {
 		entt::id_type id;
 
 		const char* ui_name() const { return name.c_str(); }
-		virtual void ui(entt::registry& reg, entt::entity en) = 0;
+		virtual void ui(entt::registry& reg, entt::entity en, sSceneEditCtx& ctx) = 0;
 		virtual ~iComponentReg() {}
 	};
 
@@ -687,9 +665,9 @@ class cSceneEditor {
 			id = entt::type_info<T>::id();
 		}
 
-		virtual void ui(entt::registry& reg, entt::entity en) override {
+		virtual void ui(entt::registry& reg, entt::entity en, sSceneEditCtx& ctx) override {
 			if (T* p = reg.try_get<T>(en)) {
-				p->dbg_ui();
+				p->dbg_ui(ctx);
 			}
 		}
 	};
@@ -729,15 +707,18 @@ public:
 	void dbg_ui() {
 		if (!mpScene) return;
 		
+		sSceneEditCtx ctx;
+		ctx.camView = mpScene->cameraMgr.get_cam().mView;
+
 		ImGui::Begin("scene");
-		show_entity_list();
+		show_entity_list(ctx);
 		
-		if (mSelected != entt::null) show_entity_components(mSelected);
+		if (mSelected != entt::null) show_entity_components(mSelected, ctx);
 
 		ImGui::End();
 	}
 
-	void show_entity_list() {
+	void show_entity_list(sSceneEditCtx& ctx) {
 		entt::registry& reg = mpScene->registry;
 
 		std::vector<entt::entity> alive;
@@ -760,7 +741,7 @@ public:
 		}
 	}
 
-	void show_entity_components(entt::entity en) {
+	void show_entity_components(entt::entity en, sSceneEditCtx& ctx) {
 		entt::registry& reg = mpScene->registry;
 
 		std::vector<entt::id_type> componentTypes;
@@ -770,7 +751,7 @@ public:
 			auto it = mComponentTypes.find(t);
 			if (it != mComponentTypes.end()) {
 				if (ImGui::TreeNode(it->second->ui_name())) {
-					it->second->ui(reg, en);
+					it->second->ui(reg, en, ctx);
 					ImGui::TreePop();
 				}
 			}

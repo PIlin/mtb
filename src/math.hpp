@@ -15,12 +15,18 @@ struct vec3 {
 struct vec4 {
 	DirectX::XMFLOAT4 mVal;
 
+	static vec4 from_float3(DirectX::XMFLOAT3 f3, float w) {
+		return vec4{ { f3.x, f3.y, f3.z, w } };
+	}
+
 	float operator[](int idx) const {
 		return reinterpret_cast<float const*>(&mVal)[idx];
 	}
 	float& operator[](int idx) {
 		return reinterpret_cast<float*>(&mVal)[idx];
 	}
+
+	DirectX::XMFLOAT3 xyz() const { return DirectX::XMFLOAT3(mVal.x, mVal.y, mVal.z); }
 };
 struct vec4i {
 	DirectX::XMINT4 mVal;
@@ -125,6 +131,9 @@ DirectX::XMVECTOR XM_CALLCONV hermite(
 );
 
 DirectX::XMVECTOR XM_CALLCONV euler_xyz_to_quat(DirectX::FXMVECTOR xyz);
+
+DirectX::XMVECTOR XM_CALLCONV euler_zyx_to_quat(DirectX::XMFLOAT3 euler);
+DirectX::XMFLOAT3 XM_CALLCONV quat_to_euler_zyx(DirectX::FXMVECTOR quat);
 
 namespace nMtx {
 extern const DirectX::XMMATRIX g_Identity;

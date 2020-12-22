@@ -1,15 +1,18 @@
+struct sCameraView {
+	DirectX::XMMATRIX mView;
+	DirectX::XMMATRIX mProj;
+	DirectX::XMMATRIX mViewProj;
+	DirectX::XMVECTOR mPos;
+
+	void calc_view(DirectX::XMVECTOR const& pos, DirectX::XMVECTOR const& tgt, DirectX::XMVECTOR const& up);
+	void calc_proj(float fovY, float aspect, float nearZ, float farZ);
+	void calc_viewProj();
+};
+
+
 class cCamera {
 public:
-	struct sView {
-		DirectX::XMMATRIX mView;
-		DirectX::XMMATRIX mProj;
-		DirectX::XMMATRIX mViewProj;
-		DirectX::XMVECTOR mPos;
-
-		void calc_view(DirectX::XMVECTOR const& pos, DirectX::XMVECTOR const& tgt, DirectX::XMVECTOR const& up);
-		void calc_proj(float fovY, float aspect, float nearZ, float farZ);
-		void calc_viewProj();
-	};
+	using sView = sCameraView;
 
 	DirectX::XMVECTOR mPos;
 	DirectX::XMVECTOR mTgt;

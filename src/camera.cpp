@@ -14,16 +14,16 @@ namespace dx = DirectX;
 extern vec2i get_window_size();
 
 
-void cCamera::sView::calc_view(dx::XMVECTOR const& pos, dx::XMVECTOR const& tgt, dx::XMVECTOR const& up) {
+void sCameraView::calc_view(dx::XMVECTOR const& pos, dx::XMVECTOR const& tgt, dx::XMVECTOR const& up) {
 	mView = dx::XMMatrixLookAtRH(pos, tgt, up);
 	mPos = pos;
 }
 
-void cCamera::sView::calc_proj(float fovY, float aspect, float nearZ, float farZ) {
+void sCameraView::calc_proj(float fovY, float aspect, float nearZ, float farZ) {
 	mProj = dx::XMMatrixPerspectiveFovRH(fovY, aspect, nearZ, farZ);
 }
 
-void cCamera::sView::calc_viewProj() {
+void sCameraView::calc_viewProj() {
 	mViewProj = mView * mProj;
 }
 
