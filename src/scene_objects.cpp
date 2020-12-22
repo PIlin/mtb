@@ -653,6 +653,7 @@ class cSceneEditor {
 		std::string name;
 		entt::id_type id;
 		int32_t order = 0;
+		bool openByDefault = false;
 
 		const char* ui_name() const { return name.c_str(); }
 		virtual void ui(entt::registry& reg, entt::entity en, sSceneEditCtx& ctx) = 0;
@@ -681,15 +682,15 @@ class cSceneEditor {
 public:
 
 	template <typename TComp>
-	void register_component(const char* szName) {
+	iComponentReg& register_component(const char* szName) {
 		std::unique_ptr<iComponentReg> r = std::make_unique<sComponentReg<TComp>>(szName);
 		entt::id_type id = r->id;
 		r->order = (int32_t)mComponentTypes.size();
-		mComponentTypes[id] = std::move(r);
+		return *(mComponentTypes[id] = std::move(r)).get();
 	}
 
 	cSceneEditor() {
-		register_component<sPositionComp>("Position");
+		register_component<sPositionComp>("Position").openByDefault = true;
 		register_component<cModelComp>("Model");
 	}
 
@@ -750,9 +751,12 @@ public:
 		reg.visit(en, [&](entt::id_type t) { componentTypes.push_back(t); });
 		sort_components_by_order(componentTypes);
 
+		ImGui::PushID((int)en);
 		for (auto t : componentTypes) {
 			auto it = mComponentTypes.find(t);
 			if (it != mComponentTypes.end()) {
+				if (it->second->openByDefault)
+					ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
 				if (ImGui::TreeNode(it->second->ui_name())) {
 					it->second->ui(reg, en, ctx);
 					ImGui::TreePop();
@@ -765,6 +769,7 @@ public:
 				}
 			}
 		}
+		ImGui::PopID();
 	}
 
 	void sort_components_by_order(std::vector<entt::id_type>& comp) const {
