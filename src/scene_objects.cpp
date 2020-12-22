@@ -15,6 +15,7 @@
 #include "rdr_queue.hpp"
 #include "resource_load.hpp"
 #include "scene_components.hpp"
+#include "imgui.hpp"
 
 #include <imgui.h>
 
@@ -119,6 +120,39 @@ struct sPositionComp {
 	sPositionComp(DirectX::FXMMATRIX wmtx)
 		: wmtx(wmtx)
 	{}
+
+	void dbg_ui() {
+		sXform xform;
+		//xform.init(wmtx);
+		dx::XMMatrixDecompose(&xform.mScale, &xform.mQuat, &xform.mPos, wmtx);
+		dx::XMVECTOR rotOrig = xform.mQuat;
+
+		vec4 tmp;
+		float* tmpArr = reinterpret_cast<float*>(&tmp.mVal);
+
+		bool changed = false;
+
+		dx::XMStoreFloat4(&tmp.mVal, xform.mPos);
+		if (ImGui::DragFloat3("Pos", tmpArr)) {
+			xform.mPos = dx::XMLoadFloat4(&tmp.mVal);
+			changed = true;
+		}
+		dx::XMStoreFloat4(&tmp.mVal, xform.mQuat);
+		if (ImGui::DragFloat4("Qaut", tmpArr)) {
+			xform.mQuat = dx::XMLoadFloat4(&tmp.mVal);
+			xform.mQuat = dx::XMQuaternionNormalize(xform.mQuat);
+			changed = true;
+		}
+		dx::XMStoreFloat4(&tmp.mVal, xform.mScale);
+		if (ImguiDragFloat3_1("Scl", tmpArr, 0.01f)) {
+			xform.mScale = dx::XMLoadFloat4(&tmp.mVal);
+			changed = true;
+		}
+
+		if (changed) {
+			wmtx = xform.build_mtx();
+		}
+	}
 };
 
 bool sPositionCompParams::create(entt::registry& reg, entt::entity en) const {
@@ -235,10 +269,10 @@ public:
 
 	void disp() {
 		if (!mRegistry.empty<cModelComp>()) {
-			auto view = mRegistry.view<cModelComp>();
-			view.each([](cModelComp& mdl) {
-				mdl.dbg_ui();
-			});
+			//auto view = mRegistry.view<cModelComp>();
+			//view.each([](cModelComp& mdl) {
+			//	mdl.dbg_ui();
+			//});
 
 			cRdrQueueMgr::get().add_model_job(*this);
 		}
@@ -533,8 +567,9 @@ public:
 
 
 
-
 class cScene {
+	friend class cSceneEditor;
+
 	entt::registry registry;
 
 	cGnomon gnomon;
@@ -549,7 +584,7 @@ class cScene {
 
 	sSceneSnapshot snapshot;
 
-	cUpdateSubscriberScope mDbgUpdate;
+	
 public:
 
 	cScene() 
@@ -566,7 +601,7 @@ public:
 		modelRdrJobs.init();
 		animSys.register_anim_update();
 
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cScene::dbg_ui, this)), mDbgUpdate);
+		
 
 		load();
 		create_from_snapshot();
@@ -633,13 +668,121 @@ public:
 	void save() {
 		snapshot.save(get_scene_snapshot_path());
 	}
-
-	void dbg_ui() {
-		//ImGui::Begin("scene");
-		//ImGui::End();
-	}
 };
 
+class cSceneEditor {
+	struct iComponentReg {
+		std::string name;
+		entt::id_type id;
+
+		const char* ui_name() const { return name.c_str(); }
+		virtual void ui(entt::registry& reg, entt::entity en) = 0;
+		virtual ~iComponentReg() {}
+	};
+
+	template <typename T>
+	struct sComponentReg : public iComponentReg {
+		sComponentReg(const char* szName) {
+			name = szName;
+			id = entt::type_info<T>::id();
+		}
+
+		virtual void ui(entt::registry& reg, entt::entity en) override {
+			if (T* p = reg.try_get<T>(en)) {
+				p->dbg_ui();
+			}
+		}
+	};
+
+	cUpdateSubscriberScope mDbgUpdate;
+	cScene* mpScene = nullptr;
+	entt::entity mSelected = entt::null;
+	std::map<entt::id_type, std::unique_ptr<iComponentReg>> mComponentTypes;
+
+public:
+
+	template <typename TComp>
+	void register_component(const char* szName) {
+		std::unique_ptr<iComponentReg> r = std::make_unique<sComponentReg<TComp>>(szName);
+		entt::id_type id = r->id;
+		mComponentTypes[id] = std::move(r);
+	}
+
+	cSceneEditor() {
+		register_component<sPositionComp>("Position");
+		register_component<cModelComp>("Model");
+	}
+
+	void init(cScene* pScene) {
+		mpScene = pScene;
+		mSelected = entt::null;
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cSceneEditor::dbg_ui, this)), mDbgUpdate);
+	}
+
+	static const char* format_entity(std::string& buf, entt::entity en) {
+		buf = std::to_string((uint32_t)entt::registry::entity(en));
+		buf += ':';
+		buf += std::to_string((uint32_t)entt::registry::version(en));
+		return buf.c_str();
+	}
+
+	void dbg_ui() {
+		if (!mpScene) return;
+		
+		ImGui::Begin("scene");
+		show_entity_list();
+		
+		if (mSelected != entt::null) show_entity_components(mSelected);
+
+		ImGui::End();
+	}
+
+	void show_entity_list() {
+		entt::registry& reg = mpScene->registry;
+
+		std::vector<entt::entity> alive;
+		int selectedIdx = -1;
+		reg.each([&](entt::entity en) { if (en == mSelected) { selectedIdx = (int)alive.size(); } alive.push_back(en); });
+		std::string buffer;
+		auto getter = [&](int i, const char** szText) {
+			if (i < alive.size()) {
+				(*szText) = format_entity(buffer, alive[i]);
+				return true;
+			}
+			return false;
+		};
+		using TGetter = decltype(getter);
+		auto getterWrapper = [](void* g, int i, const char** szText) { return (*(TGetter*)g)(i, szText); };
+		void* pGetter = &getter;
+		if (ImGui::ListBox("entities", &selectedIdx, getterWrapper, pGetter, (int)alive.size(), 10)) {
+			if (0 <= selectedIdx && selectedIdx < alive.size()) { mSelected = alive[selectedIdx]; }
+			else { mSelected = entt::null; }
+		}
+	}
+
+	void show_entity_components(entt::entity en) {
+		entt::registry& reg = mpScene->registry;
+
+		std::vector<entt::id_type> componentTypes;
+		reg.visit(en, [&](entt::id_type t) { componentTypes.push_back(t); });
+
+		for (auto t : componentTypes) {
+			auto it = mComponentTypes.find(t);
+			if (it != mComponentTypes.end()) {
+				if (ImGui::TreeNode(it->second->ui_name())) {
+					it->second->ui(reg, en);
+					ImGui::TreePop();
+				}
+			}
+			else {
+				std::string node = "**Unknown type " + std::to_string(uint32_t(t));
+				if (ImGui::TreeNode(node.c_str())) {
+					ImGui::TreePop();
+				}
+			}
+		}
+	}
+};
 
 
 //////
@@ -647,7 +790,10 @@ public:
 cSceneMgr::cSceneMgr()
 	: mpUpdateQueue(std::make_unique<cUpdateQueue>())
 	, mpScene(std::make_unique<cScene>())
-{}
+	, mpSceneEditor(std::make_unique<cSceneEditor>())
+{
+	mpSceneEditor->init(mpScene.get());
+}
 
 cSceneMgr::~cSceneMgr() {}
 

@@ -453,7 +453,7 @@ void cModel::dbg_ui() {
 	if (!mpData) return;
 	auto grpNum = mpData->mGrpNum;
 	char buf[64];
-	ImGui::Begin("model");
+	//ImGui::Begin("model");
 	for (uint32_t i = 0; i < grpNum; ++i) {
 		//sGroup const& grp = mpData->mpGroups[i];
 		auto const& name = mpData->mpGrpNames[i];
@@ -475,7 +475,7 @@ void cModel::dbg_ui() {
 		mpMtl->save();
 	}
 	
-	ImGui::End();
+	//ImGui::End();
 }
 
 static void apply_tex(ID3D11DeviceContext* pCtx, cTexture* pTex, ID3D11SamplerState* pSmp, uint32_t slot) {
