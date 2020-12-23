@@ -802,8 +802,8 @@ public:
 		
 		if (mSelected != entt::null) {
 			ImGui::PushID((int)mSelected);
-			show_entity_components(mSelected, ctx);
 			show_entity_params(mSelected, ctx);
+			show_entity_components(mSelected, ctx);
 			ImGui::PopID();
 		}
 
@@ -852,7 +852,7 @@ public:
 					}
 				}
 				else {
-					std::string node = "**Unknown type " + std::to_string(uint32_t(t));
+					std::string node = "**Unknown component type " + std::to_string(uint32_t(t));
 					if (ImGui::TreeNode(node.c_str())) {
 						ImGui::TreePop();
 					}
@@ -863,6 +863,7 @@ public:
 	}
 
 	void show_entity_params(entt::entity en, sSceneEditCtx& ctx) {
+		ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
 		if (ImGui::TreeNode("Params")) {
 			sSceneSnapshot& snapshot = mpScene->snapshot;
 			entt::registry& reg = mpScene->registry;
