@@ -11,6 +11,8 @@
 #include "light.hpp"
 #include "scene_components.hpp"
 
+#include <entt/entt.hpp>
+
 CLANG_DIAG_PUSH
 CLANG_DIAG_IGNORE("-Wunused-local-typedef")
 CLANG_DIAG_IGNORE("-Wunused-private-field")
@@ -300,8 +302,12 @@ void sParamList<Params>::serialize(Archive& arc) {
 template <class Archive>
 void sSceneSnapshot::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(entityIds));
-	ARC(CEREAL_NVP(posParams));
-	ARC(CEREAL_NVP(modelParams));
+	ARC(CEREAL_NVP(paramsOrder));
+
+	invoke_for_params([&](entt::id_type t, auto* pList) { 
+		std::string name = "id_" + std::to_string(t);
+		arc(cereal::make_nvp(name, *pList));
+	});
 }
 
 bool sSceneSnapshot::load(const fs::path& filepath) {

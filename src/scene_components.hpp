@@ -25,8 +25,12 @@ struct sModelCompParams {
 	void serialize(Archive& arc);
 };
 
+struct iParamList {
+	virtual bool create(entt::registry& reg) const = 0;
+};
+
 template <typename Params>
-struct sParamList
+struct sParamList : iParamList
 {
 	using TParams = Params;
 	using ParamId = uint32_t;
@@ -36,7 +40,7 @@ struct sParamList
 	ParamList paramList;
 	EntityList entityList;
 
-	bool create( entt::registry& reg) const {
+	virtual bool create(entt::registry& reg) const override {
 		bool res = true;
 		for (const auto& [en, paramId] : entityList) {
 			ParamList::const_iterator it = paramList.find(paramId);
@@ -55,14 +59,39 @@ struct sParamList
 
 
 struct sSceneSnapshot {
+	using TParamsMap = std::map<entt::id_type, std::unique_ptr<iParamList>>;
+
 	std::vector<entt::entity> entityIds;
-	sParamList<sPositionCompParams> posParams;
-	sParamList<sModelCompParams> modelParams;
+	std::vector<entt::id_type> paramsOrder;
+	TParamsMap params;
+
+	template <typename TFunc>
+	void invoke_for_params(TFunc&& func) {
+		for (entt::id_type t : paramsOrder) {
+			auto it = params.find(t);
+			switch (t) {
+#define CASE(T) case entt::type_info<T>::id(): func(t, ensure_list<T>(it, t));  break
+				CASE(sPositionCompParams);
+				CASE(sModelCompParams);
+#undef CASE
+			}
+		}
+	}
+
 
 	template <class Archive>
 	void serialize(Archive& arc);
 
 	bool load(const fs::path& filepath);
 	bool save(const fs::path& filepath);
+private:
+
+	template <typename TParam>
+	sParamList<TParam>* ensure_list(TParamsMap::iterator it, entt::id_type t) {
+		if (it == params.end()) {
+			it = params.emplace(t, std::make_unique<sParamList<TParam>>()).first;
+		}
+		return static_cast<sParamList<TParam>*>(it->second.get());
+	}
 };
 

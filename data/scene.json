@@ -4,7 +4,11 @@
             0,
             1
         ],
-        "posParams": {
+        "paramsOrder": [
+            304049688,
+            1188088766
+        ],
+        "id_304049688": {
             "paramList": [
                 {
                     "key": 0,
@@ -68,7 +72,7 @@
                 }
             ]
         },
-        "modelParams": {
+        "id_1188088766": {
             "paramList": [
                 {
                     "key": 0,

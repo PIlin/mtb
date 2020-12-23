@@ -603,8 +603,7 @@ public:
 			}
 		}
 
-		snapshot.posParams.create(registry);
-		snapshot.modelParams.create(registry);
+		snapshot.invoke_for_params([&](entt::id_type t, auto* pList) { pList->create(registry); });
 	}
 
 	void load() {
@@ -614,32 +613,43 @@ public:
 		else {
 			fs::path root;
 			root = fs::path("lightning");
-			const uint32_t lightningParamId = (uint32_t)snapshot.modelParams.paramList.size();
 			sXform xform;
 			xform.init(nMtx::g_Identity);
-			snapshot.posParams.paramList.emplace(lightningParamId, sPositionCompParams{ xform });
-			snapshot.modelParams.paramList.emplace(lightningParamId, sModelCompParams{ root / "lightning.geo", root / "lightning.mtl" });
+
+			sParamList<sPositionCompParams>* pPosParams = new sParamList<sPositionCompParams>();
+			sParamList<sModelCompParams>* pModelParams = new sParamList<sModelCompParams>();
+
+			auto insertEntityParam = [](auto* pList, entt::entity en, auto&& param) {
+				const uint32_t paramId = (uint32_t)pList->paramList.size();
+				pList->paramList.emplace(paramId, std::forward<decltype(param)>(param));
+				pList->entityList.emplace(en, paramId);
+			};
+
+			entt::entity lightning = registry.create();
+			snapshot.entityIds.push_back(lightning);
+			insertEntityParam(pPosParams, lightning, sPositionCompParams{ xform });
+			insertEntityParam(pModelParams, lightning, sModelCompParams{ root / "lightning.geo", root / "lightning.mtl" });
 
 			root = fs::path("owl");
-			const uint32_t owlParamId = (uint32_t)snapshot.modelParams.paramList.size();
+			entt::entity owl = registry.create();
+			snapshot.entityIds.push_back(owl);
 			{
 				const float scl = 0.01f;
 				xform.mPos = dx::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
 				xform.mQuat = dx::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 				xform.mScale = dx::XMVectorSet(scl, scl, scl, 0.0f);
-				snapshot.posParams.paramList.emplace(owlParamId, sPositionCompParams{ xform });
-				snapshot.modelParams.paramList.emplace(owlParamId, sModelCompParams{ root / "def.geo", root / "lightning.mtl" });
+				insertEntityParam(pPosParams, owl, sPositionCompParams{ xform });
+				insertEntityParam(pModelParams, owl, sModelCompParams{ root / "def.geo", root / "lightning.mtl" });
 			}
 
-			entt::entity lightning = registry.create();
-			entt::entity owl = registry.create();
-			snapshot.entityIds.push_back(lightning);
-			snapshot.entityIds.push_back(owl);
-
-			snapshot.posParams.entityList.emplace(lightning, lightningParamId);
-			snapshot.posParams.entityList.emplace(owl, owlParamId);
-			snapshot.modelParams.entityList.emplace(lightning, lightningParamId);
-			snapshot.modelParams.entityList.emplace(owl, owlParamId);
+			auto insertParam = [](sSceneSnapshot& snapshot, auto* pList) {
+				entt::id_type t = entt::type_info<std::remove_pointer<decltype(pList)>::type::TParams>::id();
+				snapshot.paramsOrder.push_back(t);
+				snapshot.params.emplace(t, std::unique_ptr<iParamList>(pList));
+			};
+			
+			insertParam(snapshot, pPosParams);
+			insertParam(snapshot, pModelParams);
 		}
 	}
 
