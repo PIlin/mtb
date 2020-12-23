@@ -11,6 +11,7 @@
 #include "camera.hpp"
 
 #include <imgui.h>
+#include <imgui_stdlib.h>
 #include <ImGuizmo.h>
 
 namespace dx = DirectX;
@@ -411,7 +412,7 @@ bool ImguiGizmoEditTransform(dx::XMMATRIX* matrix, const cCamera::sView& cam, bo
 
 		{
 			sXform xform;
-			dx::XMMatrixDecompose(&xform.mScale, &xform.mQuat, &xform.mPos, *matrix);
+			xform.init_scaled(*matrix);
 
 			vec4 tmp;
 			float* const tmpArr = reinterpret_cast<float*>(&tmp.mVal);
@@ -508,4 +509,13 @@ bool ImguiGizmoEditTransform(dx::XMMATRIX* matrix, const cCamera::sView& cam, bo
 	}
 	
 	return changedEdit || changedGizmo;
+}
+
+bool ImguiInputTextPath(const char* szLabel, fs::path& path) {
+	std::string tmp = path.u8string();
+	if (ImGui::InputText(szLabel, &tmp)) {
+		path = std::move(tmp);
+		return true;
+	}
+	return false;
 }
