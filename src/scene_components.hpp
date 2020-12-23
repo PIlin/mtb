@@ -13,7 +13,8 @@ struct sPositionCompParams {
 
 	bool create(entt::registry& reg, entt::entity en) const;
 
-	void dbg_ui(sSceneEditCtx& ctx);
+	bool dbg_ui(sSceneEditCtx& ctx);
+	bool edit_component(entt::registry& reg, entt::entity en) const;
 
 	template <class Archive>
 	void serialize(Archive& arc);
@@ -24,8 +25,9 @@ struct sModelCompParams {
 	fs::path materialPath;
 
 	bool create(entt::registry& reg, entt::entity en) const;
-
-	void dbg_ui(sSceneEditCtx& ctx);
+	
+	bool dbg_ui(sSceneEditCtx& ctx);
+	bool edit_component(entt::registry& reg, entt::entity en) const;
 
 	template <class Archive>
 	void serialize(Archive& arc);

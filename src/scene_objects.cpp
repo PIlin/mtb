@@ -136,11 +136,18 @@ bool sPositionCompParams::create(entt::registry& reg, entt::entity en) const {
 	return true;
 }
 
-void sPositionCompParams::dbg_ui(sSceneEditCtx& ctx) {
+bool sPositionCompParams::edit_component(entt::registry& reg, entt::entity en) const {
+	reg.emplace_or_replace<sPositionComp>(en, xform.build_mtx());
+	return true;
+}
+
+bool sPositionCompParams::dbg_ui(sSceneEditCtx& ctx) {
 	dx::XMMATRIX wmtx = xform.build_mtx();
 	if (ImguiGizmoEditTransform(&wmtx, ctx.camView, true)) {
 		xform.init_scaled(wmtx);
+		return true;
 	}
+	return false;
 }
 
 
@@ -184,9 +191,16 @@ bool sModelCompParams::create(entt::registry& reg, entt::entity en) const {
 	return res;
 }
 
-void sModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
-	ImguiInputTextPath("Model", modelPath);
-	ImguiInputTextPath("Material", materialPath);
+bool sModelCompParams::edit_component(entt::registry& reg, entt::entity en) const {
+	reg.remove_if_exists<cModelComp>(en);
+	return create(reg, en);
+}
+
+bool sModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
+	bool changed = false;
+	changed |= ImguiInputTextPath("Model", modelPath);
+	changed |= ImguiInputTextPath("Material", materialPath);
+	return changed;
 }
 
 
@@ -722,7 +736,9 @@ class cSceneEditor {
 					auto& params = static_cast<sParamList<T>*>(pList)->paramList;
 					auto epit = params.find(eit->second);
 					if (epit != params.end()) {
-						epit->second.dbg_ui(ctx);
+						if (epit->second.dbg_ui(ctx)) {
+							epit->second.edit_component(reg, en);
+						}
 					}
 				}
 			}
