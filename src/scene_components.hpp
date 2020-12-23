@@ -6,10 +6,14 @@
 #include <vector>
 #include <unordered_map>
 
+struct sSceneEditCtx;
+
 struct sPositionCompParams {
 	sXform xform = {};
 
 	bool create(entt::registry& reg, entt::entity en) const;
+
+	void dbg_ui(sSceneEditCtx& ctx);
 
 	template <class Archive>
 	void serialize(Archive& arc);
@@ -21,25 +25,28 @@ struct sModelCompParams {
 
 	bool create(entt::registry& reg, entt::entity en) const;
 
+	void dbg_ui(sSceneEditCtx& ctx);
+
 	template <class Archive>
 	void serialize(Archive& arc);
 };
 
 struct iParamList {
+	using ParamId = uint32_t;
+	using EntityList = std::unordered_map<entt::entity, ParamId>;
+
+	EntityList entityList;
+
 	virtual bool create(entt::registry& reg) const = 0;
 };
 
 template <typename Params>
-struct sParamList : iParamList
-{
+struct sParamList : iParamList {
 	using TParams = Params;
-	using ParamId = uint32_t;
 	using ParamList = std::map<ParamId, TParams>;
-	using EntityList = std::unordered_map<entt::entity, ParamId>;
 
 	ParamList paramList;
-	EntityList entityList;
-
+	
 	virtual bool create(entt::registry& reg) const override {
 		bool res = true;
 		for (const auto& [en, paramId] : entityList) {

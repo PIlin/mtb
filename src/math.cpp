@@ -124,6 +124,10 @@ void XM_CALLCONV sXform::init(DirectX::FXMMATRIX mtx) {
 	mScale = dx::g_XMOne3;
 }
 
+void XM_CALLCONV sXform::init_scaled(DirectX::FXMMATRIX mtx) {
+	dx::XMMatrixDecompose(&mScale, &mQuat, &mPos, mtx);
+}
+
 DirectX::XMMATRIX XM_CALLCONV sXform::build_mtx() const {
 	// Simplified dx::XMMatrixAffineTransformation()
 	dx::XMMATRIX scale = dx::XMMatrixScalingFromVector(mScale);
@@ -133,3 +137,4 @@ DirectX::XMMATRIX XM_CALLCONV sXform::build_mtx() const {
 	res.r[3] = mPos;
 	return res;
 }
+

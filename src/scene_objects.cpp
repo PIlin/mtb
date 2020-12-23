@@ -136,6 +136,13 @@ bool sPositionCompParams::create(entt::registry& reg, entt::entity en) const {
 	return true;
 }
 
+void sPositionCompParams::dbg_ui(sSceneEditCtx& ctx) {
+	dx::XMMATRIX wmtx = xform.build_mtx();
+	if (ImguiGizmoEditTransform(&wmtx, ctx.camView, true)) {
+		xform.init_scaled(wmtx);
+	}
+}
+
 
 class cModelComp {
 	cModel mModel;
@@ -177,6 +184,10 @@ bool sModelCompParams::create(entt::registry& reg, entt::entity en) const {
 	return res;
 }
 
+void sModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
+	ImguiInputTextPath("Model", modelPath);
+	ImguiInputTextPath("Material", materialPath);
+}
 
 
 class cLightning {
@@ -684,24 +695,71 @@ class cSceneEditor {
 		}
 	};
 
+	struct iParamReg {
+		std::string name;
+		entt::id_type id;
+		int32_t order = 0;
+		bool openByDefault = false;
+
+		const char* ui_name() const { return name.c_str(); }
+		virtual void ui(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en, sSceneEditCtx& ctx) = 0;
+		virtual ~iParamReg() {}
+	};
+
+	template <typename T>
+	struct sParamReg : public iParamReg {
+		sParamReg(const char* szName) {
+			name = szName;
+			id = entt::type_info<T>::id();
+		}
+
+		virtual void ui(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en, sSceneEditCtx& ctx) override {
+			auto pit = snapshot.params.find(id);
+			if (pit != snapshot.params.end() && pit->second) {
+				iParamList* pList = pit->second.get();
+				auto eit = pList->entityList.find(en);
+				if (eit != pList->entityList.end()) {
+					auto& params = static_cast<sParamList<T>*>(pList)->paramList;
+					auto epit = params.find(eit->second);
+					if (epit != params.end()) {
+						epit->second.dbg_ui(ctx);
+					}
+				}
+			}
+		}
+	};
+
 	cUpdateSubscriberScope mDbgUpdate;
 	cScene* mpScene = nullptr;
 	entt::entity mSelected = entt::null;
 	std::map<entt::id_type, std::unique_ptr<iComponentReg>> mComponentTypes;
+	std::map<entt::id_type, std::unique_ptr<iParamReg>> mParamTypes;
 
 public:
+	template <typename T, typename TMap>
+	static T& register_type(const char* szName, TMap& map) {
+		std::unique_ptr<T> r = std::make_unique<T>(szName);
+		entt::id_type id = r->id;
+		r->order = (int32_t)map.size();
+		return static_cast<T&>(*(map[id] = std::move(r)).get());
+	}
 
 	template <typename TComp>
-	iComponentReg& register_component(const char* szName) {
-		std::unique_ptr<iComponentReg> r = std::make_unique<sComponentReg<TComp>>(szName);
-		entt::id_type id = r->id;
-		r->order = (int32_t)mComponentTypes.size();
-		return *(mComponentTypes[id] = std::move(r)).get();
+	sComponentReg<TComp>& register_component(const char* szName) {
+		return register_type<sComponentReg<TComp>>(szName, mComponentTypes);
+	}
+
+	template <typename TComp>
+	sParamReg<TComp>& register_param(const char* szName) {
+		return register_type<sParamReg<TComp>>(szName, mParamTypes);
 	}
 
 	cSceneEditor() {
 		register_component<sPositionComp>("Position").openByDefault = true;
 		register_component<cModelComp>("Model");
+
+		register_param<sPositionCompParams>("Position").openByDefault = true;
+		register_param<sModelCompParams>("Model");
 	}
 
 	void init(cScene* pScene) {
@@ -726,7 +784,12 @@ public:
 		ImGui::Begin("scene");
 		show_entity_list(ctx);
 		
-		if (mSelected != entt::null) show_entity_components(mSelected, ctx);
+		if (mSelected != entt::null) {
+			ImGui::PushID((int)mSelected);
+			show_entity_components(mSelected, ctx);
+			show_entity_params(mSelected, ctx);
+			ImGui::PopID();
+		}
 
 		ImGui::End();
 	}
@@ -755,31 +818,69 @@ public:
 	}
 
 	void show_entity_components(entt::entity en, sSceneEditCtx& ctx) {
-		entt::registry& reg = mpScene->registry;
+		if (ImGui::TreeNode("Components")) {
+			entt::registry& reg = mpScene->registry;
 
-		std::vector<entt::id_type> componentTypes;
-		reg.visit(en, [&](entt::id_type t) { componentTypes.push_back(t); });
-		sort_components_by_order(componentTypes);
+			std::vector<entt::id_type> componentTypes;
+			reg.visit(en, [&](entt::id_type t) { componentTypes.push_back(t); });
+			sort_components_by_order(componentTypes);
 
-		ImGui::PushID((int)en);
-		for (auto t : componentTypes) {
-			auto it = mComponentTypes.find(t);
-			if (it != mComponentTypes.end()) {
-				if (it->second->openByDefault)
-					ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-				if (ImGui::TreeNode(it->second->ui_name())) {
-					it->second->ui(reg, en, ctx);
-					ImGui::TreePop();
+			for (auto t : componentTypes) {
+				auto it = mComponentTypes.find(t);
+				if (it != mComponentTypes.end()) {
+					if (it->second->openByDefault)
+						ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+					if (ImGui::TreeNode(it->second->ui_name())) {
+						it->second->ui(reg, en, ctx);
+						ImGui::TreePop();
+					}
+				}
+				else {
+					std::string node = "**Unknown type " + std::to_string(uint32_t(t));
+					if (ImGui::TreeNode(node.c_str())) {
+						ImGui::TreePop();
+					}
 				}
 			}
-			else {
-				std::string node = "**Unknown type " + std::to_string(uint32_t(t));
-				if (ImGui::TreeNode(node.c_str())) {
-					ImGui::TreePop();
-				}
-			}
+			ImGui::TreePop();
 		}
-		ImGui::PopID();
+	}
+
+	void show_entity_params(entt::entity en, sSceneEditCtx& ctx) {
+		if (ImGui::TreeNode("Params")) {
+			sSceneSnapshot& snapshot = mpScene->snapshot;
+			entt::registry& reg = mpScene->registry;
+
+			std::vector<entt::id_type> paramTypes;
+			for (auto& paramListPair : snapshot.params) {
+				if (paramListPair.second) {
+					const iParamList::EntityList& el = paramListPair.second->entityList;
+					if (el.find(en) != el.end())
+						paramTypes.push_back(paramListPair.first);
+				}
+			}
+
+			sort_components_by_order(paramTypes);
+
+			for (auto t : paramTypes) {
+				auto it = mParamTypes.find(t);
+				if (it != mParamTypes.end()) {
+					if (it->second->openByDefault)
+						ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+					if (ImGui::TreeNode(it->second->ui_name())) {
+						it->second->ui(reg, snapshot, en, ctx);
+						ImGui::TreePop();
+					}
+				}
+				else {
+					std::string node = "**Unknown param type " + std::to_string(uint32_t(t));
+					if (ImGui::TreeNode(node.c_str())) {
+						ImGui::TreePop();
+					}
+				}
+			}
+			ImGui::TreePop();
+		}
 	}
 
 	void sort_components_by_order(std::vector<entt::id_type>& comp) const {

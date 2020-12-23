@@ -146,5 +146,6 @@ struct sXform {
 	DirectX::XMVECTOR mScale;
 
 	void XM_CALLCONV init(DirectX::FXMMATRIX mtx);
+	void XM_CALLCONV init_scaled(DirectX::FXMMATRIX mtx);
 	DirectX::XMMATRIX XM_CALLCONV build_mtx() const;
 };
