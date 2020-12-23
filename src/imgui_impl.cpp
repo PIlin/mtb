@@ -513,7 +513,7 @@ bool ImguiGizmoEditTransform(dx::XMMATRIX* matrix, const cCamera::sView& cam, bo
 
 bool ImguiInputTextPath(const char* szLabel, fs::path& path) {
 	std::string tmp = path.u8string();
-	if (ImGui::InputText(szLabel, &tmp)) {
+	if (ImGui::InputText(szLabel, &tmp, ImGuiInputTextFlags_EnterReturnsTrue)) {
 		path = std::move(tmp);
 		return true;
 	}
