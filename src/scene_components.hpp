@@ -14,6 +14,7 @@ struct sPositionCompParams {
 	bool create(entt::registry& reg, entt::entity en) const;
 
 	bool dbg_ui(sSceneEditCtx& ctx);
+	static sPositionCompParams init_ui();
 	bool edit_component(entt::registry& reg, entt::entity en) const;
 
 	template <class Archive>
@@ -27,6 +28,7 @@ struct sModelCompParams {
 	bool create(entt::registry& reg, entt::entity en) const;
 	
 	bool dbg_ui(sSceneEditCtx& ctx);
+	static sModelCompParams init_ui();
 	bool edit_component(entt::registry& reg, entt::entity en) const;
 
 	template <class Archive>
@@ -87,6 +89,18 @@ struct sSceneSnapshot {
 		}
 	}
 
+	template <typename TParam>
+	TParamsMap::iterator ensure_list_iter(TParamsMap::iterator it, entt::id_type t) {
+		if (it == params.end()) {
+			it = params.emplace(t, std::make_unique<sParamList<TParam>>()).first;
+		}
+		return it;
+	}
+
+	template <typename TParam>
+	sParamList<TParam>* ensure_list(TParamsMap::iterator it, entt::id_type t) {
+		return static_cast<sParamList<TParam>*>(ensure_list_iter<TParam>(it, t)->second.get());
+	}
 
 	template <class Archive>
 	void serialize(Archive& arc);
@@ -95,12 +109,6 @@ struct sSceneSnapshot {
 	bool save(const fs::path& filepath);
 private:
 
-	template <typename TParam>
-	sParamList<TParam>* ensure_list(TParamsMap::iterator it, entt::id_type t) {
-		if (it == params.end()) {
-			it = params.emplace(t, std::make_unique<sParamList<TParam>>()).first;
-		}
-		return static_cast<sParamList<TParam>*>(it->second.get());
-	}
+
 };
 

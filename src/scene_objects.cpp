@@ -150,6 +150,12 @@ bool sPositionCompParams::dbg_ui(sSceneEditCtx& ctx) {
 	return false;
 }
 
+sPositionCompParams sPositionCompParams::init_ui() {
+	sXform xform;
+	xform.init(nMtx::g_Identity);
+	return sPositionCompParams{ xform };
+}
+
 
 class cModelComp {
 	cModel mModel;
@@ -202,6 +208,11 @@ bool sModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
 	changed |= ImguiInputTextPath("Material", materialPath);
 	return changed;
 }
+
+sModelCompParams sModelCompParams::init_ui() {
+	return sModelCompParams();
+}
+
 
 
 class cLightning {
@@ -717,6 +728,7 @@ class cSceneEditor {
 
 		const char* ui_name() const { return name.c_str(); }
 		virtual void ui(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en, sSceneEditCtx& ctx) = 0;
+		virtual void add(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en) = 0;
 		virtual ~iParamReg() {}
 	};
 
@@ -740,6 +752,27 @@ class cSceneEditor {
 							epit->second.edit_component(reg, en);
 						}
 					}
+				}
+			}
+		}
+
+		virtual void add(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en) override {
+			auto pit = snapshot.params.find(id);
+			if (pit == snapshot.params.end()) {
+				pit = snapshot.ensure_list_iter<T>(pit, id);
+				snapshot.paramsOrder.push_back(id);
+			}
+
+			if (pit != snapshot.params.end() && pit->second) {
+				iParamList* pList = pit->second.get();
+				auto eit = pList->entityList.find(en);
+				if (eit == pList->entityList.end()) {
+					auto& params = static_cast<sParamList<T>*>(pList)->paramList;
+					const uint32_t paramId = (uint32_t)params.size();
+					auto epit = params.emplace(paramId, typename T::init_ui()).first;
+					pList->entityList.emplace(en, paramId);
+
+					epit->second.edit_component(reg, en);
 				}
 			}
 		}
@@ -869,15 +902,17 @@ public:
 			entt::registry& reg = mpScene->registry;
 
 			std::vector<entt::id_type> paramTypes;
-			for (auto& paramListPair : snapshot.params) {
-				if (paramListPair.second) {
-					const iParamList::EntityList& el = paramListPair.second->entityList;
-					if (el.find(en) != el.end())
-						paramTypes.push_back(paramListPair.first);
-				}
-			}
+			gather_params_in_snapshot(snapshot, en, paramTypes);
 
-			sort_components_by_order(paramTypes);
+			entt::id_type typeToAdd;
+			ImGui::SameLine();
+			if (select_param_type_to_add(paramTypes, typeToAdd)) {
+				iParamReg* pParam = mParamTypes[typeToAdd].get();
+				pParam->add(reg, snapshot, en);
+				sort_components_by_order(snapshot.paramsOrder);
+				paramTypes.clear();
+				gather_params_in_snapshot(snapshot, en, paramTypes);
+			}
 
 			for (auto t : paramTypes) {
 				auto it = mParamTypes.find(t);
@@ -898,6 +933,51 @@ public:
 			}
 			ImGui::TreePop();
 		}
+	}
+
+	void gather_params_in_snapshot(const sSceneSnapshot& snapshot, entt::entity en, std::vector<entt::id_type>& paramTypes) const {
+		for (auto& paramListPair : snapshot.params) {
+			if (paramListPair.second) {
+				const iParamList::EntityList& el = paramListPair.second->entityList;
+				if (el.find(en) != el.end())
+					paramTypes.push_back(paramListPair.first);
+			}
+		}
+
+		sort_components_by_order(paramTypes);
+	}
+
+	bool select_param_type_to_add(const std::vector<entt::id_type>& paramTypes, entt::id_type& typeToAdd) const {
+		bool res = false;
+		
+		if (ImGui::SmallButton("New...")) {
+			ImGui::OpenPopup("new_param_popup");
+		}
+		if (ImGui::BeginPopup("new_param_popup")) {
+			std::vector<entt::id_type> newParamTypes;
+			for (const auto& pt : mParamTypes) {
+				if (std::find(paramTypes.begin(), paramTypes.end(), pt.first) == paramTypes.end()) {
+					newParamTypes.push_back(pt.first);
+				}
+			}
+			if (newParamTypes.empty()) {
+				ImGui::TextDisabled("- no params to add -");
+			}
+			else {
+				sort_components_by_order(newParamTypes);
+				for (entt::id_type t : newParamTypes) {
+					auto it = mParamTypes.find(t);
+					if (it != mParamTypes.end()) {
+						if (ImGui::Selectable(it->second.get()->ui_name())) {
+							typeToAdd = t;
+							res = true;
+						}
+					}
+				}
+			}
+			ImGui::EndPopup();
+		}
+		return res;
 	}
 
 	void sort_components_by_order(std::vector<entt::id_type>& comp) const {
