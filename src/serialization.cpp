@@ -301,6 +301,8 @@ template <class Archive>
 void sAnimationCompParams::serialize(Archive& arc) {
 	arc(FILEPATH_NVP(animRootPath));
 	arc(FILEPATH_NVP(animListName));
+	arc(CEREAL_NVP(curAnim));
+	arc(CEREAL_NVP(speed));
 }
 
 

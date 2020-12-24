@@ -56,6 +56,8 @@ private:
 struct sAnimationCompParams {
 	fs::path animRootPath;
 	fs::path animListName;
+	int32_t curAnim = 0;
+	float speed = 1.0f;
 
 	bool create(entt::registry& reg, entt::entity en) const;
 

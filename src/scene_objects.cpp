@@ -329,21 +329,20 @@ class cAnimationComp {
 	float mFrame = 0.0f;
 	float mSpeed = 1.0f;
 	int mCurAnim = 0;
-	cstr mId;
 
 public:
 
-	cAnimationComp(ConstAnimationListPtr pAnimList, cstr id, float speed = 1.0f)
+	cAnimationComp(ConstAnimationListPtr pAnimList, int curAnim = 0, float speed = 1.0f)
 		: mpAnimList(pAnimList)
-		, mId(id)
 		, mSpeed(speed)
+		, mCurAnim(curAnim)
 	{}
 
 	void update(cRig& rig) {
 		assert(mpAnimList);
 
-		int32_t animCount = mpAnimList->get_count();
-		if (animCount > 0) {
+		const int32_t animCount = mpAnimList->get_count();
+		if (animCount > 0 && mCurAnim < animCount) {
 			auto& anim = (*mpAnimList)[mCurAnim];
 			float lastFrame = anim.get_last_frame();
 
@@ -355,8 +354,8 @@ public:
 	}
 
 	void dbg_ui(sSceneEditCtx& ctx) {
-		int32_t animCount = mpAnimList->get_count();
-		if (animCount > 0) {
+		const int32_t animCount = mpAnimList->get_count();
+		if (animCount > 0 && mCurAnim < animCount) {
 			auto& anim = (*mpAnimList)[mCurAnim];
 			float lastFrame = anim.get_last_frame();
 
@@ -379,7 +378,7 @@ bool sAnimationCompParams::create(entt::registry& reg, entt::entity en) const {
 	if (!nResLoader::find_or_load(cPathManager::build_data_path(animRootPath), animListName, *pRigData, *&pAnimList))
 		return false;
 
-	cAnimationComp& anim = reg.emplace<cAnimationComp>(en, std::move(pAnimList), "");
+	cAnimationComp& anim = reg.emplace<cAnimationComp>(en, std::move(pAnimList), curAnim, speed);
 	return true;
 }
 
@@ -392,6 +391,20 @@ bool sAnimationCompParams::dbg_ui(sSceneEditCtx& ctx) {
 	bool changed = false;
 	changed |= ImguiInputTextPath("Anim root", animRootPath);
 	changed |= ImguiInputTextPath("Anim list", animListName);
+
+	cRigData tmpRig;
+	ConstAnimationListPtr pAnimList;
+	if (nResLoader::find_or_load(cPathManager::build_data_path(animRootPath), animListName, tmpRig, *&pAnimList)) {
+		const int32_t animCount = pAnimList->get_count();
+		changed |= ImGui::SliderInt("curAnim", &curAnim, 0, animCount - 1);
+		if (animCount > 0 && curAnim < animCount) {
+			auto& anim = (*pAnimList)[curAnim];
+			float lastFrame = anim.get_last_frame();
+
+			ImGui::LabelText("name", "%s", anim.get_name().p);
+			changed |= ImGui::SliderFloat("speed", &speed, 0.0f, 3.0f);
+		}
+	}
 	return changed;
 }
 
@@ -445,7 +458,7 @@ public:
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
 		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
-		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), id);
+		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList));
 
 		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
 		rig.init(std::move(pRigData));
@@ -481,7 +494,7 @@ public:
 		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
 		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
-		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), id);
+		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList));
 
 		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
 		rig.init(std::move(pRigData));
@@ -519,7 +532,7 @@ public:
 		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
 		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
 		float speed = 1.0f / 60.0f;
-		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), id, speed);
+		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), 0, speed);
 
 		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
 		rig.init(std::move(pRigData));
@@ -850,7 +863,7 @@ public:
 	}
 
 	cSceneEditor() {
-		register_component<sPositionComp>("Position").openByDefault = true;
+		register_component<sPositionComp>("Position").openByDefault = false;
 		register_component<cModelComp>("Model");
 		register_component<cRigComp>("Rig");
 		register_component<cAnimationComp>("Animation");
