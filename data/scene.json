@@ -2,11 +2,13 @@
     "value0": {
         "entityIds": [
             0,
-            1
+            1,
+            2
         ],
         "paramsOrder": [
             304049688,
-            1188088766
+            1188088766,
+            2872077420
         ],
         "id_304049688": {
             "paramList": [
@@ -59,6 +61,31 @@
                             }
                         }
                     }
+                },
+                {
+                    "key": 2,
+                    "value": {
+                        "xform": {
+                            "pos": {
+                                "value0": 0.5735331177711487,
+                                "value1": 8.216694880047726e-8,
+                                "value2": -0.7468122243881226,
+                                "value3": 1.0
+                            },
+                            "quat": {
+                                "value0": -0.0,
+                                "value1": 0.0,
+                                "value2": -0.0,
+                                "value3": 1.0
+                            },
+                            "scl": {
+                                "value0": 0.019999999552965165,
+                                "value1": 0.019999999552965165,
+                                "value2": 0.019999999552965165,
+                                "value3": 0.0
+                            }
+                        }
+                    }
                 }
             ],
             "entityList": [
@@ -69,6 +96,10 @@
                 {
                     "key": 1,
                     "value": 1
+                },
+                {
+                    "key": 2,
+                    "value": 2
                 }
             ]
         },
@@ -105,6 +136,30 @@
                 {
                     "key": 1,
                     "value": 1
+                }
+            ]
+        },
+        "id_2872077420": {
+            "paramList": [
+                {
+                    "key": 0,
+                    "value": {
+                        "modelPath": {
+                            "value0": "owl/def.geo"
+                        },
+                        "materialPath": {
+                            "value0": "owl/def.mtl"
+                        },
+                        "rigPath": {
+                            "value0": "owl/def.rig"
+                        }
+                    }
+                }
+            ],
+            "entityList": [
+                {
+                    "key": 2,
+                    "value": 0
                 }
             ]
         }

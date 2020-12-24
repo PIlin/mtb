@@ -232,8 +232,47 @@ public:
 
 	void upload_skin(cRdrContext const& ctx) const { mRig.upload_skin(ctx); }
 
+	void dbg_ui(sSceneEditCtx& ctx) {
+	}
+
 	cRig& get() { return mRig; }
 };
+
+bool sRiggedModelCompParams::create(entt::registry& reg, entt::entity en) const {
+	if (Base::create(reg, en)) {
+		return create_rig(reg, en);
+	}
+	return false;
+}
+
+bool sRiggedModelCompParams::create_rig(entt::registry& reg, entt::entity en) const {
+	ConstRigDataPtr pRigData;
+	if (!nResLoader::find_or_load(cPathManager::build_data_path(rigPath), *&pRigData))
+		return false;
+	cRigComp& rig = reg.emplace<cRigComp>(en);
+	rig.init(std::move(pRigData));
+	return true;
+}
+
+
+bool sRiggedModelCompParams::edit_component(entt::registry& reg, entt::entity en) const {
+	reg.remove_if_exists<cRigComp>(en);
+	if (Base::edit_component(reg, en)) {
+		return create_rig(reg, en);
+	}
+	return false;
+}
+
+bool sRiggedModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
+	bool changed = Base::dbg_ui(ctx);
+	changed |= ImguiInputTextPath("Rig", rigPath);
+	return changed;
+}
+
+sRiggedModelCompParams sRiggedModelCompParams::init_ui() {
+	return sRiggedModelCompParams();
+}
+
 
 
 class cModelDispSys : public iRdrJob {
@@ -776,9 +815,11 @@ public:
 	cSceneEditor() {
 		register_component<sPositionComp>("Position").openByDefault = true;
 		register_component<cModelComp>("Model");
+		register_component<cRigComp>("Rig");
 
 		register_param<sPositionCompParams>("Position").openByDefault = true;
 		register_param<sModelCompParams>("Model");
+		register_param<sRiggedModelCompParams>("Rigged Model");
 	}
 
 	void init(cScene* pScene) {

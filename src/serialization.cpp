@@ -288,8 +288,15 @@ void sPositionCompParams::serialize(Archive& arc) {
 template <class Archive>
 void sModelCompParams::serialize(Archive& arc) {
 	arc(FILEPATH_NVP(modelPath));
-	ARC(FILEPATH_NVP(materialPath));
+	arc(FILEPATH_NVP(materialPath));
 }
+
+template <class Archive>
+void sRiggedModelCompParams::serialize(Archive& arc) {
+	Base::serialize(arc);
+	arc(FILEPATH_NVP(rigPath));
+}
+
 
 
 template <typename Params>
