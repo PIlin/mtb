@@ -19,6 +19,7 @@ CLANG_DIAG_IGNORE("-Wunused-private-field")
 CLANG_DIAG_IGNORE("-Wexceptions")
 #include <cereal/archives/json.hpp>
 #include <cereal/types/map.hpp>
+#include <cereal/types/set.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 CLANG_DIAG_POP

@@ -662,13 +662,13 @@ public:
 			};
 
 			entt::entity lightning = registry.create();
-			snapshot.entityIds.push_back(lightning);
+			snapshot.entityIds.insert(lightning);
 			insertEntityParam(pPosParams, lightning, sPositionCompParams{ xform });
 			insertEntityParam(pModelParams, lightning, sModelCompParams{ root / "lightning.geo", root / "lightning.mtl" });
 
 			root = fs::path("owl");
 			entt::entity owl = registry.create();
-			snapshot.entityIds.push_back(owl);
+			snapshot.entityIds.insert(owl);
 			{
 				const float scl = 0.01f;
 				xform.mPos = dx::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
@@ -908,6 +908,7 @@ public:
 			ImGui::SameLine();
 			if (select_param_type_to_add(paramTypes, typeToAdd)) {
 				iParamReg* pParam = mParamTypes[typeToAdd].get();
+				ensure_entity_in_snapshot(en, snapshot);
 				pParam->add(reg, snapshot, en);
 				sort_components_by_order(snapshot.paramsOrder);
 				paramTypes.clear();
@@ -964,7 +965,7 @@ public:
 				ImGui::TextDisabled("- no params to add -");
 			}
 			else {
-				sort_components_by_order(newParamTypes);
+				sort_params_by_order(newParamTypes);
 				for (entt::id_type t : newParamTypes) {
 					auto it = mParamTypes.find(t);
 					if (it != mParamTypes.end()) {
@@ -980,11 +981,24 @@ public:
 		return res;
 	}
 
+	void ensure_entity_in_snapshot(entt::entity en, sSceneSnapshot& snapshot) {
+		snapshot.entityIds.insert(en);
+	}
+
 	void sort_components_by_order(std::vector<entt::id_type>& comp) const {
+		sort_components_by_order(comp, mComponentTypes);
+	}
+
+	void sort_params_by_order(std::vector<entt::id_type>& comp) const {
+		sort_components_by_order(comp, mParamTypes);
+	}
+
+	template <typename TMap>
+	static void sort_components_by_order(std::vector<entt::id_type>& comp, const TMap& map) {
 		std::sort(comp.begin(), comp.end(), [&](entt::id_type a, entt::id_type b) {
-			auto ait = mComponentTypes.find(a);
-			auto bit = mComponentTypes.find(b);
-			auto eit = mComponentTypes.end();
+			auto ait = map.find(a);
+			auto bit = map.find(b);
+			auto eit = map.end();
 			if (ait != eit && bit != eit) {
 				return ait->second->order < bit->second->order;
 			}

@@ -3,6 +3,7 @@
 #include "path_helpers.hpp"
 #include <entt/fwd.hpp>
 #include <map>
+#include <set>
 #include <vector>
 #include <unordered_map>
 
@@ -72,7 +73,7 @@ struct sParamList : iParamList {
 struct sSceneSnapshot {
 	using TParamsMap = std::map<entt::id_type, std::unique_ptr<iParamList>>;
 
-	std::vector<entt::entity> entityIds;
+	std::set<entt::entity> entityIds;
 	std::vector<entt::id_type> paramsOrder;
 	TParamsMap params;
 
