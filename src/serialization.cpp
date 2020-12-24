@@ -297,6 +297,12 @@ void sRiggedModelCompParams::serialize(Archive& arc) {
 	arc(FILEPATH_NVP(rigPath));
 }
 
+template <class Archive>
+void sAnimationCompParams::serialize(Archive& arc) {
+	arc(FILEPATH_NVP(animRootPath));
+	arc(FILEPATH_NVP(animListName));
+}
+
 
 
 template <typename Params>

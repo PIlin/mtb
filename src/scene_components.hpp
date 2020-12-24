@@ -53,6 +53,20 @@ private:
 	bool create_rig(entt::registry& reg, entt::entity en) const;
 };
 
+struct sAnimationCompParams {
+	fs::path animRootPath;
+	fs::path animListName;
+
+	bool create(entt::registry& reg, entt::entity en) const;
+
+	bool dbg_ui(sSceneEditCtx& ctx);
+	static sAnimationCompParams init_ui();
+	bool edit_component(entt::registry& reg, entt::entity en) const;
+
+	template <class Archive>
+	void serialize(Archive& arc);
+};
+
 ////////////////////////////////
 
 struct iParamList {
@@ -121,6 +135,7 @@ struct sSceneSnapshot {
 				CASE(sPositionCompParams);
 				CASE(sModelCompParams);
 				CASE(sRiggedModelCompParams);
+				CASE(sAnimationCompParams);
 #undef CASE
 			}
 		}

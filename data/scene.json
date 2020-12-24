@@ -8,7 +8,8 @@
         "paramsOrder": [
             304049688,
             1188088766,
-            2872077420
+            2872077420,
+            3838159947
         ],
         "id_304049688": {
             "paramList": [
@@ -152,6 +153,27 @@
                         },
                         "rigPath": {
                             "value0": "owl/def.rig"
+                        }
+                    }
+                }
+            ],
+            "entityList": [
+                {
+                    "key": 2,
+                    "value": 0
+                }
+            ]
+        },
+        "id_3838159947": {
+            "paramList": [
+                {
+                    "key": 0,
+                    "value": {
+                        "animRootPath": {
+                            "value0": "owl"
+                        },
+                        "animListName": {
+                            "value0": "def.alist"
                         }
                     }
                 }

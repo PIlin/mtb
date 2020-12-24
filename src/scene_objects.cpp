@@ -236,6 +236,7 @@ public:
 	}
 
 	cRig& get() { return mRig; }
+	const cRig& get() const { return mRig; }
 };
 
 bool sRiggedModelCompParams::create(entt::registry& reg, entt::entity en) const {
@@ -348,20 +349,56 @@ public:
 
 			anim.eval(rig, mFrame);
 			mFrame += mSpeed;
-			if (mFrame > lastFrame)
+			if (mFrame >= lastFrame)
 				mFrame = 0.0f;
+		}
+	}
 
-			char buf[64];
-			::sprintf_s(buf, "anim %s", mId.p);
-			ImGui::Begin(buf);
+	void dbg_ui(sSceneEditCtx& ctx) {
+		int32_t animCount = mpAnimList->get_count();
+		if (animCount > 0) {
+			auto& anim = (*mpAnimList)[mCurAnim];
+			float lastFrame = anim.get_last_frame();
+
 			ImGui::LabelText("name", "%s", anim.get_name().p);
 			ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
 			ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
 			ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
-			ImGui::End();
 		}
 	}
 };
+
+bool sAnimationCompParams::create(entt::registry& reg, entt::entity en) const {
+	cRigComp const* pRig = reg.try_get<cRigComp>(en);
+	if (!pRig) return false;
+
+	cRigData const* pRigData = pRig->get().get_rig_data();
+	if (!pRigData) return false;
+
+	ConstAnimationListPtr pAnimList;
+	if (!nResLoader::find_or_load(cPathManager::build_data_path(animRootPath), animListName, *pRigData, *&pAnimList))
+		return false;
+
+	cAnimationComp& anim = reg.emplace<cAnimationComp>(en, std::move(pAnimList), "");
+	return true;
+}
+
+bool sAnimationCompParams::edit_component(entt::registry& reg, entt::entity en) const {
+	reg.remove_if_exists<cAnimationComp>(en);
+	return create(reg, en);
+}
+
+bool sAnimationCompParams::dbg_ui(sSceneEditCtx& ctx) {
+	bool changed = false;
+	changed |= ImguiInputTextPath("Anim root", animRootPath);
+	changed |= ImguiInputTextPath("Anim list", animListName);
+	return changed;
+}
+
+sAnimationCompParams sAnimationCompParams::init_ui() {
+	return sAnimationCompParams();
+}
+
 
 class cAnimationSys {
 	entt::registry& mRegistry;
@@ -816,10 +853,12 @@ public:
 		register_component<sPositionComp>("Position").openByDefault = true;
 		register_component<cModelComp>("Model");
 		register_component<cRigComp>("Rig");
+		register_component<cAnimationComp>("Animation");
 
 		register_param<sPositionCompParams>("Position").openByDefault = true;
 		register_param<sModelCompParams>("Model");
 		register_param<sRiggedModelCompParams>("Rigged Model");
+		register_param<sAnimationCompParams>("Animation");
 	}
 
 	void init(cScene* pScene) {

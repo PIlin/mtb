@@ -325,6 +325,9 @@ cJoint* cRig::find_joint(cstr name) const {
 	return &mpJoints[idx];
 }
 
+cRigData const* cRig::get_rig_data() const {
+	return mpRigData.get();
+}
 
 
 void cJoint::calc_world() {

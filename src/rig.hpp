@@ -77,5 +77,6 @@ public:
 
 	cJoint* get_joint(int idx) const;
 	cJoint* find_joint(cstr name) const;
+	cRigData const* get_rig_data() const;
 };
 
