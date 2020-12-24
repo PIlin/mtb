@@ -43,6 +43,18 @@ struct iParamList {
 	EntityList entityList;
 
 	virtual bool create(entt::registry& reg) const = 0;
+	
+	bool remove_entity(entt::entity en) {
+		auto it = entityList.find(en);
+		if (it != entityList.end()) {
+			remove_param(it->second);
+			entityList.erase(it);
+			return true;
+		}
+		return false;
+	}
+protected:
+	virtual void remove_param(ParamId paramId) = 0;
 };
 
 template <typename Params>
@@ -63,6 +75,10 @@ struct sParamList : iParamList {
 			else { dbg_break(); }
 		}
 		return res;
+	}
+
+	virtual void remove_param(ParamId paramId) override {
+		paramList.erase(paramId);
 	}
 
 	template <class Archive>
@@ -101,6 +117,15 @@ struct sSceneSnapshot {
 	template <typename TParam>
 	sParamList<TParam>* ensure_list(TParamsMap::iterator it, entt::id_type t) {
 		return static_cast<sParamList<TParam>*>(ensure_list_iter<TParam>(it, t)->second.get());
+	}
+
+	void remove_entity(entt::entity en) {
+		if (entityIds.find(en) != entityIds.end()) {
+			entityIds.erase(en);
+			for (auto& paramListPair : params) {
+				paramListPair.second->remove_entity(en);
+			}
+		}
 	}
 
 	template <class Archive>

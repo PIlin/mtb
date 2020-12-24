@@ -817,10 +817,15 @@ public:
 		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cSceneEditor::dbg_ui, this)), mDbgUpdate);
 	}
 
-	static const char* format_entity(std::string& buf, entt::entity en) {
+	static const char* format_entity(std::string& buf, entt::entity en, const sSceneSnapshot& snapshot) {
 		buf = std::to_string((uint32_t)entt::registry::entity(en));
 		buf += ':';
 		buf += std::to_string((uint32_t)entt::registry::version(en));
+
+		if (snapshot.entityIds.find(en) == snapshot.entityIds.end()) {
+			buf += " (dyn)";
+		}
+
 		return buf.c_str();
 	}
 
@@ -845,6 +850,20 @@ public:
 
 	void show_entity_list(sSceneEditCtx& ctx) {
 		entt::registry& reg = mpScene->registry;
+		sSceneSnapshot& snapshot = mpScene->snapshot;
+
+		if (ImGui::Button("Create")) {
+			mSelected = reg.create();
+			snapshot.entityIds.insert(mSelected);
+		}
+		if (mSelected != entt::null) {
+			ImGui::SameLine();
+			if (ImGui::Button("Delete")) {
+				reg.destroy(mSelected);
+				snapshot.remove_entity(mSelected);
+				mSelected = entt::null;
+			}
+		}
 
 		std::vector<entt::entity> alive;
 		int selectedIdx = -1;
@@ -852,7 +871,7 @@ public:
 		std::string buffer;
 		auto getter = [&](int i, const char** szText) {
 			if (i < alive.size()) {
-				(*szText) = format_entity(buffer, alive[i]);
+				(*szText) = format_entity(buffer, alive[i], snapshot);
 				return true;
 			}
 			return false;
@@ -945,7 +964,7 @@ public:
 			}
 		}
 
-		sort_components_by_order(paramTypes);
+		sort_params_by_order(paramTypes);
 	}
 
 	bool select_param_type_to_add(const std::vector<entt::id_type>& paramTypes, entt::id_type& typeToAdd) const {
