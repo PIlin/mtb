@@ -214,36 +214,6 @@ sModelCompParams sModelCompParams::init_ui() {
 }
 
 
-
-class cLightning {
-	entt::entity mEntity;
-public:
-	bool init(entt::registry& reg) {
-		bool res = true;
-
-		const fs::path root = cPathManager::build_data_path("lightning");
-
-		ConstModelDataPtr pMdlData;
-		ConstModelMaterialPtr pMtl;
-		res = res && nResLoader::find_or_load(root / "lightning.geo", *&pMdlData);
-		res = res && nResLoader::find_or_load(root / "lightning.mtl", pMdlData, *&pMtl);
-
-		entt::entity en = reg.create();
-		sPositionComp& pos = reg.emplace<sPositionComp>(en);
-		cModelComp& mdl = reg.emplace<cModelComp>(en);
-
-		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
-
-		mEntity = en;
-
-		//mModel.mWmtx = DirectX::XMMatrixScaling(0.3f, 0.3f, 0.3f);
-
-		return res;
-	}
-};
-
-
-
 class cRigComp {
 	cRig mRig;
 public:
