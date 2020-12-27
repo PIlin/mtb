@@ -160,8 +160,13 @@ sPositionCompParams sPositionCompParams::init_ui() {
 class cModelComp {
 	cModel mModel;
 public:
+	DirectX::XMMATRIX lmtx = dx::XMMatrixIdentity();
+
 	cModelComp() = default;
-	cModelComp(cModelComp&& other) : mModel(std::move(other.mModel)) {}
+	cModelComp(cModelComp&& other) 
+		: mModel(std::move(other.mModel))
+		, lmtx(other.lmtx)
+	{}
 	cModelComp& operator=(cModelComp&&) = default;
 
 	bool init(ConstModelDataPtr pModelData, ConstModelMaterialPtr pMtl) {
@@ -176,6 +181,7 @@ public:
 	}
 
 	void dbg_ui(sSceneEditCtx& ctx) {
+		ImguiEditTransform(&lmtx);
 		mModel.dbg_ui();
 	}
 };
@@ -225,9 +231,9 @@ public:
 		mRig.init(std::move(pRigData));
 	}
 
-	void update_rig_mtx(const sPositionComp& pos) {
+	void XM_CALLCONV update_rig_mtx(dx::XMMATRIX wmtx) {
 		mRig.calc_local();
-		mRig.calc_world(pos.wmtx);
+		mRig.calc_world(wmtx);
 	}
 
 	void upload_skin(cRdrContext const& ctx) const { mRig.upload_skin(ctx); }
@@ -309,16 +315,18 @@ private:
 	void disp_solid(cRdrContext const& ctx) const {
 		auto view = mRegistry.view<sPositionComp, cModelComp>();
 		view.each([&ctx](const sPositionComp& pos, const cModelComp& mdl) {
-			mdl.disp(ctx, pos.wmtx);
+			dx::XMMATRIX mtx = mdl.lmtx * pos.wmtx;
+			mdl.disp(ctx, mtx);
 		});
 	}
 
 	void disp_skinned(cRdrContext const& ctx) const {
 		auto view = mRegistry.view<sPositionComp, cModelComp, cRigComp>();
 		view.each([&ctx](const sPositionComp& pos, const cModelComp& mdl, cRigComp& rig) {
-			rig.update_rig_mtx(pos); // todo: move to separate step
+			dx::XMMATRIX mtx = mdl.lmtx * pos.wmtx;
+			rig.update_rig_mtx(mtx); // todo: move to separate step
 			rig.upload_skin(ctx);
-			mdl.disp(ctx, pos.wmtx);
+			mdl.disp(ctx, mtx);
 		});
 	}
 };

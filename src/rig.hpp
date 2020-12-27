@@ -71,7 +71,7 @@ public:
 	void init(ConstRigDataPtr pRigData);
 
 	void calc_local();
-	void calc_world(DirectX::XMMATRIX rootWMtx);
+	void XM_CALLCONV calc_world(DirectX::XMMATRIX rootWMtx);
 
 	void upload_skin(cRdrContext const& rdrCtx) const;
 

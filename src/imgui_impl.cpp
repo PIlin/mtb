@@ -388,98 +388,103 @@ static sXformGizmoState s_xformGizmoState;
 
 
 
+bool ImguiEditTransform(DirectX::XMMATRIX* matrix) {
+	sXformGizmoState& state = s_xformGizmoState;
+
+	bool changedEdit = false;
+	//if (ImGui::IsKeyPressed(90))
+	//	state.mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+	//if (ImGui::IsKeyPressed(69))
+	//	state.mCurrentGizmoOperation = ImGuizmo::ROTATE;
+	//if (ImGui::IsKeyPressed(82)) // r Key
+	//	state.mCurrentGizmoOperation = ImGuizmo::SCALE;
+	if (ImGui::RadioButton("Translate", state.mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
+		state.mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+	ImGui::SameLine();
+	if (ImGui::RadioButton("Rotate", state.mCurrentGizmoOperation == ImGuizmo::ROTATE))
+		state.mCurrentGizmoOperation = ImGuizmo::ROTATE;
+	ImGui::SameLine();
+	if (ImGui::RadioButton("Scale", state.mCurrentGizmoOperation == ImGuizmo::SCALE))
+		state.mCurrentGizmoOperation = ImGuizmo::SCALE;
+
+	{
+		sXform xform;
+		xform.init_scaled(*matrix);
+
+		vec4 tmp;
+		float* const tmpArr = reinterpret_cast<float*>(&tmp.mVal);
+
+		dx::XMStoreFloat4(&tmp.mVal, xform.mPos);
+		if (ImGui::DragFloat3("Pos", tmpArr)) {
+			xform.mPos = dx::XMLoadFloat4(&tmp.mVal);
+			changedEdit = true;
+		}
+		tmp = vec4::from_float3(quat_to_euler_zyx(xform.mQuat), 0.0f);
+		for (int i = 0; i < 3; ++i) { tmp[i] = RAD2DEG(tmp[i]); }
+		bool rotChanged = ImGui::DragFloat3("Rot", tmpArr);
+		ImGui::SameLine();
+		if (ImGui::Button("Reset")) {
+			tmp.mVal = {};
+			rotChanged = true;
+		}
+		if (rotChanged) {
+			for (int i = 0; i < 3; ++i) { tmp[i] = DEG2RAD(tmp[i]); }
+			xform.mQuat = euler_zyx_to_quat(tmp.xyz());
+			changedEdit = true;
+		}
+		dx::XMStoreFloat4(&tmp.mVal, xform.mScale);
+		if (ImguiDragFloat3_1("Scl", tmpArr, 0.01f)) {
+			xform.mScale = dx::XMLoadFloat4(&tmp.mVal);
+			changedEdit = true;
+		}
+
+		if (changedEdit) {
+			*matrix = xform.build_mtx();
+		}
+	}
+
+	if (state.mCurrentGizmoOperation != ImGuizmo::SCALE)
+	{
+		if (ImGui::RadioButton("Local", state.mCurrentGizmoMode == ImGuizmo::LOCAL))
+			state.mCurrentGizmoMode = ImGuizmo::LOCAL;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("World", state.mCurrentGizmoMode == ImGuizmo::WORLD))
+			state.mCurrentGizmoMode = ImGuizmo::WORLD;
+	}
+	//if (ImGui::IsKeyPressed(83)) useSnap = !useSnap;
+	ImGui::Checkbox("", &state.useSnap);
+	ImGui::SameLine();
+
+	switch (state.mCurrentGizmoOperation)
+	{
+	case ImGuizmo::TRANSLATE:
+		ImGui::InputFloat3("Snap", &state.snap[0]);
+		break;
+	case ImGuizmo::ROTATE:
+		ImGui::InputFloat("Angle Snap", &state.snap[0]);
+		break;
+	case ImGuizmo::SCALE:
+		ImGui::InputFloat("Scale Snap", &state.snap[0]);
+		break;
+	}
+	ImGui::Checkbox("Bound Sizing", &state.boundSizing);
+	if (state.boundSizing)
+	{
+		ImGui::PushID(3);
+		ImGui::Checkbox("", &state.boundSizingSnap);
+		ImGui::SameLine();
+		ImGui::InputFloat3("Snap", state.boundsSnap);
+		ImGui::PopID();
+	}
+
+	return changedEdit;
+}
 
 bool ImguiGizmoEditTransform(dx::XMMATRIX* matrix, const cCamera::sView& cam, bool editTransformDecomposition) {
 	sXformGizmoState& state = s_xformGizmoState;
 
-	bool changedEdit = false;
-	if (editTransformDecomposition)
-	{
-		//if (ImGui::IsKeyPressed(90))
-		//	state.mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-		//if (ImGui::IsKeyPressed(69))
-		//	state.mCurrentGizmoOperation = ImGuizmo::ROTATE;
-		//if (ImGui::IsKeyPressed(82)) // r Key
-		//	state.mCurrentGizmoOperation = ImGuizmo::SCALE;
-		if (ImGui::RadioButton("Translate", state.mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
-			state.mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-		ImGui::SameLine();
-		if (ImGui::RadioButton("Rotate", state.mCurrentGizmoOperation == ImGuizmo::ROTATE))
-			state.mCurrentGizmoOperation = ImGuizmo::ROTATE;
-		ImGui::SameLine();
-		if (ImGui::RadioButton("Scale", state.mCurrentGizmoOperation == ImGuizmo::SCALE))
-			state.mCurrentGizmoOperation = ImGuizmo::SCALE;
+	bool changedEdit = editTransformDecomposition && ImguiEditTransform(matrix);
 
-		{
-			sXform xform;
-			xform.init_scaled(*matrix);
-
-			vec4 tmp;
-			float* const tmpArr = reinterpret_cast<float*>(&tmp.mVal);
-
-			dx::XMStoreFloat4(&tmp.mVal, xform.mPos);
-			if (ImGui::DragFloat3("Pos", tmpArr)) {
-				xform.mPos = dx::XMLoadFloat4(&tmp.mVal);
-				changedEdit = true;
-			}
-			tmp = vec4::from_float3(quat_to_euler_zyx(xform.mQuat), 0.0f);
-			for (int i = 0; i < 3; ++i) { tmp[i] = RAD2DEG(tmp[i]); }
-			bool rotChanged = ImGui::DragFloat3("Rot", tmpArr);
-			ImGui::SameLine();
-			if (ImGui::Button("Reset")) {
-				tmp.mVal = {};
-				rotChanged = true;
-			}
-			if (rotChanged) {
-				for (int i = 0; i < 3; ++i) { tmp[i] = DEG2RAD(tmp[i]); }
-				xform.mQuat = euler_zyx_to_quat(tmp.xyz());
-				changedEdit = true;
-			}
-			dx::XMStoreFloat4(&tmp.mVal, xform.mScale);
-			if (ImguiDragFloat3_1("Scl", tmpArr, 0.01f)) {
-				xform.mScale = dx::XMLoadFloat4(&tmp.mVal);
-				changedEdit = true;
-			}
-
-			if (changedEdit) {
-				*matrix = xform.build_mtx();
-			}
-		}
-
-		if (state.mCurrentGizmoOperation != ImGuizmo::SCALE)
-		{
-			if (ImGui::RadioButton("Local", state.mCurrentGizmoMode == ImGuizmo::LOCAL))
-				state.mCurrentGizmoMode = ImGuizmo::LOCAL;
-			ImGui::SameLine();
-			if (ImGui::RadioButton("World", state.mCurrentGizmoMode == ImGuizmo::WORLD))
-				state.mCurrentGizmoMode = ImGuizmo::WORLD;
-		}
-		//if (ImGui::IsKeyPressed(83)) useSnap = !useSnap;
-		ImGui::Checkbox("", &state.useSnap);
-		ImGui::SameLine();
-
-		switch (state.mCurrentGizmoOperation)
-		{
-		case ImGuizmo::TRANSLATE:
-			ImGui::InputFloat3("Snap", &state.snap[0]);
-			break;
-		case ImGuizmo::ROTATE:
-			ImGui::InputFloat("Angle Snap", &state.snap[0]);
-			break;
-		case ImGuizmo::SCALE:
-			ImGui::InputFloat("Scale Snap", &state.snap[0]);
-			break;
-		}
-		ImGui::Checkbox("Bound Sizing", &state.boundSizing);
-		if (state.boundSizing)
-		{
-			ImGui::PushID(3);
-			ImGui::Checkbox("", &state.boundSizingSnap);
-			ImGui::SameLine();
-			ImGui::InputFloat3("Snap", state.boundsSnap);
-			ImGui::PopID();
-		}
-	}
 	ImGuiIO& io = ImGui::GetIO();
 	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 

@@ -278,7 +278,7 @@ void cRig::calc_local() {
 	}
 }
 
-void cRig::calc_world(DirectX::XMMATRIX rootWMtx) {
+void XM_CALLCONV cRig::calc_world(DirectX::XMMATRIX rootWMtx) {
 	assert(mJointsNum > 0);
 	assert(mpWmtx);
 	assert(mpJoints);
