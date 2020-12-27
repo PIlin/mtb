@@ -9,6 +9,7 @@
 	using Const ## NAME = std::shared_ptr<const TYPE>
 
 FRWD_RES(cModelData, ModelDataPtr);
+FRWD_RES(cModelMaterial, ModelMaterialPtr);
 FRWD_RES(cRigData, RigDataPtr);
 FRWD_RES(cAnimationDataList, AnimationDataListPtr);
 FRWD_RES(cAnimationList, AnimationListPtr);

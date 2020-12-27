@@ -1,3 +1,5 @@
+#pragma once
+
 struct sCameraView {
 	DirectX::XMMATRIX mView;
 	DirectX::XMMATRIX mProj;

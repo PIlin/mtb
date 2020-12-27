@@ -17,6 +17,11 @@
 #include "scene_components.hpp"
 #include "imgui.hpp"
 
+#include "scene/anim_sys.hpp"
+#include "scene/camera_mgr.hpp"
+#include "scene/scene.hpp"
+#include "scene/scene_editor.hpp"
+
 #include <imgui.h>
 
 CLANG_DIAG_PUSH
@@ -32,10 +37,6 @@ CLANG_DIAG_POP
 namespace dx = DirectX;
 using dx::XMFLOAT4;
 
-struct sSceneEditCtx
-{
-	cCamera::sView camView;
-};
 
 class cGnomon : public iRdrJob {
 	struct sVtx {
@@ -375,151 +376,15 @@ private:
 };
 
 
-class cAnimationComp {
-	ConstAnimationListPtr mpAnimList;
-	float mFrame = 0.0f;
-	float mSpeed = 1.0f;
-	int mCurAnim = 0;
-
-public:
-
-	cAnimationComp(ConstAnimationListPtr pAnimList, int curAnim = 0, float speed = 1.0f)
-		: mpAnimList(pAnimList)
-		, mSpeed(speed)
-		, mCurAnim(curAnim)
-	{}
-
-	void update(cRig& rig) {
-		assert(mpAnimList);
-
-		const int32_t animCount = mpAnimList->get_count();
-		if (animCount > 0 && mCurAnim < animCount) {
-			auto& anim = (*mpAnimList)[mCurAnim];
-			float lastFrame = anim.get_last_frame();
-
-			anim.eval(rig, mFrame);
-			mFrame += mSpeed;
-			if (mFrame >= lastFrame)
-				mFrame = 0.0f;
-		}
-	}
-
-	void dbg_ui(sSceneEditCtx& ctx) {
-		const int32_t animCount = mpAnimList->get_count();
-		if (animCount > 0 && mCurAnim < animCount) {
-			auto& anim = (*mpAnimList)[mCurAnim];
-			float lastFrame = anim.get_last_frame();
-
-			ImGui::LabelText("name", "%s", anim.get_name().p);
-			ImGui::SliderInt("curAnim", &mCurAnim, 0, animCount - 1);
-			ImGui::SliderFloat("frame", &mFrame, 0.0f, lastFrame);
-			ImGui::SliderFloat("speed", &mSpeed, 0.0f, 3.0f);
-		}
-	}
-};
-
-bool sAnimationCompParams::create(entt::registry& reg, entt::entity en) const {
-	cRigComp const* pRig = reg.try_get<cRigComp>(en);
-	if (!pRig) return false;
-
-	cRigData const* pRigData = pRig->get().get_rig_data();
-	if (!pRigData) return false;
-
-	ConstAnimationListPtr pAnimList;
-	if (!nResLoader::find_or_load(cPathManager::build_data_path(animRootPath), animListName, *pRigData, *&pAnimList))
-		return false;
-
-	cAnimationComp& anim = reg.emplace<cAnimationComp>(en, std::move(pAnimList), curAnim, speed);
-	return true;
-}
-
-bool sAnimationCompParams::edit_component(entt::registry& reg, entt::entity en) const {
-	reg.remove_if_exists<cAnimationComp>(en);
-	return create(reg, en);
-}
-
-bool sAnimationCompParams::dbg_ui(sSceneEditCtx& ctx) {
-	bool changed = false;
-	changed |= ImguiInputTextPath("Anim root", animRootPath);
-	changed |= ImguiInputTextPath("Anim list", animListName);
-
-	cRigData tmpRig;
-	ConstAnimationListPtr pAnimList;
-	if (nResLoader::find_or_load(cPathManager::build_data_path(animRootPath), animListName, tmpRig, *&pAnimList)) {
-		const int32_t animCount = pAnimList->get_count();
-		changed |= ImGui::SliderInt("curAnim", &curAnim, 0, animCount - 1);
-		if (animCount > 0 && curAnim < animCount) {
-			auto& anim = (*pAnimList)[curAnim];
-			float lastFrame = anim.get_last_frame();
-
-			ImGui::LabelText("name", "%s", anim.get_name().p);
-			changed |= ImGui::SliderFloat("speed", &speed, 0.0f, 3.0f);
-		}
-	}
-	return changed;
-}
-
-sAnimationCompParams sAnimationCompParams::init_ui() {
-	return sAnimationCompParams();
-}
 
 
-class cAnimationSys {
-	entt::registry& mRegistry;
-	cUpdateSubscriberScope mAnimUpdate;
-public:
-	cAnimationSys(entt::registry& reg) : mRegistry(reg) {}
 
-	void register_anim_update() {
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneAnimUpdate, tUpdateFunc(std::bind(&cAnimationSys::update_anim, this)), mAnimUpdate);
-	}
 
-	void update_anim() {
-		auto view = mRegistry.view<cAnimationComp, cRigComp>();
-		view.each([](cAnimationComp& anim, cRigComp& rig) {
-			anim.update(rig.get());
-		});
-	}
-};
 
 
 
 ////
 
-class cCameraManager : public iRdrJob {
-	cCamera mCamera;
-	cTrackballCam mTrackballCam;
-	cUpdateSubscriberScope mCameraUpdate;
-
-public:
-	void init() {
-		mTrackballCam.init(mCamera);
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Camera, tUpdateFunc(std::bind(&cCameraManager::update_cam, this)), mCameraUpdate);
-	}
-
-	void update_cam() {
-		mTrackballCam.update(mCamera);
-		cRdrQueueMgr::get().add_model_prologue_job(*this);
-	}
-
-	virtual void disp_job(cRdrContext const& rdrCtx) const override {
-		upload_cam(rdrCtx);
-	}
-
-	void upload_cam(cRdrContext const& rdrCtx) const {
-		auto pCtx = rdrCtx.get_ctx();
-		auto& camCBuf = rdrCtx.get_cbufs().mCameraCBuf;
-		camCBuf.mData.viewProj = mCamera.mView.mViewProj;
-		camCBuf.mData.view = mCamera.mView.mView;
-		camCBuf.mData.proj = mCamera.mView.mProj;
-		camCBuf.mData.camPos = mCamera.mView.mPos;
-		camCBuf.update(pCtx);
-		camCBuf.set_VS(pCtx);
-		camCBuf.set_PS(pCtx);
-	}
-
-	const cCamera& get_cam() const { return mCamera; }
-};
 
 ////
 
@@ -578,491 +443,152 @@ public:
 
 
 
-class cScene {
-	friend class cSceneEditor;
-
-	entt::registry registry;
-
+struct cScene::sSceneImpl {
 	cGnomon gnomon;
-	cCameraManager cameraMgr;
 	cLightMgrUpdate lightMgr;
 	cModelRdrJobs modelRdrJobs;
 	cAnimationSys animSys;
 
-	sSceneSnapshot snapshot;
 
-	
+
 public:
 
-	cScene() 
+	sSceneImpl(entt::registry& registry)
 		: modelRdrJobs(registry)
 		, animSys(registry)
 	{
 		gnomon.init();
-		cameraMgr.init();
 		lightMgr.init();
 		modelRdrJobs.init();
-		animSys.register_anim_update();
+		animSys.register_update(cSceneMgr::get().get_update_queue());
+	}
+};
 
-		load();
-		create_from_snapshot();
+cScene::cScene()
+	: mpCameraMgr(std::make_unique<cCameraManager>())
+	, mpSceneImpl(std::make_unique<sSceneImpl>(registry))
+{
+	mpCameraMgr->init();
+	load();
+	create_from_snapshot();
+}
+
+cScene::~cScene() {
+	save();
+}
+
+static fs::path get_scene_snapshot_path() { return cPathManager::build_data_path("scene.json"); }
+
+void cScene::create_from_snapshot() {
+	if (!registry.empty()) {
+		registry.clear();
 	}
 
-	~cScene() {
-		save();
+	for (entt::entity en : snapshot.entityIds) {
+		entt::entity realEn = registry.create(en);
+		if (realEn != en) {
+			dbg_break();
+		}
 	}
 
-	static fs::path get_scene_snapshot_path() { return cPathManager::build_data_path("scene.json"); }
+	snapshot.invoke_for_params([&](entt::id_type t, auto* pList) { pList->create(registry); });
+}
 
-	void create_from_snapshot() {
-		if (!registry.empty()) {
-			registry.clear();
-		}
+void cScene::load() {
+	if (snapshot.load(get_scene_snapshot_path())) {
 
-		for (entt::entity en : snapshot.entityIds) {
-			entt::entity realEn = registry.create(en);
-			if (realEn != en) {
-				dbg_break();
-			}
-		}
-
-		snapshot.invoke_for_params([&](entt::id_type t, auto* pList) { pList->create(registry); });
 	}
+	else {
+		sParamList<sPositionCompParams>* pPosParams = new sParamList<sPositionCompParams>();
+		sParamList<sModelCompParams>* pModelParams = new sParamList<sModelCompParams>();
+		sParamList<sRiggedModelCompParams>* pRiggedModelParams = new sParamList<sRiggedModelCompParams>();
+		sParamList<sFbxRiggedModelParams>* pFbxModelParams = new sParamList<sFbxRiggedModelParams>();
+		sParamList<sAnimationCompParams>* pAnimParams = new sParamList<sAnimationCompParams>();
 
-	void load() {
-		if (snapshot.load(get_scene_snapshot_path())) {
-
-		}
-		else {
-			sParamList<sPositionCompParams>* pPosParams = new sParamList<sPositionCompParams>();
-			sParamList<sModelCompParams>* pModelParams = new sParamList<sModelCompParams>();
-			sParamList<sRiggedModelCompParams>* pRiggedModelParams = new sParamList<sRiggedModelCompParams>();
-			sParamList<sFbxRiggedModelParams>* pFbxModelParams = new sParamList<sFbxRiggedModelParams>();
-			sParamList<sAnimationCompParams>* pAnimParams = new sParamList<sAnimationCompParams>();
-
-			auto insertEntityParam = [](auto* pList, entt::entity en, auto&& param) {
-				const uint32_t paramId = (uint32_t)pList->paramList.size();
-				pList->paramList.emplace(paramId, std::forward<decltype(param)>(param));
-				pList->entityList.emplace(en, paramId);
-			};
+		auto insertEntityParam = [](auto* pList, entt::entity en, auto&& param) {
+			const uint32_t paramId = (uint32_t)pList->paramList.size();
+			pList->paramList.emplace(paramId, std::forward<decltype(param)>(param));
+			pList->entityList.emplace(en, paramId);
+		};
 
 #if 1
-			{
-				entt::entity lightning = registry.create();
-				snapshot.entityIds.insert(lightning);
-				fs::path root = fs::path("lightning");
-				sXform xform = sXform::identity();
-				insertEntityParam(pPosParams, lightning, sPositionCompParams{ xform });
-				insertEntityParam(pModelParams, lightning, sModelCompParams{ root / "lightning.geo", root / "lightning.mtl" });
-			}
+		{
+			entt::entity lightning = registry.create();
+			snapshot.entityIds.insert(lightning);
+			fs::path root = fs::path("lightning");
+			sXform xform = sXform::identity();
+			insertEntityParam(pPosParams, lightning, sPositionCompParams{ xform });
+			insertEntityParam(pModelParams, lightning, sModelCompParams{ root / "lightning.geo", root / "lightning.mtl" });
+		}
 
-			{
-				entt::entity owl = registry.create();
-				snapshot.entityIds.insert(owl);
-				fs::path root = fs::path("owl");
-				sXform xform = sXform::identity();
-				xform.mPos = dx::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
-				insertEntityParam(pPosParams, owl, sPositionCompParams{ xform });
-				sRiggedModelCompParams rm;
-				rm.modelPath = root / "def.geo";
-				rm.materialPath = root / "def.mtl";
-				rm.rigPath = root / "def.rig";
-				xform = sXform::identity();
-				const float scl = 0.01f;
-				xform.mScale = dx::XMVectorSet(scl, scl, scl, 0.0f);
-				dx::XMStoreFloat4x4A(&rm.localXform, xform.build_mtx());
-				insertEntityParam(pRiggedModelParams, owl, std::move(rm));
-				insertEntityParam(pAnimParams, owl, sAnimationCompParams{ root, "def.alist" });
-			}
+		{
+			entt::entity owl = registry.create();
+			snapshot.entityIds.insert(owl);
+			fs::path root = fs::path("owl");
+			sXform xform = sXform::identity();
+			xform.mPos = dx::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
+			insertEntityParam(pPosParams, owl, sPositionCompParams{ xform });
+			sRiggedModelCompParams rm;
+			rm.modelPath = root / "def.geo";
+			rm.materialPath = root / "def.mtl";
+			rm.rigPath = root / "def.rig";
+			xform = sXform::identity();
+			const float scl = 0.01f;
+			xform.mScale = dx::XMVectorSet(scl, scl, scl, 0.0f);
+			dx::XMStoreFloat4x4A(&rm.localXform, xform.build_mtx());
+			insertEntityParam(pRiggedModelParams, owl, std::move(rm));
+			insertEntityParam(pAnimParams, owl, sAnimationCompParams{ root, "def.alist" });
+		}
 #endif
 
-			{
-				entt::entity jumpingSphere = registry.create();
-				snapshot.entityIds.insert(jumpingSphere);
-				fs::path root = fs::path("jumping_sphere");
-				sXform xform = sXform::identity();
-				xform.mPos = dx::XMVectorSet(2.0f, 0.0f, 0.0f, 1.0f);
-				insertEntityParam(pPosParams, jumpingSphere, sPositionCompParams{ xform });
-				sRiggedModelCompParams rm;
-				rm.modelPath = root / "def.geo";
-				rm.materialPath = root / "def.mtl";
-				rm.rigPath = root / "def.rig";
-				insertEntityParam(pRiggedModelParams, jumpingSphere, std::move(rm));
-				insertEntityParam(pAnimParams, jumpingSphere, sAnimationCompParams{ root, "def.alist" });
-			}
-
-			{
-				entt::entity unrealPuppet = registry.create();
-				snapshot.entityIds.insert(unrealPuppet);
-				fs::path root = fs::path("unreal_puppet");
-				sXform xform = sXform::identity();
-				xform.mPos = dx::XMVectorSet(3.0f, 0.0f, 0.0f, 1.0f);
-				insertEntityParam(pPosParams, unrealPuppet, sPositionCompParams{ xform });
-				sFbxRiggedModelParams rm;
-				rm.modelPath = root / "SideScrollerSkeletalMesh.FBX";
-				rm.materialPath = root / "def.mtl";
-				insertEntityParam(pFbxModelParams, unrealPuppet, std::move(rm));
-				insertEntityParam(pAnimParams, unrealPuppet, sAnimationCompParams{ root, "def.alist", 0, 1.0f / 60.0f });
-			}
-
-			auto insertParam = [](sSceneSnapshot& snapshot, auto* pList) {
-				entt::id_type t = entt::type_info<std::remove_pointer<decltype(pList)>::type::TParams>::id();
-				snapshot.paramsOrder.push_back(t);
-				snapshot.params.emplace(t, std::unique_ptr<iParamList>(pList));
-			};
-			
-			insertParam(snapshot, pPosParams);
-			insertParam(snapshot, pModelParams);
-			insertParam(snapshot, pRiggedModelParams);
-			insertParam(snapshot, pFbxModelParams);
-			insertParam(snapshot, pAnimParams);
-		}
-	}
-
-	void save() {
-		snapshot.save(get_scene_snapshot_path());
-	}
-};
-
-class cSceneEditor {
-	struct iComponentReg {
-		std::string name;
-		entt::id_type id;
-		int32_t order = 0;
-		bool openByDefault = false;
-
-		const char* ui_name() const { return name.c_str(); }
-		virtual void ui(entt::registry& reg, entt::entity en, sSceneEditCtx& ctx) = 0;
-		virtual ~iComponentReg() {}
-	};
-
-	template <typename T>
-	struct sComponentReg : public iComponentReg {
-		sComponentReg(const char* szName) {
-			name = szName;
-			id = entt::type_info<T>::id();
+		{
+			entt::entity jumpingSphere = registry.create();
+			snapshot.entityIds.insert(jumpingSphere);
+			fs::path root = fs::path("jumping_sphere");
+			sXform xform = sXform::identity();
+			xform.mPos = dx::XMVectorSet(2.0f, 0.0f, 0.0f, 1.0f);
+			insertEntityParam(pPosParams, jumpingSphere, sPositionCompParams{ xform });
+			sRiggedModelCompParams rm;
+			rm.modelPath = root / "def.geo";
+			rm.materialPath = root / "def.mtl";
+			rm.rigPath = root / "def.rig";
+			insertEntityParam(pRiggedModelParams, jumpingSphere, std::move(rm));
+			insertEntityParam(pAnimParams, jumpingSphere, sAnimationCompParams{ root, "def.alist" });
 		}
 
-		virtual void ui(entt::registry& reg, entt::entity en, sSceneEditCtx& ctx) override {
-			if (T* p = reg.try_get<T>(en)) {
-				p->dbg_ui(ctx);
-			}
-		}
-	};
-
-	struct iParamReg {
-		std::string name;
-		entt::id_type id;
-		int32_t order = 0;
-		bool openByDefault = false;
-
-		const char* ui_name() const { return name.c_str(); }
-		virtual void ui(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en, sSceneEditCtx& ctx) = 0;
-		virtual void add(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en) = 0;
-		virtual ~iParamReg() {}
-	};
-
-	template <typename T>
-	struct sParamReg : public iParamReg {
-		sParamReg(const char* szName) {
-			name = szName;
-			id = entt::type_info<T>::id();
+		{
+			entt::entity unrealPuppet = registry.create();
+			snapshot.entityIds.insert(unrealPuppet);
+			fs::path root = fs::path("unreal_puppet");
+			sXform xform = sXform::identity();
+			xform.mPos = dx::XMVectorSet(3.0f, 0.0f, 0.0f, 1.0f);
+			insertEntityParam(pPosParams, unrealPuppet, sPositionCompParams{ xform });
+			sFbxRiggedModelParams rm;
+			rm.modelPath = root / "SideScrollerSkeletalMesh.FBX";
+			rm.materialPath = root / "def.mtl";
+			insertEntityParam(pFbxModelParams, unrealPuppet, std::move(rm));
+			insertEntityParam(pAnimParams, unrealPuppet, sAnimationCompParams{ root, "def.alist", 0, 1.0f / 60.0f });
 		}
 
-		virtual void ui(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en, sSceneEditCtx& ctx) override {
-			auto pit = snapshot.params.find(id);
-			if (pit != snapshot.params.end() && pit->second) {
-				iParamList* pList = pit->second.get();
-				auto eit = pList->entityList.find(en);
-				if (eit != pList->entityList.end()) {
-					auto& params = static_cast<sParamList<T>*>(pList)->paramList;
-					auto epit = params.find(eit->second);
-					if (epit != params.end()) {
-						if (epit->second.dbg_ui(ctx)) {
-							epit->second.edit_component(reg, en);
-						}
-					}
-				}
-			}
-		}
-
-		virtual void add(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en) override {
-			auto pit = snapshot.params.find(id);
-			if (pit == snapshot.params.end()) {
-				pit = snapshot.ensure_list_iter<T>(pit, id);
-				snapshot.paramsOrder.push_back(id);
-			}
-
-			if (pit != snapshot.params.end() && pit->second) {
-				iParamList* pList = pit->second.get();
-				auto eit = pList->entityList.find(en);
-				if (eit == pList->entityList.end()) {
-					auto& params = static_cast<sParamList<T>*>(pList)->paramList;
-					const uint32_t paramId = (uint32_t)params.size();
-					auto epit = params.emplace(paramId, typename T::init_ui()).first;
-					pList->entityList.emplace(en, paramId);
-
-					epit->second.edit_component(reg, en);
-				}
-			}
-		}
-	};
-
-	cUpdateSubscriberScope mDbgUpdate;
-	cScene* mpScene = nullptr;
-	entt::entity mSelected = entt::null;
-	std::map<entt::id_type, std::unique_ptr<iComponentReg>> mComponentTypes;
-	std::map<entt::id_type, std::unique_ptr<iParamReg>> mParamTypes;
-
-public:
-	template <typename T, typename TMap>
-	static T& register_type(const char* szName, TMap& map) {
-		std::unique_ptr<T> r = std::make_unique<T>(szName);
-		entt::id_type id = r->id;
-		r->order = (int32_t)map.size();
-		return static_cast<T&>(*(map[id] = std::move(r)).get());
-	}
-
-	template <typename TComp>
-	sComponentReg<TComp>& register_component(const char* szName) {
-		return register_type<sComponentReg<TComp>>(szName, mComponentTypes);
-	}
-
-	template <typename TComp>
-	sParamReg<TComp>& register_param(const char* szName) {
-		return register_type<sParamReg<TComp>>(szName, mParamTypes);
-	}
-
-	cSceneEditor() {
-		register_component<sPositionComp>("Position").openByDefault = false;
-		register_component<cModelComp>("Model");
-		register_component<cRigComp>("Rig");
-		register_component<cAnimationComp>("Animation");
-
-		register_param<sPositionCompParams>("Position").openByDefault = true;
-		register_param<sModelCompParams>("Model");
-		register_param<sRiggedModelCompParams>("Rigged Model");
-		register_param<sFbxRiggedModelParams>("Fbx Model");
-		register_param<sAnimationCompParams>("Animation");
-	}
-
-	void init(cScene* pScene) {
-		mpScene = pScene;
-		mSelected = entt::null;
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cSceneEditor::dbg_ui, this)), mDbgUpdate);
-	}
-
-	static const char* format_entity(std::string& buf, entt::entity en, const sSceneSnapshot& snapshot) {
-		buf = std::to_string((uint32_t)entt::registry::entity(en));
-		buf += ':';
-		buf += std::to_string((uint32_t)entt::registry::version(en));
-
-		if (snapshot.entityIds.find(en) == snapshot.entityIds.end()) {
-			buf += " (dyn)";
-		}
-
-		return buf.c_str();
-	}
-
-	void dbg_ui() {
-		if (!mpScene) return;
-		
-		sSceneEditCtx ctx;
-		ctx.camView = mpScene->cameraMgr.get_cam().mView;
-
-		ImGui::Begin("scene");
-		show_entity_list(ctx);
-		
-		if (mSelected != entt::null) {
-			ImGui::PushID((int)mSelected);
-			show_entity_params(mSelected, ctx);
-			show_entity_components(mSelected, ctx);
-			ImGui::PopID();
-		}
-
-		ImGui::End();
-	}
-
-	void show_entity_list(sSceneEditCtx& ctx) {
-		entt::registry& reg = mpScene->registry;
-		sSceneSnapshot& snapshot = mpScene->snapshot;
-
-		if (ImGui::Button("Create")) {
-			mSelected = reg.create();
-			snapshot.entityIds.insert(mSelected);
-		}
-		if (mSelected != entt::null) {
-			ImGui::SameLine();
-			if (ImGui::Button("Delete")) {
-				reg.destroy(mSelected);
-				snapshot.remove_entity(mSelected);
-				mSelected = entt::null;
-			}
-		}
-
-		std::vector<entt::entity> alive;
-		int selectedIdx = -1;
-		reg.each([&](entt::entity en) { if (en == mSelected) { selectedIdx = (int)alive.size(); } alive.push_back(en); });
-		std::string buffer;
-		auto getter = [&](int i, const char** szText) {
-			if (i < alive.size()) {
-				(*szText) = format_entity(buffer, alive[i], snapshot);
-				return true;
-			}
-			return false;
+		auto insertParam = [](sSceneSnapshot& snapshot, auto* pList) {
+			entt::id_type t = entt::type_info<std::remove_pointer<decltype(pList)>::type::TParams>::id();
+			snapshot.paramsOrder.push_back(t);
+			snapshot.params.emplace(t, std::unique_ptr<iParamList>(pList));
 		};
-		using TGetter = decltype(getter);
-		auto getterWrapper = [](void* g, int i, const char** szText) { return (*(TGetter*)g)(i, szText); };
-		void* pGetter = &getter;
-		if (ImGui::ListBox("entities", &selectedIdx, getterWrapper, pGetter, (int)alive.size(), 10)) {
-			if (0 <= selectedIdx && selectedIdx < alive.size()) { mSelected = alive[selectedIdx]; }
-			else { mSelected = entt::null; }
-		}
+			
+		insertParam(snapshot, pPosParams);
+		insertParam(snapshot, pModelParams);
+		insertParam(snapshot, pRiggedModelParams);
+		insertParam(snapshot, pFbxModelParams);
+		insertParam(snapshot, pAnimParams);
 	}
+}
 
-	void show_entity_components(entt::entity en, sSceneEditCtx& ctx) {
-		if (ImGui::TreeNode("Components")) {
-			entt::registry& reg = mpScene->registry;
+void cScene::save() {
+	snapshot.save(get_scene_snapshot_path());
+}
 
-			std::vector<entt::id_type> componentTypes;
-			reg.visit(en, [&](entt::id_type t) { componentTypes.push_back(t); });
-			sort_components_by_order(componentTypes);
 
-			for (auto t : componentTypes) {
-				auto it = mComponentTypes.find(t);
-				if (it != mComponentTypes.end()) {
-					if (it->second->openByDefault)
-						ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-					if (ImGui::TreeNode(it->second->ui_name())) {
-						it->second->ui(reg, en, ctx);
-						ImGui::TreePop();
-					}
-				}
-				else {
-					std::string node = "**Unknown component type " + std::to_string(uint32_t(t));
-					if (ImGui::TreeNode(node.c_str())) {
-						ImGui::TreePop();
-					}
-				}
-			}
-			ImGui::TreePop();
-		}
-	}
-
-	void show_entity_params(entt::entity en, sSceneEditCtx& ctx) {
-		ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-		if (ImGui::TreeNode("Params")) {
-			sSceneSnapshot& snapshot = mpScene->snapshot;
-			entt::registry& reg = mpScene->registry;
-
-			std::vector<entt::id_type> paramTypes;
-			gather_params_in_snapshot(snapshot, en, paramTypes);
-
-			entt::id_type typeToAdd;
-			ImGui::SameLine();
-			if (select_param_type_to_add(paramTypes, typeToAdd)) {
-				iParamReg* pParam = mParamTypes[typeToAdd].get();
-				ensure_entity_in_snapshot(en, snapshot);
-				pParam->add(reg, snapshot, en);
-				sort_components_by_order(snapshot.paramsOrder);
-				paramTypes.clear();
-				gather_params_in_snapshot(snapshot, en, paramTypes);
-			}
-
-			for (auto t : paramTypes) {
-				auto it = mParamTypes.find(t);
-				if (it != mParamTypes.end()) {
-					if (it->second->openByDefault)
-						ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-					if (ImGui::TreeNode(it->second->ui_name())) {
-						it->second->ui(reg, snapshot, en, ctx);
-						ImGui::TreePop();
-					}
-				}
-				else {
-					std::string node = "**Unknown param type " + std::to_string(uint32_t(t));
-					if (ImGui::TreeNode(node.c_str())) {
-						ImGui::TreePop();
-					}
-				}
-			}
-			ImGui::TreePop();
-		}
-	}
-
-	void gather_params_in_snapshot(const sSceneSnapshot& snapshot, entt::entity en, std::vector<entt::id_type>& paramTypes) const {
-		for (auto& paramListPair : snapshot.params) {
-			if (paramListPair.second) {
-				const iParamList::EntityList& el = paramListPair.second->entityList;
-				if (el.find(en) != el.end())
-					paramTypes.push_back(paramListPair.first);
-			}
-		}
-
-		sort_params_by_order(paramTypes);
-	}
-
-	bool select_param_type_to_add(const std::vector<entt::id_type>& paramTypes, entt::id_type& typeToAdd) const {
-		bool res = false;
-		
-		if (ImGui::SmallButton("New...")) {
-			ImGui::OpenPopup("new_param_popup");
-		}
-		if (ImGui::BeginPopup("new_param_popup")) {
-			std::vector<entt::id_type> newParamTypes;
-			for (const auto& pt : mParamTypes) {
-				if (std::find(paramTypes.begin(), paramTypes.end(), pt.first) == paramTypes.end()) {
-					newParamTypes.push_back(pt.first);
-				}
-			}
-			if (newParamTypes.empty()) {
-				ImGui::TextDisabled("- no params to add -");
-			}
-			else {
-				sort_params_by_order(newParamTypes);
-				for (entt::id_type t : newParamTypes) {
-					auto it = mParamTypes.find(t);
-					if (it != mParamTypes.end()) {
-						if (ImGui::Selectable(it->second.get()->ui_name())) {
-							typeToAdd = t;
-							res = true;
-						}
-					}
-				}
-			}
-			ImGui::EndPopup();
-		}
-		return res;
-	}
-
-	void ensure_entity_in_snapshot(entt::entity en, sSceneSnapshot& snapshot) {
-		snapshot.entityIds.insert(en);
-	}
-
-	void sort_components_by_order(std::vector<entt::id_type>& comp) const {
-		sort_components_by_order(comp, mComponentTypes);
-	}
-
-	void sort_params_by_order(std::vector<entt::id_type>& comp) const {
-		sort_components_by_order(comp, mParamTypes);
-	}
-
-	template <typename TMap>
-	static void sort_components_by_order(std::vector<entt::id_type>& comp, const TMap& map) {
-		std::sort(comp.begin(), comp.end(), [&](entt::id_type a, entt::id_type b) {
-			auto ait = map.find(a);
-			auto bit = map.find(b);
-			auto eit = map.end();
-			if (ait != eit && bit != eit) {
-				return ait->second->order < bit->second->order;
-			}
-			else if (ait != eit) {
-				return true;
-			}
-			return false;
-		});
-	}
-};
 
 
 //////
@@ -1072,6 +598,20 @@ cSceneMgr::cSceneMgr()
 	, mpScene(std::make_unique<cScene>())
 	, mpSceneEditor(std::make_unique<cSceneEditor>())
 {
+	mpSceneEditor->register_component<sPositionComp>("Position").openByDefault = false;
+	mpSceneEditor->register_component<cModelComp>("Model");
+	mpSceneEditor->register_component<cRigComp>("Rig");
+	//mpSceneEditor->register_component<cAnimationComp>("Animation");
+
+	mpSceneEditor->register_param<sPositionCompParams>("Position").openByDefault = true;
+	mpSceneEditor->register_param<sModelCompParams>("Model");
+	mpSceneEditor->register_param<sRiggedModelCompParams>("Rigged Model");
+	mpSceneEditor->register_param<sFbxRiggedModelParams>("Fbx Model");
+	//mpSceneEditor->register_param<sAnimationCompParams>("Animation");
+
+	//mpScene->
+
+
 	mpSceneEditor->init(mpScene.get());
 }
 

@@ -38,6 +38,16 @@ add_subdirectory("${THIRD_PARTY_DIR}/entt")
 project(mtb)
 
 set(SRC
+	src/scene/anim_sys.cpp
+	src/scene/anim_sys.hpp
+	src/scene/camera_mgr.cpp
+	src/scene/camera_mgr.hpp
+	src/scene/rig_component.hpp
+	src/scene/scene.cpp
+	src/scene/scene.hpp
+	src/scene/scene_editor.cpp
+	src/scene/scene_editor.hpp
+
 	src/update_queue.hpp
 	src/update_queue.cpp
 	src/texture.hpp
@@ -87,7 +97,8 @@ set(SRC
 	src/anim.hpp
 	src/anim.cpp
 )
-source_group("src" FILES ${SRC})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${SRC})
+
 
 set(HLSL_INC
 	hlsl/light.hlsli
@@ -110,6 +121,7 @@ set_source_files_properties(${HLSL_PS} PROPERTIES VS_SHADER_TYPE Pixel  VS_SHADE
 source_group("hlsl" FILES ${HLSL})
 
 add_executable(mtb ${SRC} ${HLSL})
+target_include_directories(mtb PRIVATE "src")
 target_link_libraries(mtb PRIVATE SDL2-static SDL2main imgui imguizmo DirectXTK assimp cereal EnTT d3d11 d3dcompiler)
 
 

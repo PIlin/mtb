@@ -1,3 +1,4 @@
+#pragma once
 #include <DirectXMath.h>
 
 inline float DEG2RAD(const float deg) {
