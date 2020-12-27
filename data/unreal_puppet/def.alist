@@ -1,0 +1,14 @@
+[
+    {
+        "name": "idle",
+        "fbxName": "SideScrollerIdle.FBX"
+    },
+    {
+        "name": "run",
+        "fbxName": "SideScrollerRun.FBX"
+    },
+    {
+        "name": "walk",
+        "fbxName": "SideScrollerWalk.FBX"
+    }
+]

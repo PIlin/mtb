@@ -28,6 +28,8 @@ private:
 	std::vector<sAIBoneInfo> mpBones;
 	std::unordered_map<cstr, int32_t> mBonesMap;
 public:
+	cAssimpLoader();
+	~cAssimpLoader();
 
 	bool load(const fs::path& filepath, uint32_t flags);
 	bool load(const fs::path& filepath);

@@ -57,15 +57,20 @@ private:
 	void find_keyframe(int comp, float frame, sKeyframe const*& pKfrA, sKeyframe const*& pKfrB) const;
 };
 
-class cAnimationData : noncopyable {
+class cAnimationData {
 public:
-	cChannel* mpChannels = nullptr;
+	std::unique_ptr<cChannel[]> mpChannels;
 	int mChannelsNum = 0;
 	float mLastFrame = 0.0f;
 
 	std::string mName;
 public:
-	~cAnimationData();
+	cAnimationData() = default;
+	cAnimationData(const cAnimationData&) = delete;
+	cAnimationData& operator=(const cAnimationData&) = delete;
+	cAnimationData(cAnimationData&&) = default;
+	cAnimationData& operator=(cAnimationData&&) = default;
+
 	bool load(const fs::path& filepath);
 	bool load(aiAnimation const& anim);
 

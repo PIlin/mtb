@@ -46,7 +46,7 @@ public:
 			}
 		}
 
-		mData.mpChannels = pChannels.release();
+		mData.mpChannels = std::move(pChannels);
 		mData.mChannelsNum = channelsNum;
 		mData.mLastFrame = lastFrame;
 		mData.mName = std::move(animName);
@@ -156,7 +156,7 @@ public:
 			if (!load_channel(node, 't', pChannels[i * 3 + 2])) { return false; }
 		}
 
-		mData.mpChannels = pChannels.release();
+		mData.mpChannels = std::move(pChannels);
 		mData.mChannelsNum = channelsNum;
 		mData.mLastFrame = lastFrame;
 		mData.mName = std::move(animName);
@@ -270,24 +270,61 @@ public:
 		CHECK_SCHEMA(doc.IsArray(), "doc is not an array\n");
 		Size count = doc.Size();
 		
-		auto pAdata = std::make_unique<cAnimationData[]>(count);
+		std::vector<cAnimationData> adata;
+		adata.reserve(count);
 		std::unordered_map<std::string, int32_t> map;
 		int anim = 0;
 
 		for (Size i = 0; i < count; ++i) {
 			auto& rec = doc[i];
 			CHECK_SCHEMA(rec.HasMember("name"), "rec has no name\n");
-			//auto& n = rec["name"];
-			CHECK_SCHEMA(rec.HasMember("fname"), "rec has no fname\n");
-			auto& fn = rec["fname"];
+			auto& n = rec["name"];
 
-			std::string fname(fn.GetString(), fn.GetStringLength());
+			if (rec.HasMember("fname")) {
+				auto& fn = rec["fname"];
 
-			if (pAdata[anim].load(mPath / fname)) {
-				map[pAdata[anim].mName] = anim;
-				anim++;
+				std::string fname(fn.GetString(), fn.GetStringLength());
+				adata.emplace_back();
+				if (adata[anim].load(mPath / fname)) {
+					map[adata[anim].mName] = anim;
+					anim++;
+				}
+			}
+			else if (rec.HasMember("fbxName")) {
+				std::string prefix(n.GetString(), n.GetStringLength());
+				prefix += ".";
+
+				auto& fn = rec["fbxName"];
+
+				std::string fname(fn.GetString(), fn.GetStringLength());
+
+				cAssimpLoader animLoader;
+				if (animLoader.load_unreal_fbx(mPath / fname)) {
+					cAnimationDataList tmpList;
+					if (tmpList.load(animLoader)) {
+						std::unique_ptr<cAnimationData[]> pTmpData = std::move(tmpList.mpList);
+						const int32_t tmpCount = tmpList.get_count();
+						for (int32_t t = 0; t < tmpCount; ++t) {
+							adata.emplace_back(std::move(pTmpData[t]));
+							adata[anim].mName = prefix + adata[anim].mName;
+							map[adata[anim].mName] = anim;
+							anim++;
+						}
+					}
+				}
+			}
+			else { 
+				CHECK_SCHEMA(false, "rec has no fname or fbxName\n");
 			}
 		}
+
+		auto pAdata = std::make_unique<cAnimationData[]>(anim);
+		for (int32_t i = 0; i < anim; ++i) {
+			cAnimationData& dst = pAdata[i];
+			cAnimationData& src = adata[i];
+			dst = std::move(src);
+		}
+		adata.clear();
 
 		mList.mpList = std::move(pAdata);
 		mList.mCount = anim;
@@ -417,10 +454,6 @@ void cChannel::find_keyframe(int comp, float frame, sKeyframe const*& pKfrA, sKe
 		pKfrA = last;
 		pKfrB = last;
 	}
-}
-
-cAnimationData::~cAnimationData() {
-	delete[] mpChannels;
 }
 
 bool cAnimationData::load(const fs::path& filepath) {

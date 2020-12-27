@@ -8,7 +8,8 @@
         "paramsOrder": [
             304049688,
             1188088766,
-            3773953081
+            3773953081,
+            3838159947
         ],
         "id_304049688": {
             "paramList": [
@@ -210,6 +211,29 @@
                                 "value15": 1.0
                             }
                         }
+                    }
+                }
+            ],
+            "entityList": [
+                {
+                    "key": 2,
+                    "value": 0
+                }
+            ]
+        },
+        "id_3838159947": {
+            "paramList": [
+                {
+                    "key": 0,
+                    "value": {
+                        "animRootPath": {
+                            "value0": "unreal_puppet"
+                        },
+                        "animListName": {
+                            "value0": "def.alist"
+                        },
+                        "curAnim": 0,
+                        "speed": 0.016666660085320474
                     }
                 }
             ],

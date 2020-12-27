@@ -23,6 +23,9 @@ static void list_meshes(aiScene const* pScene, aiNode const* pNode, std::vector<
 	}
 }
 
+cAssimpLoader::cAssimpLoader() = default;
+cAssimpLoader::~cAssimpLoader() = default;
+
 bool cAssimpLoader::load(const fs::path& filepath, uint32_t flags) {
 	auto pImporter = std::make_unique<Assimp::Importer>();
 	pImporter->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
