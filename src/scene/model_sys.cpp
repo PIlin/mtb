@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "math.hpp"
+#include "gfx.hpp"
 #include "rdr.hpp"
 #include "model_sys.hpp"
 #include "path_helpers.hpp"
@@ -49,10 +50,16 @@ public:
 
 /////////////////////////
 
-void cModelDispSys::register_disp_update() {
+void cModelDispSys::register_update(cUpdateQueue& queue) {
 	if (!mDispUpdate) {
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cModelDispSys::disp, this)), mDispUpdate);
+		queue.add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cModelDispSys::update_begin, this)), mUpdateBegin);
+		queue.add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cModelDispSys::disp, this)), mDispUpdate);
+		queue.add(eUpdatePriority::End, tUpdateFunc(std::bind(&cModelDispSys::update_end, this)), mUpdateEnd);
 	}
+}
+
+void cModelDispSys::update_begin() {
+	cRdrQueueMgr::get().add_model_prologue_job(mPrologueJob);
 }
 
 void cModelDispSys::disp() {
@@ -61,9 +68,20 @@ void cModelDispSys::disp() {
 	}
 }
 
+void cModelDispSys::update_end() {
+	cRdrQueueMgr::get().exec_model_jobs();
+}
+
 void cModelDispSys::disp_job(cRdrContext const& ctx) const {
 	disp_solid(ctx);
 	disp_skinned(ctx);
+}
+
+void cModelDispSys::sPrologueJob::disp_job(cRdrContext const& rdrCtx) const {
+	auto pCtx = rdrCtx.get_ctx();
+	get_gfx().apply_default_rt_vp(pCtx);
+	cRasterizerStates::get().set_def(pCtx);
+	cDepthStencilStates::get().set_def(pCtx);
 }
 
 

@@ -7,14 +7,24 @@ class cRdrContext;
 class cSceneCompMetaReg;
 
 class cModelDispSys : public iRdrJob {
+	cUpdateSubscriberScope mUpdateBegin;
+	cUpdateSubscriberScope mUpdateEnd;
 	cUpdateSubscriberScope mDispUpdate;
+
+	struct sPrologueJob : public iRdrJob {
+		virtual void disp_job(cRdrContext const& ctx) const override;
+	};
+
 	entt::registry& mRegistry;
+	sPrologueJob mPrologueJob;
 public:
 
 	cModelDispSys(entt::registry& reg) : mRegistry(reg) {}
 
-	void register_disp_update();
+	void register_update(cUpdateQueue& queue);
+	void update_begin();
 	void disp();
+	void update_end();
 
 	virtual void disp_job(cRdrContext const& ctx) const override;
 

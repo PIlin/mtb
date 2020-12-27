@@ -140,58 +140,21 @@ public:
 
 ////
 
-class cModelRdrJobs : public iRdrJob {
-	cUpdateSubscriberScope mUpdateBegin;
-	cUpdateSubscriberScope mUpdateEnd;
-
-	cModelDispSys mModelDispSys;
-public:
-	cModelRdrJobs(entt::registry& reg)
-		: mModelDispSys(reg)
-	{}
-
-	void init() {
-		mModelDispSys.register_disp_update();
-
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cModelRdrJobs::update_begin, this)), mUpdateBegin);
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::End, tUpdateFunc(std::bind(&cModelRdrJobs::update_end, this)), mUpdateEnd);
-	}
-
-	void update_begin() {
-		cRdrQueueMgr::get().add_model_prologue_job(*this);
-	}
-	
-	void update_end() {
-		cRdrQueueMgr::get().exec_model_jobs();
-	}
-
-	virtual void disp_job(cRdrContext const& rdrCtx) const override {
-		auto pCtx = rdrCtx.get_ctx();
-		get_gfx().apply_default_rt_vp(pCtx);
-		cRasterizerStates::get().set_def(pCtx);
-		cDepthStencilStates::get().set_def(pCtx);
-	}
-};
-
-
-
 struct cScene::sSceneImpl {
 	cGnomon gnomon;
 	cLightMgrUpdate lightMgr;
-	cModelRdrJobs modelRdrJobs;
+	cModelDispSys modelSys;
 	cAnimationSys animSys;
-
-
 
 public:
 
 	sSceneImpl(entt::registry& registry)
-		: modelRdrJobs(registry)
+		: modelSys(registry)
 		, animSys(registry)
 	{
 		gnomon.init();
 		lightMgr.init();
-		modelRdrJobs.init();
+		modelSys.register_update(cSceneMgr::get().get_update_queue());
 		animSys.register_update(cSceneMgr::get().get_update_queue());
 	}
 };
