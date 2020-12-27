@@ -1,0 +1,220 @@
+#include "common.hpp"
+#include "math.hpp"
+#include "rdr.hpp"
+#include "model_sys.hpp"
+#include "path_helpers.hpp"
+#include "position_component.hpp"
+#include "rig_component.hpp"
+#include "scene_objects.hpp"
+#include "scene_components.hpp"
+#include "scene_editor.hpp"
+
+#include "model.hpp"
+#include "resource_load.hpp"
+#include "imgui.hpp"
+
+#include <entt/entt.hpp>
+
+namespace dx = DirectX;
+
+
+class cModelComp {
+	cModel mModel;
+public:
+	DirectX::XMMATRIX lmtx = dx::XMMatrixIdentity();
+
+	cModelComp() = default;
+	cModelComp(cModelComp&& other)
+		: mModel(std::move(other.mModel))
+		, lmtx(other.lmtx)
+	{}
+	cModelComp& operator=(cModelComp&&) = default;
+
+	bool init(ConstModelDataPtr pModelData, ConstModelMaterialPtr pMtl) {
+		static_assert(std::is_move_constructible_v<cModelComp>, "The managed type must be at least move constructible");
+		static_assert(std::is_move_assignable_v<cModelComp>, "The managed type must be at least move assignable");
+
+		return mModel.init(pModelData, pMtl);
+	}
+
+	void disp(cRdrContext const& rdrCtx, const DirectX::XMMATRIX& wmtx) const {
+		mModel.disp(rdrCtx, wmtx);
+	}
+
+	void dbg_ui(sSceneEditCtx& ctx) {
+		ImguiEditTransform(&lmtx);
+		mModel.dbg_ui();
+	}
+};
+
+/////////////////////////
+
+void cModelDispSys::register_disp_update() {
+	if (!mDispUpdate) {
+		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cModelDispSys::disp, this)), mDispUpdate);
+	}
+}
+
+void cModelDispSys::disp() {
+	if (!mRegistry.empty<cModelComp>()) {
+		cRdrQueueMgr::get().add_model_job(*this);
+	}
+}
+
+void cModelDispSys::disp_job(cRdrContext const& ctx) const {
+	disp_solid(ctx);
+	disp_skinned(ctx);
+}
+
+
+void cModelDispSys::disp_solid(cRdrContext const& ctx) const {
+	auto view = mRegistry.view<sPositionComp, cModelComp>();
+	view.each([&ctx](const sPositionComp& pos, const cModelComp& mdl) {
+		dx::XMMATRIX mtx = mdl.lmtx * pos.wmtx;
+		mdl.disp(ctx, mtx);
+	});
+}
+
+void cModelDispSys::disp_skinned(cRdrContext const& ctx) const {
+	auto view = mRegistry.view<sPositionComp, cModelComp, cRigComp>();
+	view.each([&ctx](const sPositionComp& pos, const cModelComp& mdl, cRigComp& rig) {
+		dx::XMMATRIX mtx = mdl.lmtx * pos.wmtx;
+		rig.update_rig_mtx(mtx); // todo: move to separate step
+		rig.upload_skin(ctx);
+		mdl.disp(ctx, mtx);
+	});
+}
+
+void cModelDispSys::register_to_editor(cSceneCompMetaReg& metaRegistry) {
+	metaRegistry.register_component<cModelComp>("Model");
+	metaRegistry.register_component<cRigComp>("Rig");
+
+	metaRegistry.register_param<sModelCompParams>("Model");
+	metaRegistry.register_param<sRiggedModelCompParams>("Rigged Model");
+	metaRegistry.register_param<sFbxRiggedModelParams>("Fbx Model");
+}
+
+/////////////////////////
+
+bool sModelCompParams::create(entt::registry& reg, entt::entity en) const {
+	ConstModelDataPtr pMdlData;
+	ConstModelMaterialPtr pMtl;
+
+	bool res = true;
+	res = res && nResLoader::find_or_load(cPathManager::build_data_path(modelPath), *&pMdlData);
+	res = res && nResLoader::find_or_load(cPathManager::build_data_path(materialPath), pMdlData, *&pMtl);
+
+	if (!res) return res;
+
+	sPositionComp& pos = reg.get_or_emplace<sPositionComp>(en);
+	cModelComp& mdl = reg.emplace<cModelComp>(en);
+	res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
+	mdl.lmtx = dx::XMLoadFloat4x4A(&localXform);
+
+	return res;
+}
+
+
+bool sModelCompParams::edit_component(entt::registry& reg, entt::entity en) const {
+	reg.remove_if_exists<cModelComp>(en);
+	return create(reg, en);
+}
+
+bool sModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
+	bool changed = false;
+	changed |= ImguiInputTextPath("Model", modelPath);
+	changed |= ImguiInputTextPath("Material", materialPath);
+	changed |= ImguiGizmoEditTransform(&localXform, ctx.camView, true);
+	return changed;
+}
+
+sModelCompParams sModelCompParams::init_ui() {
+	return sModelCompParams();
+}
+
+/////////////////////////
+
+
+bool sRiggedModelCompParams::create(entt::registry& reg, entt::entity en) const {
+	if (Base::create(reg, en)) {
+		return create_rig(reg, en);
+	}
+	return false;
+}
+
+bool sRiggedModelCompParams::create_rig(entt::registry& reg, entt::entity en) const {
+	ConstRigDataPtr pRigData;
+	if (!nResLoader::find_or_load(cPathManager::build_data_path(rigPath), *&pRigData))
+		return false;
+	cRigComp& rig = reg.emplace<cRigComp>(en);
+	rig.init(std::move(pRigData));
+	return true;
+}
+
+
+bool sRiggedModelCompParams::edit_component(entt::registry& reg, entt::entity en) const {
+	reg.remove_if_exists<cRigComp>(en);
+	if (Base::edit_component(reg, en)) {
+		return create_rig(reg, en);
+	}
+	return false;
+}
+
+bool sRiggedModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
+	bool changed = Base::dbg_ui(ctx);
+	changed |= ImguiInputTextPath("Rig", rigPath);
+	return changed;
+}
+
+sRiggedModelCompParams sRiggedModelCompParams::init_ui() {
+	return sRiggedModelCompParams();
+}
+
+/////////////////////////
+
+sFbxRiggedModelParams::sFbxRiggedModelParams() {
+	const float scl = 0.01f;
+	dx::XMMATRIX mtx = dx::XMMatrixScaling(scl, scl, scl);
+	mtx *= dx::XMMatrixRotationX(DEG2RAD(-90.0f));
+	dx::XMStoreFloat4x4A(&localXform, mtx);
+}
+
+bool sFbxRiggedModelParams::create(entt::registry& reg, entt::entity en) const {
+	ConstModelDataPtr pMdlData;
+	ConstModelMaterialPtr pMtl;
+	ConstRigDataPtr pRigData;
+
+	bool res = true;
+	res = res && nResLoader::find_or_load_unreal(cPathManager::build_data_path(modelPath), *&pMdlData, *&pRigData);
+	res = res && nResLoader::find_or_load(cPathManager::build_data_path(materialPath), pMdlData, *&pMtl, true);
+
+	if (!res) return res;
+
+	sPositionComp& pos = reg.get_or_emplace<sPositionComp>(en);
+	cModelComp& mdl = reg.emplace<cModelComp>(en);
+	cRigComp& rig = reg.emplace<cRigComp>(en);
+	res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
+	mdl.lmtx = dx::XMLoadFloat4x4A(&localXform);
+	rig.init(std::move(pRigData));
+
+	return res;
+}
+
+bool sFbxRiggedModelParams::edit_component(entt::registry& reg, entt::entity en) const {
+	reg.remove_if_exists<cModelComp>(en);
+	reg.remove_if_exists<cRigComp>(en);
+	return create(reg, en);
+}
+
+bool sFbxRiggedModelParams::dbg_ui(sSceneEditCtx& ctx) {
+	bool changed = false;
+	changed |= ImguiInputTextPath("Model", modelPath);
+	changed |= ImguiInputTextPath("Material", materialPath);
+	changed |= ImguiGizmoEditTransform(&localXform, ctx.camView, true);
+	return changed;
+}
+
+sFbxRiggedModelParams sFbxRiggedModelParams::init_ui() {
+	return sFbxRiggedModelParams();
+}
+

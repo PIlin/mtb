@@ -42,8 +42,11 @@ set(SRC
 	src/scene/anim_sys.hpp
 	src/scene/camera_mgr.cpp
 	src/scene/camera_mgr.hpp
+	src/scene/model_sys.cpp
+	src/scene/model_sys.hpp
 	src/scene/position_component.cpp
 	src/scene/position_component.hpp
+	src/scene/rig_component.cpp
 	src/scene/rig_component.hpp
 	src/scene/scene.cpp
 	src/scene/scene.hpp

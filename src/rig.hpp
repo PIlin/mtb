@@ -1,6 +1,8 @@
 #pragma once
 #include "resource.hpp"
 
+#include <string>
+
 class cAssimpLoader;
 class cRdrContext;
 
