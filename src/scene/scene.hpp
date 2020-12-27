@@ -6,6 +6,7 @@
 
 class cCameraManager;
 class cSceneEditor;
+class cUpdateQueue;
 
 class cScene {
 	friend class cSceneEditor;
