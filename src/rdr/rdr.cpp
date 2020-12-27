@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "math.hpp"
 #include "rdr.hpp"
+#include "cbufs.hpp"
 #include "gfx.hpp"
 
 cBufferBase::cMapHandle::cMapHandle(ID3D11DeviceContext* pCtx, ID3D11Buffer* pBuf) : mpCtx(pCtx), mpBuf(pBuf), mMSR() {

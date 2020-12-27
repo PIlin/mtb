@@ -1,3 +1,5 @@
+#pragma once
+
 struct sSHCoef {
 	static int get_idx(int l, int m) { return l * (l + 1) + m; }
 

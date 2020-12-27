@@ -4,6 +4,7 @@
 #include "path_helpers.hpp"
 #include "light.hpp"
 #include "rdr.hpp"
+#include "cbufs.hpp"
 #include "gfx.hpp"
 #include "imgui.hpp"
 

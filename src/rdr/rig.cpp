@@ -7,6 +7,7 @@
 #include "path_helpers.hpp"
 #include "rig.hpp"
 #include "rdr.hpp"
+#include "cbufs.hpp"
 #include "assimp_loader.hpp"
 
 CLANG_DIAG_PUSH

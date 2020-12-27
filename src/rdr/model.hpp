@@ -1,7 +1,11 @@
+#pragma once
+
 #include <memory>
 #include <string>
 
 #include "resource.hpp"
+
+#include "cbufs.hpp"
 
 struct sModelVtx;
 class cShader;

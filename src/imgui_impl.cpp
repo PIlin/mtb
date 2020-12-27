@@ -5,6 +5,7 @@
 #include "path_helpers.hpp"
 #include "rdr/texture.hpp"
 #include "rdr/rdr.hpp"
+#include "rdr/cbufs.hpp"
 #include "imgui.hpp"
 #include "imgui_impl.hpp"
 #include "rdr/gfx.hpp"

@@ -69,6 +69,7 @@ set(SRC
 	src/rdr/anim.hpp
 	src/rdr/camera.cpp
 	src/rdr/camera.hpp
+	src/rdr/cbufs.hpp
 	src/rdr/gfx.cpp
 	src/rdr/gfx.hpp
 	src/rdr/light.cpp
@@ -77,6 +78,7 @@ set(SRC
 	src/rdr/model.hpp
 	src/rdr/rdr.cpp
 	src/rdr/rdr.hpp
+	src/rdr/rdr_buf.hpp
 	src/rdr/rdr_queue.cpp
 	src/rdr/rdr_queue.hpp
 	src/rdr/rig.cpp
