@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "math.hpp"
 #include "path_helpers.hpp"
-#include "rdr.hpp"
+#include "rdr/rdr.hpp"
 #include "scene_editor.hpp"
 #include "scene.hpp"
 #include "camera_mgr.hpp"

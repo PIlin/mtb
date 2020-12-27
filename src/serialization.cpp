@@ -2,14 +2,14 @@
 
 #include "math.hpp"
 #include "common.hpp"
-#include "rdr.hpp"
+#include "rdr/rdr.hpp"
 #include "path_helpers.hpp"
-#include "texture.hpp"
-#include "model.hpp"
-#include "camera.hpp"
-#include "sh.hpp"
-#include "light.hpp"
-#include "scene_components.hpp"
+#include "rdr/texture.hpp"
+#include "rdr/model.hpp"
+#include "rdr/camera.hpp"
+#include "rdr/sh.hpp"
+#include "rdr/light.hpp"
+#include "scene/scene_components.hpp"
 
 #include <entt/entt.hpp>
 

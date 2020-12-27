@@ -2,12 +2,12 @@
 
 #include "resource_mgr.hpp"
 #include "math.hpp"
-#include "gfx.hpp"
-#include "rdr.hpp"
+#include "rdr/gfx.hpp"
+#include "rdr/rdr.hpp"
 //#include "texture.hpp"
-#include "model.hpp"
-#include "rig.hpp"
-#include "anim.hpp"
+#include "rdr/model.hpp"
+#include "rdr/rig.hpp"
+#include "rdr/anim.hpp"
 
 CLANG_DIAG_PUSH
 CLANG_DIAG_IGNORE("-Wpragma-pack")

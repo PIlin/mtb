@@ -8,16 +8,16 @@ CLANG_DIAG_IGNORE("-Wpragma-pack")
 CLANG_DIAG_POP
 
 #include "math.hpp"
-#include "gfx.hpp"
-#include "rdr.hpp"
+#include "rdr/gfx.hpp"
+#include "rdr/rdr.hpp"
 #include "path_helpers.hpp"
 #include "input.hpp"
-#include "camera.hpp"
-#include "texture.hpp"
+#include "rdr/camera.hpp"
+#include "rdr/texture.hpp"
 #include "imgui_impl.hpp"
 #include "scene/scene_mgr.hpp"
 #include <imgui.h>
-#include "rdr_queue.hpp"
+#include "rdr/rdr_queue.hpp"
 #include "resource_mgr.hpp"
 
 class cSDLInit {

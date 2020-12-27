@@ -3,13 +3,13 @@
 #include "math.hpp"
 #include "common.hpp"
 #include "path_helpers.hpp"
-#include "texture.hpp"
-#include "rdr.hpp"
+#include "rdr/texture.hpp"
+#include "rdr/rdr.hpp"
 #include "imgui.hpp"
 #include "imgui_impl.hpp"
-#include "gfx.hpp"
+#include "rdr/gfx.hpp"
 #include "input.hpp"
-#include "camera.hpp"
+#include "rdr/camera.hpp"
 
 #include <imgui.h>
 #include <imgui_stdlib.h>
