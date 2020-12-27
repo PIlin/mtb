@@ -1,5 +1,5 @@
 #pragma once
-#include "camera.hpp"
+#include "rdr/camera.hpp"
 #include "update_queue.hpp"
 
 #include <entt/fwd.hpp>

@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "math.hpp"
-#include "gfx.hpp"
-#include "rdr.hpp"
+#include "rdr/gfx.hpp"
+#include "rdr/rdr.hpp"
 #include "model_sys.hpp"
 #include "path_helpers.hpp"
 #include "position_component.hpp"
@@ -9,7 +9,7 @@
 #include "scene_components.hpp"
 #include "scene_editor.hpp"
 
-#include "model.hpp"
+#include "rdr/model.hpp"
 #include "resource_load.hpp"
 #include "imgui.hpp"
 

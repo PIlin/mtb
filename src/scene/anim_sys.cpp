@@ -10,7 +10,7 @@
 #include "scene_components.hpp"
 #include "resource_load.hpp"
 
-#include "anim.hpp"
+#include "rdr/anim.hpp"
 #include "imgui.hpp"
 
 #include <entt/entt.hpp>

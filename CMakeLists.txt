@@ -38,6 +38,53 @@ add_subdirectory("${THIRD_PARTY_DIR}/entt")
 project(mtb)
 
 set(SRC
+	src/assimp_loader.cpp
+	src/assimp_loader.hpp
+	src/common.cpp
+	src/common.hpp
+	src/hou_geo.cpp
+	src/hou_geo.hpp
+	src/imgui.hpp
+	src/imgui_impl.cpp
+	src/imgui_impl.hpp
+	src/input.cpp
+	src/input.hpp
+	src/json_helpers.cpp
+	src/json_helpers.hpp
+	src/main.cpp
+	src/math.cpp
+	src/math.hpp
+	src/path_helpers.cpp
+	src/path_helpers.hpp
+	src/resource.hpp
+	src/resource_load.cpp
+	src/resource_load.hpp
+	src/resource_mgr.cpp
+	src/resource_mgr.hpp
+	src/serialization.cpp
+	src/update_queue.cpp
+	src/update_queue.hpp
+
+	src/rdr/anim.cpp
+	src/rdr/anim.hpp
+	src/rdr/camera.cpp
+	src/rdr/camera.hpp
+	src/rdr/gfx.cpp
+	src/rdr/gfx.hpp
+	src/rdr/light.cpp
+	src/rdr/light.hpp
+	src/rdr/model.cpp
+	src/rdr/model.hpp
+	src/rdr/rdr.cpp
+	src/rdr/rdr.hpp
+	src/rdr/rdr_queue.cpp
+	src/rdr/rdr_queue.hpp
+	src/rdr/rig.cpp
+	src/rdr/rig.hpp
+	src/rdr/sh.hpp
+	src/rdr/texture.cpp
+	src/rdr/texture.hpp
+
 	src/scene/anim_sys.cpp
 	src/scene/anim_sys.hpp
 	src/scene/camera_mgr.cpp
@@ -50,59 +97,13 @@ set(SRC
 	src/scene/rig_component.hpp
 	src/scene/scene.cpp
 	src/scene/scene.hpp
+	src/scene/scene_components.hpp
 	src/scene/scene_editor.cpp
 	src/scene/scene_editor.hpp
-	src/scene/scene_mgr.hpp
 	src/scene/scene_mgr.cpp
-	src/scene/scene_components.hpp
-
-	src/update_queue.hpp
-	src/update_queue.cpp
-	src/texture.hpp
-	src/texture.cpp
-	src/sh.hpp
-	src/serialization.cpp
-
-	src/rig.hpp
-	src/rig.cpp
-	src/resource.hpp
-	src/resource_mgr.hpp
-	src/resource_mgr.cpp
-	src/resource_load.hpp
-	src/resource_load.cpp
-	src/rdr_queue.hpp
-	src/rdr_queue.cpp
-	src/rdr.hpp
-	src/rdr.cpp
-	src/path_helpers.hpp
-	src/path_helpers.cpp
-	src/model.hpp
-	src/model.cpp
-	src/math.hpp
-	src/math.cpp
-	src/main.cpp
-	src/light.hpp
-	src/light.cpp
-	src/json_helpers.hpp
-	src/json_helpers.cpp
-	src/input.hpp
-	src/input.cpp
-	src/imgui_impl.hpp
-	src/imgui_impl.cpp
-	src/imgui.hpp
-	src/hou_geo.hpp
-	src/hou_geo.cpp
-	src/gfx.hpp
-	src/gfx.cpp
-	src/common.hpp
-	src/common.cpp
-	src/camera.hpp
-	src/camera.cpp
-	src/assimp_loader.hpp
-	src/assimp_loader.cpp
-	src/anim.hpp
-	src/anim.cpp
+	src/scene/scene_mgr.hpp
 )
+
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${SRC})
 
 

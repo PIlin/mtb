@@ -1,7 +1,7 @@
 #pragma once
 
-#include "camera.hpp"
-#include "rdr_queue.hpp"
+#include "rdr/camera.hpp"
+#include "rdr/rdr_queue.hpp"
 #include "update_queue.hpp"
 
 class cRdrContext;

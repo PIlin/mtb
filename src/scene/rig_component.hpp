@@ -1,7 +1,7 @@
 #pragma once
 
 #include "math.hpp"
-#include "rig.hpp"
+#include "rdr/rig.hpp"
 
 struct sSceneEditCtx;
 
