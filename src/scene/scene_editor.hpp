@@ -99,12 +99,8 @@ namespace nSceneEdit {
 	};
 }
 
-class cSceneEditor {
-
-
-	cUpdateSubscriberScope mDbgUpdate;
-	cScene* mpScene = nullptr;
-	entt::entity mSelected = entt::null;
+class cSceneCompMetaReg {
+protected:
 	std::map<entt::id_type, std::unique_ptr<nSceneEdit::iComponentReg>> mComponentTypes;
 	std::map<entt::id_type, std::unique_ptr<nSceneEdit::iParamReg>> mParamTypes;
 
@@ -126,7 +122,14 @@ public:
 	nSceneEdit::sParamReg<TComp>& register_param(const char* szName) {
 		return register_type<nSceneEdit::sParamReg<TComp>>(szName, mParamTypes);
 	}
+};
 
+
+class cSceneEditor : public cSceneCompMetaReg {
+	cUpdateSubscriberScope mDbgUpdate;
+	cScene* mpScene = nullptr;
+	entt::entity mSelected = entt::null;
+public:
 	cSceneEditor();
 	void init(cScene* pScene);
 	void dbg_ui();

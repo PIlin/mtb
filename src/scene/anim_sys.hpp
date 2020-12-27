@@ -2,6 +2,8 @@
 #include "update_queue.hpp"
 #include <entt/fwd.hpp>
 
+class cSceneCompMetaReg;
+
 class cAnimationSys {
 	entt::registry& mRegistry;
 	cUpdateSubscriberScope mAnimUpdate;
@@ -10,4 +12,6 @@ public:
 
 	void register_update(cUpdateQueue& queue);
 	void update_anim();
+
+	static void register_to_editor(cSceneCompMetaReg& metaRegistry);
 };

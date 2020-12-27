@@ -70,7 +70,10 @@ void cAnimationSys::update_anim() {
 	});
 }
 
-
+void cAnimationSys::register_to_editor(cSceneCompMetaReg& metaRegistry) {
+	metaRegistry.register_component<cAnimationComp>("Animation");
+	metaRegistry.register_param<sAnimationCompParams>("Animation");
+}
 
 bool sAnimationCompParams::create(entt::registry& reg, entt::entity en) const {
 	cRigComp const* pRig = reg.try_get<cRigComp>(en);

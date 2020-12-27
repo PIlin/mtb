@@ -601,15 +601,13 @@ cSceneMgr::cSceneMgr()
 	mpSceneEditor->register_component<sPositionComp>("Position").openByDefault = false;
 	mpSceneEditor->register_component<cModelComp>("Model");
 	mpSceneEditor->register_component<cRigComp>("Rig");
-	//mpSceneEditor->register_component<cAnimationComp>("Animation");
 
 	mpSceneEditor->register_param<sPositionCompParams>("Position").openByDefault = true;
 	mpSceneEditor->register_param<sModelCompParams>("Model");
 	mpSceneEditor->register_param<sRiggedModelCompParams>("Rigged Model");
 	mpSceneEditor->register_param<sFbxRiggedModelParams>("Fbx Model");
-	//mpSceneEditor->register_param<sAnimationCompParams>("Animation");
 
-	//mpScene->
+	cAnimationSys::register_to_editor(*mpSceneEditor);
 
 
 	mpSceneEditor->init(mpScene.get());
