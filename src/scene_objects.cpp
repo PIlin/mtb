@@ -345,11 +345,6 @@ public:
 
 	void disp() {
 		if (!mRegistry.empty<cModelComp>()) {
-			//auto view = mRegistry.view<cModelComp>();
-			//view.each([](cModelComp& mdl) {
-			//	mdl.dbg_ui();
-			//});
-
 			cRdrQueueMgr::get().add_model_job(*this);
 		}
 	}
@@ -489,119 +484,6 @@ public:
 
 
 
-class cOwl {
-	entt::entity mEntity;
-public:
-
-	bool init(entt::registry& reg) {
-		bool res = true;
-
-		cstr id = "owl";
-		const fs::path root = cPathManager::build_data_path("owl");
-
-		ConstModelDataPtr pMdlData;
-		ConstModelMaterialPtr pMtl;
-		ConstRigDataPtr pRigData;
-		res = res && nResLoader::find_or_load(root / "def.geo", *&pMdlData);
-		res = res && nResLoader::find_or_load(root / "def.mtl", pMdlData, *&pMtl);
-
-		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
-
-		ConstAnimationListPtr pAnimList;
-		res = res && nResLoader::find_or_load(root, "def.alist", *pRigData, *&pAnimList);
-
-		mEntity = reg.create();
-		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
-		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
-		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
-		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList));
-
-		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
-		rig.init(std::move(pRigData));
-
-		const float scl = 0.01f;
-		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
-		pos.wmtx *= dx::XMMatrixTranslation(1.0f, 0.0f, 0.0f);
-
-		return res;
-	}
-};
-
-class cJumpingSphere {
-	entt::entity mEntity;
-public:
-	bool init(entt::registry& reg) {
-		bool res = true;
-
-		cstr id = "jumping_sphere";
-		const fs::path root = cPathManager::build_data_path("jumping_sphere");
-
-		ConstModelDataPtr pMdlData;
-		ConstModelMaterialPtr pMtl;
-		ConstRigDataPtr pRigData;
-		res = res && nResLoader::find_or_load(root / "def.geo", *&pMdlData);
-		res = res && nResLoader::find_or_load(root / "def.mtl", pMdlData, *&pMtl, true);
-		res = res && nResLoader::find_or_load(root / "def.rig", *&pRigData);
-
-		ConstAnimationListPtr pAnimList;
-		res = res && nResLoader::find_or_load(root, "def.alist", *pRigData, *&pAnimList);
-
-		mEntity = reg.create();
-		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
-		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
-		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
-		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList));
-
-		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
-		rig.init(std::move(pRigData));
-
-		const float scl = 1.0f;
-		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
-		pos.wmtx *= dx::XMMatrixTranslation(2.0f, 0.0f, 0.0f);
-
-		return res;
-	}
-};
-
-
-class cUnrealPuppet {
-	entt::entity mEntity;
-public:
-
-	bool init(entt::registry& reg) {
-		bool res = true;
-
-		cstr id = "unreal_puppet";
-		const fs::path root = cPathManager::build_data_path("unreal_puppet");
-
-		ConstModelDataPtr pMdlData;
-		ConstRigDataPtr pRigData;
-		ConstModelMaterialPtr pMtl;
-		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerSkeletalMesh.FBX", *&pMdlData, *&pRigData);
-		res = res && nResLoader::find_or_load(root / "def.mtl", pMdlData, *&pMtl, true);
-
-		ConstAnimationListPtr pAnimList;
-		res = res && nResLoader::find_or_load_unreal(root / "SideScrollerWalk.FBX", *pRigData, *&pAnimList);
-
-		mEntity = reg.create();
-		sPositionComp& pos = reg.emplace<sPositionComp>(mEntity);
-		cModelComp& mdl = reg.emplace<cModelComp>(mEntity);
-		cRigComp& rig = reg.emplace<cRigComp>(mEntity);
-		float speed = 1.0f / 60.0f;
-		cAnimationComp& anim = reg.emplace<cAnimationComp>(mEntity, std::move(pAnimList), 0, speed);
-
-		res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
-		rig.init(std::move(pRigData));
-
-		const float scl = 0.01f;
-		pos.wmtx = dx::XMMatrixScaling(scl, scl, scl);
-		pos.wmtx *= dx::XMMatrixRotationX(DEG2RAD(-90.0f));
-		pos.wmtx *= dx::XMMatrixTranslation(3.0f, 0.0f, 0.0f);
-
-		return res;
-	}
-};
-
 ////
 
 class cCameraManager : public iRdrJob {
@@ -702,10 +584,6 @@ class cScene {
 	entt::registry registry;
 
 	cGnomon gnomon;
-	//cLightning lightning;
-	//cJumpingSphere sphere;
-	//cOwl owl;
-	//cUnrealPuppet upuppet;
 	cCameraManager cameraMgr;
 	cLightMgrUpdate lightMgr;
 	cModelRdrJobs modelRdrJobs;
@@ -721,16 +599,10 @@ public:
 		, animSys(registry)
 	{
 		gnomon.init();
-		//lightning.init(registry);
-		//sphere.init(registry);
-		//owl.init(registry);
-		//upuppet.init(registry);
 		cameraMgr.init();
 		lightMgr.init();
 		modelRdrJobs.init();
 		animSys.register_anim_update();
-
-		
 
 		load();
 		create_from_snapshot();
@@ -762,13 +634,11 @@ public:
 
 		}
 		else {
-			fs::path root;
-			root = fs::path("lightning");
-			sXform xform;
-			xform.init(nMtx::g_Identity);
-
 			sParamList<sPositionCompParams>* pPosParams = new sParamList<sPositionCompParams>();
 			sParamList<sModelCompParams>* pModelParams = new sParamList<sModelCompParams>();
+			sParamList<sRiggedModelCompParams>* pRiggedModelParams = new sParamList<sRiggedModelCompParams>();
+			sParamList<sFbxRiggedModelParams>* pFbxModelParams = new sParamList<sFbxRiggedModelParams>();
+			sParamList<sAnimationCompParams>* pAnimParams = new sParamList<sAnimationCompParams>();
 
 			auto insertEntityParam = [](auto* pList, entt::entity en, auto&& param) {
 				const uint32_t paramId = (uint32_t)pList->paramList.size();
@@ -776,21 +646,63 @@ public:
 				pList->entityList.emplace(en, paramId);
 			};
 
-			entt::entity lightning = registry.create();
-			snapshot.entityIds.insert(lightning);
-			insertEntityParam(pPosParams, lightning, sPositionCompParams{ xform });
-			insertEntityParam(pModelParams, lightning, sModelCompParams{ root / "lightning.geo", root / "lightning.mtl" });
-
-			root = fs::path("owl");
-			entt::entity owl = registry.create();
-			snapshot.entityIds.insert(owl);
+#if 1
 			{
-				const float scl = 0.01f;
+				entt::entity lightning = registry.create();
+				snapshot.entityIds.insert(lightning);
+				fs::path root = fs::path("lightning");
+				sXform xform = sXform::identity();
+				insertEntityParam(pPosParams, lightning, sPositionCompParams{ xform });
+				insertEntityParam(pModelParams, lightning, sModelCompParams{ root / "lightning.geo", root / "lightning.mtl" });
+			}
+
+			{
+				entt::entity owl = registry.create();
+				snapshot.entityIds.insert(owl);
+				fs::path root = fs::path("owl");
+				sXform xform = sXform::identity();
 				xform.mPos = dx::XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
-				xform.mQuat = dx::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-				xform.mScale = dx::XMVectorSet(scl, scl, scl, 0.0f);
 				insertEntityParam(pPosParams, owl, sPositionCompParams{ xform });
-				insertEntityParam(pModelParams, owl, sModelCompParams{ root / "def.geo", root / "lightning.mtl" });
+				sRiggedModelCompParams rm;
+				rm.modelPath = root / "def.geo";
+				rm.materialPath = root / "def.mtl";
+				rm.rigPath = root / "def.rig";
+				xform = sXform::identity();
+				const float scl = 0.01f;
+				xform.mScale = dx::XMVectorSet(scl, scl, scl, 0.0f);
+				dx::XMStoreFloat4x4A(&rm.localXform, xform.build_mtx());
+				insertEntityParam(pRiggedModelParams, owl, std::move(rm));
+				insertEntityParam(pAnimParams, owl, sAnimationCompParams{ root, "def.alist" });
+			}
+#endif
+
+			{
+				entt::entity jumpingSphere = registry.create();
+				snapshot.entityIds.insert(jumpingSphere);
+				fs::path root = fs::path("jumping_sphere");
+				sXform xform = sXform::identity();
+				xform.mPos = dx::XMVectorSet(2.0f, 0.0f, 0.0f, 1.0f);
+				insertEntityParam(pPosParams, jumpingSphere, sPositionCompParams{ xform });
+				sRiggedModelCompParams rm;
+				rm.modelPath = root / "def.geo";
+				rm.materialPath = root / "def.mtl";
+				rm.rigPath = root / "def.rig";
+				insertEntityParam(pRiggedModelParams, jumpingSphere, std::move(rm));
+				insertEntityParam(pAnimParams, jumpingSphere, sAnimationCompParams{ root, "def.alist" });
+			}
+
+			{
+				entt::entity unrealPuppet = registry.create();
+				snapshot.entityIds.insert(unrealPuppet);
+				fs::path root = fs::path("unreal_puppet");
+				sXform xform = sXform::identity();
+				xform.mPos = dx::XMVectorSet(3.0f, 0.0f, 0.0f, 1.0f);
+				insertEntityParam(pPosParams, unrealPuppet, sPositionCompParams{ xform });
+				sFbxRiggedModelParams rm;
+				rm.modelPath = root / "SideScrollerSkeletalMesh.FBX";
+				rm.materialPath = root / "def.mtl";
+				insertEntityParam(pFbxModelParams, unrealPuppet, std::move(rm));
+				insertEntityParam(pAnimParams, unrealPuppet, sAnimationCompParams{ root, "def.alist", 0, 1.0f / 60.0f });
 			}
 
 			auto insertParam = [](sSceneSnapshot& snapshot, auto* pList) {
@@ -801,6 +713,9 @@ public:
 			
 			insertParam(snapshot, pPosParams);
 			insertParam(snapshot, pModelParams);
+			insertParam(snapshot, pRiggedModelParams);
+			insertParam(snapshot, pFbxModelParams);
+			insertParam(snapshot, pAnimParams);
 		}
 	}
 

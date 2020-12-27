@@ -3,11 +3,13 @@
         "entityIds": [
             0,
             1,
-            2
+            2,
+            3
         ],
         "paramsOrder": [
             304049688,
             1188088766,
+            2872077420,
             3773953081,
             3838159947
         ],
@@ -24,9 +26,9 @@
                                 "value3": 1.0
                             },
                             "quat": {
-                                "value0": -0.0,
+                                "value0": 0.0,
                                 "value1": 0.0,
-                                "value2": -0.0,
+                                "value2": 0.0,
                                 "value3": 1.0
                             },
                             "scl": {
@@ -55,9 +57,9 @@
                                 "value3": 1.0
                             },
                             "scl": {
-                                "value0": 0.009999999776482582,
-                                "value1": 0.009999999776482582,
-                                "value2": 0.009999999776482582,
+                                "value0": 1.0,
+                                "value1": 1.0,
+                                "value2": 1.0,
                                 "value3": 0.0
                             }
                         }
@@ -74,9 +76,34 @@
                                 "value3": 1.0
                             },
                             "quat": {
-                                "value0": -0.0,
+                                "value0": 0.0,
                                 "value1": 0.0,
-                                "value2": -0.0,
+                                "value2": 0.0,
+                                "value3": 1.0
+                            },
+                            "scl": {
+                                "value0": 1.0,
+                                "value1": 1.0,
+                                "value2": 1.0,
+                                "value3": 0.0
+                            }
+                        }
+                    }
+                },
+                {
+                    "key": 3,
+                    "value": {
+                        "xform": {
+                            "pos": {
+                                "value0": 3.0,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 1.0
+                            },
+                            "quat": {
+                                "value0": 0.0,
+                                "value1": 0.0,
+                                "value2": 0.0,
                                 "value3": 1.0
                             },
                             "scl": {
@@ -101,6 +128,10 @@
                 {
                     "key": 2,
                     "value": 2
+                },
+                {
+                    "key": 3,
+                    "value": 3
                 }
             ]
         },
@@ -136,15 +167,59 @@
                             }
                         }
                     }
-                },
+                }
+            ],
+            "entityList": [
                 {
-                    "key": 1,
+                    "key": 0,
+                    "value": 0
+                }
+            ]
+        },
+        "id_2872077420": {
+            "paramList": [
+                {
+                    "key": 0,
                     "value": {
                         "modelPath": {
                             "value0": "owl\\def.geo"
                         },
                         "materialPath": {
-                            "value0": "owl\\lightning.mtl"
+                            "value0": "owl\\def.mtl"
+                        },
+                        "xform": {
+                            "value0": {
+                                "value0": 0.009999999776482582,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 0.0,
+                                "value4": 0.0,
+                                "value5": 0.009999999776482582,
+                                "value6": 0.0,
+                                "value7": 0.0,
+                                "value8": 0.0,
+                                "value9": 0.0,
+                                "value10": 0.009999999776482582,
+                                "value11": 0.0,
+                                "value12": 0.0,
+                                "value13": 0.0,
+                                "value14": 0.0,
+                                "value15": 1.0
+                            }
+                        },
+                        "rigPath": {
+                            "value0": "owl\\def.rig"
+                        }
+                    }
+                },
+                {
+                    "key": 1,
+                    "value": {
+                        "modelPath": {
+                            "value0": "jumping_sphere\\def.geo"
+                        },
+                        "materialPath": {
+                            "value0": "jumping_sphere\\def.mtl"
                         },
                         "xform": {
                             "value0": {
@@ -165,17 +240,20 @@
                                 "value14": 0.0,
                                 "value15": 1.0
                             }
+                        },
+                        "rigPath": {
+                            "value0": "jumping_sphere\\def.rig"
                         }
                     }
                 }
             ],
             "entityList": [
                 {
-                    "key": 0,
+                    "key": 1,
                     "value": 0
                 },
                 {
-                    "key": 1,
+                    "key": 2,
                     "value": 1
                 }
             ]
@@ -186,10 +264,10 @@
                     "key": 0,
                     "value": {
                         "modelPath": {
-                            "value0": "unreal_puppet/SideScrollerSkeletalMesh.FBX"
+                            "value0": "unreal_puppet\\SideScrollerSkeletalMesh.FBX"
                         },
                         "materialPath": {
-                            "value0": "unreal_puppet/def.mtl"
+                            "value0": "unreal_puppet\\def.mtl"
                         },
                         "xform": {
                             "value0": {
@@ -216,7 +294,7 @@
             ],
             "entityList": [
                 {
-                    "key": 2,
+                    "key": 3,
                     "value": 0
                 }
             ]
@@ -227,20 +305,54 @@
                     "key": 0,
                     "value": {
                         "animRootPath": {
+                            "value0": "owl"
+                        },
+                        "animListName": {
+                            "value0": "def.alist"
+                        },
+                        "curAnim": 0,
+                        "speed": 1.0
+                    }
+                },
+                {
+                    "key": 1,
+                    "value": {
+                        "animRootPath": {
+                            "value0": "jumping_sphere"
+                        },
+                        "animListName": {
+                            "value0": "def.alist"
+                        },
+                        "curAnim": 0,
+                        "speed": 1.0
+                    }
+                },
+                {
+                    "key": 2,
+                    "value": {
+                        "animRootPath": {
                             "value0": "unreal_puppet"
                         },
                         "animListName": {
                             "value0": "def.alist"
                         },
                         "curAnim": 0,
-                        "speed": 0.016666660085320474
+                        "speed": 0.01666666753590107
                     }
                 }
             ],
             "entityList": [
                 {
-                    "key": 2,
+                    "key": 1,
                     "value": 0
+                },
+                {
+                    "key": 2,
+                    "value": 1
+                },
+                {
+                    "key": 3,
+                    "value": 2
                 }
             ]
         }

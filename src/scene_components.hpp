@@ -37,7 +37,7 @@ struct sModelCompParams {
 	void serialize(Archive& arc);
 };
 
-struct sRiggedModelCompParams : protected sModelCompParams {
+struct sRiggedModelCompParams : public sModelCompParams {
 	using Base = sModelCompParams;
 
 	fs::path rigPath;
