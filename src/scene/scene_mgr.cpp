@@ -81,7 +81,7 @@ public:
 		pCtx->Draw(6, 0);
 	}
 
-	void init() {
+	void init(cUpdateQueue& queue) {
 		auto& ss = cShaderStorage::get();
 		mpVS = ss.load_VS("simple.vs.cso");
 		if (!mpVS) return;
@@ -108,7 +108,7 @@ public:
 
 		mVtxBuf.init(pDev, vtx, LENGTHOF_ARRAY(vtx), sizeof(vtx[0]));
 
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cGnomon::disp, this)), mDispUpdate);
+		queue.add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cGnomon::disp, this)), mDispUpdate);
 	}
 
 	void deinit() {
@@ -124,8 +124,8 @@ class cLightMgrUpdate : public iRdrJob {
 	cLightMgr mLightMgr;
 	cUpdateSubscriberScope mLightUpdate;
 public:
-	void init() {
-		cSceneMgr::get().get_update_queue().add(eUpdatePriority::Light, tUpdateFunc(std::bind(&cLightMgrUpdate::update, this)), mLightUpdate);
+	void init(cUpdateQueue& queue) {
+		queue.add(eUpdatePriority::Light, tUpdateFunc(std::bind(&cLightMgrUpdate::update, this)), mLightUpdate);
 	}
 
 	void update() {
@@ -148,22 +148,24 @@ struct cScene::sSceneImpl {
 
 public:
 
-	sSceneImpl(entt::registry& registry)
+	sSceneImpl(entt::registry& registry, cUpdateQueue& updateQueue)
 		: modelSys(registry)
 		, animSys(registry)
 	{
-		gnomon.init();
-		lightMgr.init();
-		modelSys.register_update(cSceneMgr::get().get_update_queue());
-		animSys.register_update(cSceneMgr::get().get_update_queue());
+		gnomon.init(updateQueue);
+		lightMgr.init(updateQueue);
+		modelSys.register_update(updateQueue);
+		animSys.register_update(updateQueue);
 	}
 };
 
-cScene::cScene()
-	: mpCameraMgr(std::make_unique<cCameraManager>())
-	, mpSceneImpl(std::make_unique<sSceneImpl>(registry))
+cScene::cScene(const std::string& name)
+	: mpUpdateQueue(std::make_unique<cUpdateQueue>())
+	, mpCameraMgr(std::make_unique<cCameraManager>())
+	, mpSceneImpl(std::make_unique<sSceneImpl>(registry, *mpUpdateQueue))
+	, mName(name)
 {
-	mpCameraMgr->init(cSceneMgr::get().get_update_queue());
+	mpCameraMgr->init(*mpUpdateQueue);
 	load();
 	create_from_snapshot();
 }
@@ -172,7 +174,7 @@ cScene::~cScene() {
 	save();
 }
 
-static fs::path get_scene_snapshot_path() { return cPathManager::build_data_path("scene.json"); }
+static fs::path get_scene_snapshot_path(const std::string& name) { return cPathManager::build_data_path(name); }
 
 void cScene::create_from_snapshot() {
 	if (!registry.empty()) {
@@ -190,7 +192,7 @@ void cScene::create_from_snapshot() {
 }
 
 void cScene::load() {
-	if (snapshot.load(get_scene_snapshot_path())) {
+	if (snapshot.load(get_scene_snapshot_path(mName))) {
 
 	}
 	else {
@@ -280,31 +282,90 @@ void cScene::load() {
 }
 
 void cScene::save() {
-	snapshot.save(get_scene_snapshot_path());
+	snapshot.save(get_scene_snapshot_path(mName));
 }
 
+void cScene::update() {
+	mpUpdateQueue->begin_exec();
+	mpUpdateQueue->advance_exec(eUpdatePriority::End);
+	mpUpdateQueue->end_exec();
+}
 
 
 
 //////
 
 cSceneMgr::cSceneMgr()
-	: mpUpdateQueue(std::make_unique<cUpdateQueue>())
-	, mpScene(std::make_unique<cScene>())
-	, mpSceneEditor(std::make_unique<cSceneEditor>())
+	: mpSceneEditor(std::make_unique<cSceneEditor>())
 {
 	sPositionComp::register_to_editor(*mpSceneEditor);
 	cModelDispSys::register_to_editor(*mpSceneEditor);
 	cAnimationSys::register_to_editor(*mpSceneEditor);
 
-
-	mpSceneEditor->init(mpScene.get());
+	load_scene("def.scene");
 }
 
 cSceneMgr::~cSceneMgr() {}
 
 void cSceneMgr::update() {
-	mpUpdateQueue->begin_exec();
-	mpUpdateQueue->advance_exec(eUpdatePriority::End);
-	mpUpdateQueue->end_exec();
+	if (mCurrentScene < mScenes.size()) {
+		mScenes[mCurrentScene]->update();
+	}
+	
+	dbg_ui();
+}
+
+void cSceneMgr::dbg_ui() {
+	if (ImGui::Begin("scene")) {
+		if (ImGui::TreeNode("Scenes")) {
+			if (ImGui::Button("Load")) {
+				ImGui::OpenPopup("CrearScenePopUp");
+			}
+			if (mCurrentScene < mScenes.size()) {
+				ImGui::SameLine();
+				if (ImGui::Button("Unload")) {
+					mScenes.erase(mScenes.begin() + mCurrentScene);
+				}
+			}
+			if (ImGui::BeginPopup("CrearScenePopUp")) {
+				char nameBuf[128] = { 0 };
+				if (ImGui::InputText("Name", nameBuf, sizeof(nameBuf), ImGuiInputTextFlags_EnterReturnsTrue)) {
+					std::string name = nameBuf;
+					load_scene(name);
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
+			}
+
+			int current = (int)mCurrentScene;
+			auto scenesListFunc = [](void* data, int idx, const char** outText) {
+				const ScenesVector* pScenes = reinterpret_cast<ScenesVector*>(data);
+				if (idx < pScenes->size()) {
+					*outText = (*pScenes)[idx]->get_name().c_str();
+					return true;
+				}
+				return false;
+			};
+
+			if (ImGui::ListBox("Scenes", &current, scenesListFunc, &mScenes, (int)mScenes.size())) {
+				set_current(current);
+			}
+			ImGui::TreePop();
+		}
+	}
+	ImGui::End();
+}
+
+void cSceneMgr::load_scene(const std::string& name) {
+	mpSceneEditor->init(nullptr);
+	mCurrentScene = mScenes.size();
+	mScenes.emplace_back(std::make_unique<cScene>(name));
+	set_current(mCurrentScene);
+}
+
+void cSceneMgr::set_current(size_t idx) {
+	mCurrentScene = idx;
+	if (mCurrentScene < mScenes.size()) {
+		mpSceneEditor->init(mScenes[mCurrentScene].get());
+	}
 }

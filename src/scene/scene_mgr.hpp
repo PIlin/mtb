@@ -1,13 +1,18 @@
+#pragma once
+
 #include <memory>
+#include <string>
+#include <vector>
 
 class cScene;
 class cSceneEditor;
 class cUpdateQueue;
 
 class cSceneMgr {
-	std::unique_ptr<cUpdateQueue> mpUpdateQueue;
-	std::unique_ptr<cScene> mpScene;
+	using ScenesVector = std::vector<std::unique_ptr<cScene>>;
+	std::vector<std::unique_ptr<cScene>> mScenes;
 	std::unique_ptr<cSceneEditor> mpSceneEditor;
+	size_t mCurrentScene = 0;
 public:
 
 	static cSceneMgr& get();
@@ -17,5 +22,8 @@ public:
 
 	void update();
 
-	cUpdateQueue& get_update_queue() { return *mpUpdateQueue.get(); }
+private:
+	void set_current(size_t idx);
+	void load_scene(const std::string& name);
+	void dbg_ui();
 };

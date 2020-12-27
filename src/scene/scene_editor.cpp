@@ -21,7 +21,10 @@ cSceneEditor::cSceneEditor() {
 void cSceneEditor::init(cScene* pScene) {
 	mpScene = pScene;
 	mSelected = entt::null;
-	cSceneMgr::get().get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cSceneEditor::dbg_ui, this)), mDbgUpdate);
+	mDbgUpdate.reset();
+	if (pScene) {
+		pScene->get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cSceneEditor::dbg_ui, this)), mDbgUpdate);
+	}
 }
 
 static const char* format_entity(std::string& buf, entt::entity en, const sSceneSnapshot& snapshot) {
@@ -43,15 +46,17 @@ void cSceneEditor::dbg_ui() {
 	ctx.camView = mpScene->mpCameraMgr->get_cam().mView;
 
 	ImGui::Begin("scene");
-	show_entity_list(ctx);
+	if (ImGui::TreeNode("Entities")) {
+		show_entity_list(ctx);
 
-	if (mSelected != entt::null) {
-		ImGui::PushID((int)mSelected);
-		show_entity_params(mSelected, ctx);
-		show_entity_components(mSelected, ctx);
-		ImGui::PopID();
+		if (mSelected != entt::null) {
+			ImGui::PushID((int)mSelected);
+			show_entity_params(mSelected, ctx);
+			show_entity_components(mSelected, ctx);
+			ImGui::PopID();
+		}
+		ImGui::TreePop();
 	}
-
 	ImGui::End();
 }
 
