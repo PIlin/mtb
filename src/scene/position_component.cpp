@@ -36,6 +36,10 @@ bool sPositionCompParams::edit_component(entt::registry& reg, entt::entity en) c
 	return true;
 }
 
+bool sPositionCompParams::remove_component(entt::registry& reg, entt::entity en) const {
+	return reg.remove_if_exists<sPositionComp>(en) > 0;
+}
+
 bool sPositionCompParams::dbg_ui(sSceneEditCtx& ctx) {
 	DirectX::XMMATRIX wmtx = xform.build_mtx();
 	if (ImguiGizmoEditTransform(&wmtx, ctx.camView, true)) {

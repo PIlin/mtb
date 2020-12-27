@@ -91,8 +91,12 @@ bool sAnimationCompParams::create(entt::registry& reg, entt::entity en) const {
 }
 
 bool sAnimationCompParams::edit_component(entt::registry& reg, entt::entity en) const {
-	reg.remove_if_exists<cAnimationComp>(en);
+	remove_component(reg, en);
 	return create(reg, en);
+}
+
+bool sAnimationCompParams::remove_component(entt::registry& reg, entt::entity en) const {
+	return reg.remove_if_exists<cAnimationComp>(en) > 0;
 }
 
 bool sAnimationCompParams::dbg_ui(sSceneEditCtx& ctx) {

@@ -17,6 +17,7 @@ struct sPositionCompParams {
 	bool dbg_ui(sSceneEditCtx& ctx);
 	static sPositionCompParams init_ui();
 	bool edit_component(entt::registry& reg, entt::entity en) const;
+	bool remove_component(entt::registry& reg, entt::entity en) const;
 
 	template <class Archive>
 	void serialize(Archive& arc);
@@ -32,6 +33,7 @@ struct sModelCompParams {
 	bool dbg_ui(sSceneEditCtx& ctx);
 	static sModelCompParams init_ui();
 	bool edit_component(entt::registry& reg, entt::entity en) const;
+	bool remove_component(entt::registry& reg, entt::entity en) const;
 
 	template <class Archive>
 	void serialize(Archive& arc);
@@ -47,6 +49,7 @@ struct sRiggedModelCompParams : public sModelCompParams {
 	bool dbg_ui(sSceneEditCtx& ctx);
 	static sRiggedModelCompParams init_ui();
 	bool edit_component(entt::registry& reg, entt::entity en) const;
+	bool remove_component(entt::registry& reg, entt::entity en) const;
 
 	template <class Archive>
 	void serialize(Archive& arc);
@@ -66,6 +69,7 @@ struct sFbxRiggedModelParams {
 	bool dbg_ui(sSceneEditCtx& ctx);
 	static sFbxRiggedModelParams init_ui();
 	bool edit_component(entt::registry& reg, entt::entity en) const;
+	bool remove_component(entt::registry& reg, entt::entity en) const;
 
 	template <class Archive>
 	void serialize(Archive& arc);
@@ -82,6 +86,7 @@ struct sAnimationCompParams {
 	bool dbg_ui(sSceneEditCtx& ctx);
 	static sAnimationCompParams init_ui();
 	bool edit_component(entt::registry& reg, entt::entity en) const;
+	bool remove_component(entt::registry& reg, entt::entity en) const;
 
 	template <class Archive>
 	void serialize(Archive& arc);

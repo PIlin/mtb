@@ -137,6 +137,10 @@ bool sModelCompParams::edit_component(entt::registry& reg, entt::entity en) cons
 	return create(reg, en);
 }
 
+bool sModelCompParams::remove_component(entt::registry& reg, entt::entity en) const {
+	return reg.remove_if_exists<cModelComp>(en) > 0;
+}
+
 bool sModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
 	bool changed = false;
 	changed |= ImguiInputTextPath("Model", modelPath);
@@ -176,6 +180,13 @@ bool sRiggedModelCompParams::edit_component(entt::registry& reg, entt::entity en
 	}
 	return false;
 }
+
+bool sRiggedModelCompParams::remove_component(entt::registry& reg, entt::entity en) const {
+	bool removed = reg.remove_if_exists<cRigComp>(en);
+	bool removedBase = Base::remove_component(reg, en);
+	return removed || removedBase;
+}
+
 
 bool sRiggedModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
 	bool changed = Base::dbg_ui(ctx);
@@ -218,9 +229,15 @@ bool sFbxRiggedModelParams::create(entt::registry& reg, entt::entity en) const {
 }
 
 bool sFbxRiggedModelParams::edit_component(entt::registry& reg, entt::entity en) const {
-	reg.remove_if_exists<cModelComp>(en);
-	reg.remove_if_exists<cRigComp>(en);
+	remove_component(reg, en);
 	return create(reg, en);
+}
+
+bool sFbxRiggedModelParams::remove_component(entt::registry& reg, entt::entity en) const {
+	size_t removed = 0;
+	removed += reg.remove_if_exists<cModelComp>(en);
+	removed += reg.remove_if_exists<cRigComp>(en);
+	return removed > 0;
 }
 
 bool sFbxRiggedModelParams::dbg_ui(sSceneEditCtx& ctx) {

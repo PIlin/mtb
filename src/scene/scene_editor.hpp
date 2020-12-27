@@ -49,6 +49,7 @@ namespace nSceneEdit {
 		const char* ui_name() const { return name.c_str(); }
 		virtual void ui(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en, sSceneEditCtx& ctx) = 0;
 		virtual void add(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en) = 0;
+		virtual void remove(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en) = 0;
 		virtual ~iParamReg() {}
 	};
 
@@ -93,6 +94,24 @@ namespace nSceneEdit {
 					pList->entityList.emplace(en, paramId);
 
 					epit->second.edit_component(reg, en);
+				}
+			}
+		}
+
+		virtual void remove(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en) override {
+			auto pit = snapshot.params.find(id);
+			if (pit != snapshot.params.end() && pit->second) {
+				iParamList* pList = pit->second.get();
+				auto eit = pList->entityList.find(en);
+				if (eit != pList->entityList.end()) {
+					auto& params = static_cast<sParamList<T>*>(pList)->paramList;
+					const uint32_t paramId = eit->second;
+					auto epit = params.find(paramId);
+					if (epit != params.end()) {
+						epit->second.remove_component(reg, en);
+						params.erase(epit);
+					}
+					pList->entityList.erase(eit);
 				}
 			}
 		}

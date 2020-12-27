@@ -46,6 +46,7 @@ void cSceneEditor::dbg_ui() {
 	ctx.camView = mpScene->mpCameraMgr->get_cam().mView;
 
 	ImGui::Begin("scene");
+	ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
 	if (ImGui::TreeNode("Entities")) {
 		show_entity_list(ctx);
 
@@ -150,14 +151,21 @@ void cSceneEditor::show_entity_params(entt::entity en, sSceneEditCtx& ctx) {
 			gather_params_in_snapshot(snapshot, en, paramTypes);
 		}
 
+		entt::id_type typeToRemove = entt::null;
 		for (auto t : paramTypes) {
 			auto it = mParamTypes.find(t);
 			if (it != mParamTypes.end()) {
 				if (it->second->openByDefault)
 					ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-				if (ImGui::TreeNode(it->second->ui_name())) {
+				bool keep = true;
+				if (ImGui::CollapsingHeader(it->second->ui_name(), &keep)) {
+					ImGui::PushID(it->second->ui_name());
 					it->second->ui(reg, snapshot, en, ctx);
-					ImGui::TreePop();
+					//ImGui::TreePop();
+					ImGui::PopID();
+				}
+				if (!keep) {
+					typeToRemove = t;
 				}
 			}
 			else {
@@ -168,6 +176,13 @@ void cSceneEditor::show_entity_params(entt::entity en, sSceneEditCtx& ctx) {
 			}
 		}
 		ImGui::TreePop();
+
+		if (typeToRemove != entt::null) {
+			auto it = mParamTypes.find(typeToRemove);
+			if (it != mParamTypes.end()) {
+				it->second->remove(reg, snapshot, en);
+			}
+		}
 	}
 }
 
