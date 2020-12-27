@@ -5,11 +5,9 @@
 #include "camera_mgr.hpp"
 
 
-#include "scene_objects.hpp"
-
-void cCameraManager::init() {
+void cCameraManager::init(cUpdateQueue& queue) {
 	mTrackballCam.init(mCamera);
-	cSceneMgr::get().get_update_queue().add(eUpdatePriority::Camera, tUpdateFunc(std::bind(&cCameraManager::update_cam, this)), mCameraUpdate);
+	queue.add(eUpdatePriority::Camera, tUpdateFunc(std::bind(&cCameraManager::update_cam, this)), mCameraUpdate);
 }
 
 void cCameraManager::update_cam() {

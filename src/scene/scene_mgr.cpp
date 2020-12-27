@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "scene_objects.hpp"
+#include "scene_mgr.hpp"
 #include "math.hpp"
 #include "path_helpers.hpp"
 #include "gfx.hpp"
@@ -163,7 +163,7 @@ cScene::cScene()
 	: mpCameraMgr(std::make_unique<cCameraManager>())
 	, mpSceneImpl(std::make_unique<sSceneImpl>(registry))
 {
-	mpCameraMgr->init();
+	mpCameraMgr->init(cSceneMgr::get().get_update_queue());
 	load();
 	create_from_snapshot();
 }

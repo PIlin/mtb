@@ -6,7 +6,7 @@
 #include "scene.hpp"
 #include "camera_mgr.hpp"
 
-#include "scene_objects.hpp"
+#include "scene_mgr.hpp"
 #include "scene_components.hpp"
 
 #include "imgui.hpp"

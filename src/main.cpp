@@ -15,7 +15,7 @@ CLANG_DIAG_POP
 #include "camera.hpp"
 #include "texture.hpp"
 #include "imgui_impl.hpp"
-#include "scene_objects.hpp"
+#include "scene/scene_mgr.hpp"
 #include <imgui.h>
 #include "rdr_queue.hpp"
 #include "resource_mgr.hpp"

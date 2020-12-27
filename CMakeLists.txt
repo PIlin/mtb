@@ -52,6 +52,9 @@ set(SRC
 	src/scene/scene.hpp
 	src/scene/scene_editor.cpp
 	src/scene/scene_editor.hpp
+	src/scene/scene_mgr.hpp
+	src/scene/scene_mgr.cpp
+	src/scene/scene_components.hpp
 
 	src/update_queue.hpp
 	src/update_queue.cpp
@@ -59,9 +62,7 @@ set(SRC
 	src/texture.cpp
 	src/sh.hpp
 	src/serialization.cpp
-	src/scene_objects.hpp
-	src/scene_objects.cpp
-	src/scene_components.hpp
+
 	src/rig.hpp
 	src/rig.cpp
 	src/resource.hpp

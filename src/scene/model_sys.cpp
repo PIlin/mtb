@@ -6,7 +6,6 @@
 #include "path_helpers.hpp"
 #include "position_component.hpp"
 #include "rig_component.hpp"
-#include "scene_objects.hpp"
 #include "scene_components.hpp"
 #include "scene_editor.hpp"
 

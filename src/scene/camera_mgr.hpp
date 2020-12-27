@@ -12,7 +12,7 @@ class cCameraManager : public iRdrJob {
 	cUpdateSubscriberScope mCameraUpdate;
 
 public:
-	void init();
+	void init(cUpdateQueue& queue);
 
 	void update_cam();
 
