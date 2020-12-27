@@ -10,7 +10,7 @@
 struct sSceneEditCtx;
 
 struct sPositionCompParams {
-	sXform xform = {};
+	sXform xform = sXform::identity();
 
 	bool create(entt::registry& reg, entt::entity en) const;
 
@@ -25,6 +25,7 @@ struct sPositionCompParams {
 struct sModelCompParams {
 	fs::path modelPath;
 	fs::path materialPath;
+	DirectX::XMFLOAT4X4A localXform = nMtx::g_IdentityF;
 
 	bool create(entt::registry& reg, entt::entity en) const;
 	

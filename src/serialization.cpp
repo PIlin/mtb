@@ -18,6 +18,7 @@ CLANG_DIAG_IGNORE("-Wunused-local-typedef")
 CLANG_DIAG_IGNORE("-Wunused-private-field")
 CLANG_DIAG_IGNORE("-Wexceptions")
 #include <cereal/archives/json.hpp>
+#include <cereal/types/array.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/set.hpp>
 #include <cereal/types/string.hpp>
@@ -144,6 +145,28 @@ void serialize(Archive& arc, sXform& xform)
 		xform.mScale = DirectX::XMLoadFloat4(&scl.mVal);
 	}
 }
+
+// todo: why DirectX::XMFLOAT4X4 doesn't work directly?
+struct sMatrixWrapper {
+	using MtxArray = std::array<float, 16>;
+	MtxArray& arr;
+
+	sMatrixWrapper(DirectX::XMFLOAT4X4& mtx)
+		: arr(reinterpret_cast<MtxArray&>(*&mtx.m[0][0]))
+	{}
+
+	template<class Archive>
+	void serialize(Archive& arc) {
+		arc(arr);
+	}
+};
+//template<class Archive>
+//void serialize(Archive& arc, DirectX::XMFLOAT4X4& mtx)
+//{
+//	using MtxArray = std::array<float, 16>;
+//	MtxArray& arr = reinterpret_cast<MtxArray&>(*&mtx.m[0][0]);
+//	arc(arr);
+//}
 
 template <class Archive>
 void sTestMtlCBuf::serialize(Archive& arc) {
@@ -287,22 +310,32 @@ void sPositionCompParams::serialize(Archive& arc) {
 
 template <class Archive>
 void sModelCompParams::serialize(Archive& arc) {
-	arc(FILEPATH_NVP(modelPath));
-	arc(FILEPATH_NVP(materialPath));
+	ARC(FILEPATH_NVP(modelPath));
+	ARC(FILEPATH_NVP(materialPath));
+	sMatrixWrapper xform(localXform);
+	ARC(CEREAL_NVP(xform));
 }
 
 template <class Archive>
 void sRiggedModelCompParams::serialize(Archive& arc) {
 	Base::serialize(arc);
-	arc(FILEPATH_NVP(rigPath));
+	ARC(FILEPATH_NVP(rigPath));
+}
+
+template <class Archive>
+void sFbxRiggedModelParams::serialize(Archive& arc) {
+	ARC(FILEPATH_NVP(modelPath));
+	ARC(FILEPATH_NVP(materialPath));
+	sMatrixWrapper xform(localXform);
+	ARC(CEREAL_NVP(xform));
 }
 
 template <class Archive>
 void sAnimationCompParams::serialize(Archive& arc) {
-	arc(FILEPATH_NVP(animRootPath));
-	arc(FILEPATH_NVP(animListName));
-	arc(CEREAL_NVP(curAnim));
-	arc(CEREAL_NVP(speed));
+	ARC(FILEPATH_NVP(animRootPath));
+	ARC(FILEPATH_NVP(animListName));
+	ARC(CEREAL_NVP(curAnim));
+	ARC(CEREAL_NVP(speed));
 }
 
 
@@ -322,7 +355,7 @@ void sSceneSnapshot::serialize(Archive& arc) {
 
 	invoke_for_params([&](entt::id_type t, auto* pList) { 
 		std::string name = "id_" + std::to_string(t);
-		arc(cereal::make_nvp(name, *pList));
+		ARC(cereal::make_nvp(name, *pList));
 	});
 }
 

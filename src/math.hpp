@@ -137,6 +137,7 @@ DirectX::XMFLOAT3 XM_CALLCONV quat_to_euler_zyx(DirectX::FXMVECTOR quat);
 
 namespace nMtx {
 extern const DirectX::XMMATRIX g_Identity;
+extern const DirectX::XMFLOAT4X4A g_IdentityF;
 }
 
 
@@ -144,6 +145,8 @@ struct sXform {
 	DirectX::XMVECTOR mPos;
 	DirectX::XMVECTOR mQuat;
 	DirectX::XMVECTOR mScale;
+
+	static sXform XM_CALLCONV identity();
 
 	void XM_CALLCONV init(DirectX::FXMMATRIX mtx);
 	void XM_CALLCONV init_scaled(DirectX::FXMMATRIX mtx);

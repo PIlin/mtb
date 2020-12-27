@@ -199,6 +199,7 @@ bool sModelCompParams::create(entt::registry& reg, entt::entity en) const {
 	sPositionComp& pos = reg.get_or_emplace<sPositionComp>(en);
 	cModelComp& mdl = reg.emplace<cModelComp>(en);
 	res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
+	mdl.lmtx = dx::XMLoadFloat4x4A(&localXform);
 
 	return res;
 }
@@ -212,6 +213,7 @@ bool sModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
 	bool changed = false;
 	changed |= ImguiInputTextPath("Model", modelPath);
 	changed |= ImguiInputTextPath("Material", materialPath);
+	changed |= ImguiGizmoEditTransform(&localXform, ctx.camView, true);
 	return changed;
 }
 

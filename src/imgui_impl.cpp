@@ -5,6 +5,7 @@
 #include "path_helpers.hpp"
 #include "texture.hpp"
 #include "rdr.hpp"
+#include "imgui.hpp"
 #include "imgui_impl.hpp"
 #include "gfx.hpp"
 #include "input.hpp"
@@ -310,7 +311,7 @@ void cImgui::render_callback(ImDrawData* pDrawData) {
 }
 
 
-bool ImguiSlideFloat3_1(char const* label, float v[3], float v_min, float v_max, const char* display_format = "%.3f") {
+bool ImguiSlideFloat3_1(char const* label, float v[3], float v_min, float v_max, const char* display_format /*= "%.3f"*/) {
 	char keyBuf[64];
 	::sprintf_s(keyBuf, "issng%s", label);
 	ImGuiID id = ImGui::GetID(keyBuf);
@@ -341,7 +342,7 @@ bool ImguiSlideFloat3_1(char const* label, float v[3], float v_min, float v_max,
 	return res;
 }
 
-bool ImguiDragFloat3_1(char const* label, float v[3], float v_speed, const char* display_format = "%.3f") {
+bool ImguiDragFloat3_1(char const* label, float v[3], float v_speed, const char* display_format /*= "%.3f"*/) {
 	char keyBuf[64];
 	::sprintf_s(keyBuf, "issng%s", label);
 	ImGuiID id = ImGui::GetID(keyBuf);
@@ -386,9 +387,28 @@ struct sXformGizmoState {
 };
 static sXformGizmoState s_xformGizmoState;
 
-
-
 bool ImguiEditTransform(DirectX::XMMATRIX* matrix) {
+	sXform xform;
+	xform.init_scaled(*matrix);
+
+	bool changed = ImguiEditTransform(xform);
+
+	if (changed) {
+		*matrix = xform.build_mtx();
+	}
+	return changed;
+}
+
+bool ImguiEditTransform(DirectX::XMFLOAT4X4* matrix) {
+	DirectX::XMMATRIX mtx = dx::XMLoadFloat4x4(matrix);
+	if (ImguiEditTransform(&mtx)) {
+		dx::XMStoreFloat4x4(matrix, mtx);
+		return true;
+	}
+	return false;
+}
+
+bool ImguiEditTransform(sXform& xform) {
 	sXformGizmoState& state = s_xformGizmoState;
 
 	bool changedEdit = false;
@@ -408,9 +428,6 @@ bool ImguiEditTransform(DirectX::XMMATRIX* matrix) {
 		state.mCurrentGizmoOperation = ImGuizmo::SCALE;
 
 	{
-		sXform xform;
-		xform.init_scaled(*matrix);
-
 		vec4 tmp;
 		float* const tmpArr = reinterpret_cast<float*>(&tmp.mVal);
 
@@ -437,53 +454,72 @@ bool ImguiEditTransform(DirectX::XMMATRIX* matrix) {
 			xform.mScale = dx::XMLoadFloat4(&tmp.mVal);
 			changedEdit = true;
 		}
-
-		if (changedEdit) {
-			*matrix = xform.build_mtx();
-		}
 	}
 
-	if (state.mCurrentGizmoOperation != ImGuizmo::SCALE)
-	{
-		if (ImGui::RadioButton("Local", state.mCurrentGizmoMode == ImGuizmo::LOCAL))
-			state.mCurrentGizmoMode = ImGuizmo::LOCAL;
-		ImGui::SameLine();
-		if (ImGui::RadioButton("World", state.mCurrentGizmoMode == ImGuizmo::WORLD))
-			state.mCurrentGizmoMode = ImGuizmo::WORLD;
-	}
-	//if (ImGui::IsKeyPressed(83)) useSnap = !useSnap;
-	ImGui::Checkbox("", &state.useSnap);
-	ImGui::SameLine();
 
-	switch (state.mCurrentGizmoOperation)
-	{
-	case ImGuizmo::TRANSLATE:
-		ImGui::InputFloat3("Snap", &state.snap[0]);
-		break;
-	case ImGuizmo::ROTATE:
-		ImGui::InputFloat("Angle Snap", &state.snap[0]);
-		break;
-	case ImGuizmo::SCALE:
-		ImGui::InputFloat("Scale Snap", &state.snap[0]);
-		break;
-	}
-	ImGui::Checkbox("Bound Sizing", &state.boundSizing);
-	if (state.boundSizing)
-	{
-		ImGui::PushID(3);
-		ImGui::Checkbox("", &state.boundSizingSnap);
-		ImGui::SameLine();
-		ImGui::InputFloat3("Snap", state.boundsSnap);
-		ImGui::PopID();
-	}
 
 	return changedEdit;
+}
+
+bool ImguiGizmoEditTransform(sXform& xform, const cCamera::sView& cam, bool editTransformDecomposition) {
+	// todo: unnecessary conversion between mtx and xform
+	dx::XMMATRIX mtx = xform.build_mtx();
+	if (ImguiGizmoEditTransform(&mtx, cam, editTransformDecomposition)) {
+		xform.init_scaled(mtx);
+		return true;
+	}
+	return false;
+}
+
+bool ImguiGizmoEditTransform(dx::XMFLOAT4X4* matrix, const cCamera::sView& cam, bool editTransformDecomposition) {
+	DirectX::XMMATRIX mtx = dx::XMLoadFloat4x4(matrix);
+	if (ImguiGizmoEditTransform(&mtx, cam, editTransformDecomposition)) {
+		dx::XMStoreFloat4x4(matrix, mtx);
+		return true;
+	}
+	return false;
 }
 
 bool ImguiGizmoEditTransform(dx::XMMATRIX* matrix, const cCamera::sView& cam, bool editTransformDecomposition) {
 	sXformGizmoState& state = s_xformGizmoState;
 
 	bool changedEdit = editTransformDecomposition && ImguiEditTransform(matrix);
+	if (editTransformDecomposition) {
+		if (state.mCurrentGizmoOperation != ImGuizmo::SCALE)
+		{
+			if (ImGui::RadioButton("Local", state.mCurrentGizmoMode == ImGuizmo::LOCAL))
+				state.mCurrentGizmoMode = ImGuizmo::LOCAL;
+			ImGui::SameLine();
+			if (ImGui::RadioButton("World", state.mCurrentGizmoMode == ImGuizmo::WORLD))
+				state.mCurrentGizmoMode = ImGuizmo::WORLD;
+		}
+		//if (ImGui::IsKeyPressed(83)) useSnap = !useSnap;
+		ImGui::Checkbox("", &state.useSnap);
+		ImGui::SameLine();
+
+		switch (state.mCurrentGizmoOperation)
+		{
+		case ImGuizmo::TRANSLATE:
+			ImGui::InputFloat3("Snap", &state.snap[0]);
+			break;
+		case ImGuizmo::ROTATE:
+			ImGui::InputFloat("Angle Snap", &state.snap[0]);
+			break;
+		case ImGuizmo::SCALE:
+			ImGui::InputFloat("Scale Snap", &state.snap[0]);
+			break;
+		}
+		ImGui::Checkbox("Bound Sizing", &state.boundSizing);
+		if (state.boundSizing)
+		{
+			ImGui::PushID(3);
+			ImGui::Checkbox("", &state.boundSizingSnap);
+			ImGui::SameLine();
+			ImGui::InputFloat3("Snap", state.boundsSnap);
+			ImGui::PopID();
+		}
+	}
+
 
 	ImGuiIO& io = ImGui::GetIO();
 	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);

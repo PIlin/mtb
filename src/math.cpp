@@ -4,6 +4,13 @@ namespace dx = DirectX;
 
 namespace nMtx {
 const DirectX::XMMATRIX g_Identity = DirectX::XMMatrixIdentity();
+
+const dx::XMFLOAT4X4A g_IdentityF = [](){ 
+	dx::XMFLOAT4X4A res;
+	dx::XMStoreFloat4x4A(&res, DirectX::XMMatrixIdentity());
+	return res;
+}();
+
 }
 
 // Hermite cubic spline
@@ -115,6 +122,14 @@ DirectX::XMFLOAT3 XM_CALLCONV quat_to_euler_zyx(DirectX::FXMVECTOR quat) {
 	}
 
 	return euler;
+}
+
+sXform XM_CALLCONV sXform::identity() {
+	sXform xform;
+	xform.mPos = dx::g_XMIdentityR3;
+	xform.mQuat = dx::g_XMIdentityR3;
+	xform.mScale = dx::g_XMOne3;
+	return xform;
 }
 
 void XM_CALLCONV sXform::init(DirectX::FXMMATRIX mtx) {
