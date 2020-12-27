@@ -283,6 +283,52 @@ sRiggedModelCompParams sRiggedModelCompParams::init_ui() {
 }
 
 
+sFbxRiggedModelParams::sFbxRiggedModelParams() {
+	const float scl = 0.01f;
+	dx::XMMATRIX mtx = dx::XMMatrixScaling(scl, scl, scl);
+	mtx *= dx::XMMatrixRotationX(DEG2RAD(-90.0f));
+	dx::XMStoreFloat4x4A(&localXform, mtx);
+}
+
+bool sFbxRiggedModelParams::create(entt::registry& reg, entt::entity en) const {
+	ConstModelDataPtr pMdlData;
+	ConstModelMaterialPtr pMtl;
+	ConstRigDataPtr pRigData;
+
+	bool res = true;
+	res = res && nResLoader::find_or_load_unreal(cPathManager::build_data_path(modelPath), *&pMdlData, *&pRigData);
+	res = res && nResLoader::find_or_load(cPathManager::build_data_path(materialPath), pMdlData, *&pMtl, true);
+
+	if (!res) return res;
+
+	sPositionComp& pos = reg.get_or_emplace<sPositionComp>(en);
+	cModelComp& mdl = reg.emplace<cModelComp>(en);
+	cRigComp& rig = reg.emplace<cRigComp>(en);
+	res = res && mdl.init(std::move(pMdlData), std::move(pMtl));
+	mdl.lmtx = dx::XMLoadFloat4x4A(&localXform);
+	rig.init(std::move(pRigData));
+
+	return res;
+}
+
+bool sFbxRiggedModelParams::edit_component(entt::registry& reg, entt::entity en) const {
+	reg.remove_if_exists<cModelComp>(en);
+	reg.remove_if_exists<cRigComp>(en);
+	return create(reg, en);
+}
+
+bool sFbxRiggedModelParams::dbg_ui(sSceneEditCtx& ctx) {
+	bool changed = false;
+	changed |= ImguiInputTextPath("Model", modelPath);
+	changed |= ImguiInputTextPath("Material", materialPath);
+	changed |= ImguiGizmoEditTransform(&localXform, ctx.camView, true);
+	return changed;
+}
+
+sFbxRiggedModelParams sFbxRiggedModelParams::init_ui() {
+	return sFbxRiggedModelParams();
+}
+
 
 class cModelDispSys : public iRdrJob {
 	cUpdateSubscriberScope mDispUpdate;
@@ -881,6 +927,7 @@ public:
 		register_param<sPositionCompParams>("Position").openByDefault = true;
 		register_param<sModelCompParams>("Model");
 		register_param<sRiggedModelCompParams>("Rigged Model");
+		register_param<sFbxRiggedModelParams>("Fbx Model");
 		register_param<sAnimationCompParams>("Animation");
 	}
 

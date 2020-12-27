@@ -8,8 +8,7 @@
         "paramsOrder": [
             304049688,
             1188088766,
-            2872077420,
-            3838159947
+            3773953081
         ],
         "id_304049688": {
             "paramList": [
@@ -68,9 +67,9 @@
                     "value": {
                         "xform": {
                             "pos": {
-                                "value0": 0.4454041123390198,
-                                "value1": 6.153835840905231e-8,
-                                "value2": 0.6055028438568115,
+                                "value0": 2.0,
+                                "value1": 0.0,
+                                "value2": 0.0,
                                 "value3": 1.0
                             },
                             "quat": {
@@ -80,9 +79,9 @@
                                 "value3": 1.0
                             },
                             "scl": {
-                                "value0": 0.019999999552965165,
-                                "value1": 0.019999999552965165,
-                                "value2": 0.019999999552965165,
+                                "value0": 1.0,
+                                "value1": 1.0,
+                                "value2": 1.0,
                                 "value3": 0.0
                             }
                         }
@@ -114,6 +113,26 @@
                         },
                         "materialPath": {
                             "value0": "lightning\\lightning.mtl"
+                        },
+                        "xform": {
+                            "value0": {
+                                "value0": 1.0,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 0.0,
+                                "value4": 0.0,
+                                "value5": 1.0,
+                                "value6": 0.0,
+                                "value7": 0.0,
+                                "value8": 0.0,
+                                "value9": 0.0,
+                                "value10": 1.0,
+                                "value11": 0.0,
+                                "value12": 0.0,
+                                "value13": 0.0,
+                                "value14": 0.0,
+                                "value15": 1.0
+                            }
                         }
                     }
                 },
@@ -125,6 +144,26 @@
                         },
                         "materialPath": {
                             "value0": "owl\\lightning.mtl"
+                        },
+                        "xform": {
+                            "value0": {
+                                "value0": 1.0,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 0.0,
+                                "value4": 0.0,
+                                "value5": 1.0,
+                                "value6": 0.0,
+                                "value7": 0.0,
+                                "value8": 0.0,
+                                "value9": 0.0,
+                                "value10": 1.0,
+                                "value11": 0.0,
+                                "value12": 0.0,
+                                "value13": 0.0,
+                                "value14": 0.0,
+                                "value15": 1.0
+                            }
                         }
                     }
                 }
@@ -140,43 +179,37 @@
                 }
             ]
         },
-        "id_2872077420": {
+        "id_3773953081": {
             "paramList": [
                 {
                     "key": 0,
                     "value": {
                         "modelPath": {
-                            "value0": "owl/def.geo"
+                            "value0": "unreal_puppet/SideScrollerSkeletalMesh.FBX"
                         },
                         "materialPath": {
-                            "value0": "owl/def.mtl"
+                            "value0": "unreal_puppet/def.mtl"
                         },
-                        "rigPath": {
-                            "value0": "owl/def.rig"
+                        "xform": {
+                            "value0": {
+                                "value0": 0.009999999776482582,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 0.0,
+                                "value4": 0.0,
+                                "value5": -1.19209286886246e-9,
+                                "value6": -0.009999998845160008,
+                                "value7": 0.0,
+                                "value8": 0.0,
+                                "value9": 0.009999998845160008,
+                                "value10": -1.19209286886246e-9,
+                                "value11": 0.0,
+                                "value12": 0.0,
+                                "value13": 0.0,
+                                "value14": 0.0,
+                                "value15": 1.0
+                            }
                         }
-                    }
-                }
-            ],
-            "entityList": [
-                {
-                    "key": 2,
-                    "value": 0
-                }
-            ]
-        },
-        "id_3838159947": {
-            "paramList": [
-                {
-                    "key": 0,
-                    "value": {
-                        "animRootPath": {
-                            "value0": "owl"
-                        },
-                        "animListName": {
-                            "value0": "def.alist"
-                        },
-                        "curAnim": 1,
-                        "speed": 1.0
                     }
                 }
             ],

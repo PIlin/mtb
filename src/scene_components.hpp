@@ -54,6 +54,23 @@ private:
 	bool create_rig(entt::registry& reg, entt::entity en) const;
 };
 
+struct sFbxRiggedModelParams {
+	fs::path modelPath;
+	fs::path materialPath;
+	DirectX::XMFLOAT4X4A localXform;
+
+	sFbxRiggedModelParams();
+
+	bool create(entt::registry& reg, entt::entity en) const;
+
+	bool dbg_ui(sSceneEditCtx& ctx);
+	static sFbxRiggedModelParams init_ui();
+	bool edit_component(entt::registry& reg, entt::entity en) const;
+
+	template <class Archive>
+	void serialize(Archive& arc);
+};
+
 struct sAnimationCompParams {
 	fs::path animRootPath;
 	fs::path animListName;
@@ -139,6 +156,7 @@ struct sSceneSnapshot {
 				CASE(sModelCompParams);
 				CASE(sRiggedModelCompParams);
 				CASE(sAnimationCompParams);
+				CASE(sFbxRiggedModelParams);
 #undef CASE
 			}
 		}
