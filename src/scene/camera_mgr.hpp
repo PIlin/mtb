@@ -13,6 +13,7 @@ class cCameraManager : public iRdrJob {
 
 public:
 	void init(cUpdateQueue& queue);
+	void init(cUpdateGraph& graph);
 
 	void update_cam();
 

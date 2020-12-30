@@ -63,6 +63,15 @@ void cAnimationSys::register_update(cUpdateQueue& queue) {
 	queue.add(eUpdatePriority::SceneAnimUpdate, tUpdateFunc(std::bind(&cAnimationSys::update_anim, this)), mAnimUpdate);
 }
 
+void cAnimationSys::register_update(cUpdateGraph& graph) {
+	sUpdateDepRes anim = graph.register_res("anim");
+	sUpdateDepRes rig = graph.register_res("rig");
+	sUpdateDepRes compAny = graph.register_res("components*");
+
+	graph.add(sUpdateDepDesc{ {compAny}, {anim, rig} },
+		tUpdateFunc(std::bind(&cAnimationSys::update_anim, this)), mAnimUpdate);
+}
+
 void cAnimationSys::update_anim() {
 	auto view = mRegistry.view<cAnimationComp, cRigComp>();
 	view.each([](cAnimationComp& anim, cRigComp& rig) {

@@ -137,3 +137,149 @@ void cUpdateQueue::commit_temp_records() {
 	}
 }
 
+/////////////////
+
+cUpdateGraphNode::cUpdateGraphNode(NodeId id, const sUpdateDepDesc& desc, tUpdateFunc&& func, cUpdateSubscriberScope& scope)
+	: cUpdateRecord(eUpdatePriority::Begin, std::move(func), scope)
+	, mDesc(desc)
+	, mId(id)
+{}
+
+sUpdateDepRes cUpdateGraph::register_res(cstr name) {
+	uint32_t hash = hash_fnv_1a_cstr(name);
+	auto it = mResources.find(hash);
+	if (mResources.end() == it) {
+		it = mResources.emplace(hash, sResource{ hash, name }).first;
+	}
+	assert(it->first == it->second.hash);
+	assert(name.p == it->second.name);
+	return sUpdateDepRes(hash, it->second.name.c_str());
+}
+
+void cUpdateGraph::add(const sUpdateDepDesc& desc, tUpdateFunc&& func, cUpdateSubscriberScope& scope) {
+	NodeId id = mIdGen++;
+	mPending.emplace_back(id, desc, std::move(func), scope);
+}
+
+void cUpdateGraph::exec() {
+	commit_pending();
+	update_dirty();
+
+	for (NodeId id : mOrder) {
+		auto it = mNodes.find(id);
+		assert(it != mNodes.end());
+		if (it != mNodes.end()) {
+			if (!it->second.exec()) {
+				mNodes.erase(it);
+				mIsDirty = true;
+			}
+		}
+	}
+}
+
+void cUpdateGraph::commit_pending() {
+	if (!mPending.empty()) {
+		for (cUpdateGraphNode& node : mPending) {
+			mNodes.emplace(node.get_id(), std::move(node));
+		}
+		mPending.clear();
+		mIsDirty = true;
+	}
+}
+
+void cUpdateGraph::update_dirty() {
+	if (mIsDirty) {
+		build_adj_list();
+		topo_sort();
+		mIsDirty = false;
+	}
+}
+
+void cUpdateGraph::build_adj_list() {
+	mAdjList.clear();
+
+	using tEdgeMap = std::unordered_map<uint32_t, std::vector<NodeId>>;
+	tEdgeMap inEdgeMap;
+	tEdgeMap outEdgeMap;
+	for (const auto& idNode : mNodes) {
+		const NodeId id = idNode.first;
+		const auto& node = idNode.second;
+		for (const sUpdateDepRes& dep : node.get_deps().inputs) {
+			inEdgeMap[dep.hash].push_back(id);
+		}
+		for (const sUpdateDepRes& dep : node.get_deps().outputs) {
+			outEdgeMap[dep.hash].push_back(id);
+		}
+	}
+
+	for (const auto& p : outEdgeMap) {
+		auto it = inEdgeMap.find(p.first);
+		if (it != inEdgeMap.end()) {
+			for (NodeId outNode : p.second) {
+				for (NodeId inNode : it->second) {
+					if (outNode != inNode) {
+						mAdjList[outNode].push_back(inNode);
+					}
+				}
+			}
+		}
+	}
+}
+
+struct cUpdateGraph::sTopoSorter {
+	enum class EMark { No, Temp, Perm };
+
+	const cUpdateGraph& graph;
+	std::unordered_map<NodeId, EMark> marks;
+	tOrder order;
+
+	sTopoSorter(cUpdateGraph& graph)
+		: graph(graph)
+	{}
+
+	void sort() {
+		for (const auto& idNode : graph.mNodes) {
+			marks[idNode.first] = EMark::No;
+		}
+
+		for (const auto& idMark : marks) {
+			if (idMark.second == EMark::No) {
+				visit(idMark.first);
+			}
+		}
+
+		std::reverse(order.begin(), order.end());
+	}
+
+private:
+	void visit(NodeId id) {
+		auto it = marks.find(id);
+		assert(it != marks.end());
+
+		if (it->second == EMark::Perm) { return; }
+		if (it->second == EMark::Temp) {
+			dbg_msg("Found cycle in node %u", id);
+			return;
+		}
+		assert(it->second == EMark::No);
+
+		it->second = EMark::Temp;
+		auto adjIt = graph.mAdjList.find(id);
+		if (adjIt != graph.mAdjList.end()) {
+			for (NodeId adj : adjIt->second) {
+				visit(adj);
+			}
+		}
+
+		assert(it->second == EMark::Temp);
+		it->second = EMark::Perm;
+
+		order.push_back(id);
+	}
+};
+
+void cUpdateGraph::topo_sort() {
+	sTopoSorter sorter(*this);
+	sorter.sort();
+	mOrder = std::move(sorter.order);
+}

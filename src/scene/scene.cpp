@@ -57,12 +57,34 @@ public:
 		pCtx->Draw(6, 0);
 	}
 
+	void init(cUpdateGraph& graph) {
+		if (init()) {
+			sUpdateDepRes rdrJobAny = graph.register_res("rdr_job_*");
+			sUpdateDepRes rdrJobGnomon = graph.register_res("rdr_job_gnomon");
+			graph.add(sUpdateDepDesc{ {}, {rdrJobGnomon, rdrJobAny} },
+				tUpdateFunc(std::bind(&cGnomon::disp, this)), mDispUpdate);
+		}
+	}
+
 	void init(cUpdateQueue& queue) {
+		if (init()) {
+			queue.add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cGnomon::disp, this)), mDispUpdate);
+		}
+	}
+
+	void deinit() {
+		mDispUpdate.reset();
+		mVtxBuf.deinit();
+		mpIL.reset();
+	}
+
+private:
+	bool init() {
 		auto& ss = cShaderStorage::get();
 		mpVS = ss.load_VS("simple.vs.cso");
-		if (!mpVS) return;
+		if (!mpVS) return false;
 		mpPS = ss.load_PS("simple.ps.cso");
-		if (!mpPS) return;
+		if (!mpPS) return false;
 
 		D3D11_INPUT_ELEMENT_DESC vdsc[] = {
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sVtx, mPos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -83,14 +105,7 @@ public:
 		};
 
 		mVtxBuf.init(pDev, vtx, LENGTHOF_ARRAY(vtx), sizeof(vtx[0]));
-
-		queue.add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cGnomon::disp, this)), mDispUpdate);
-	}
-
-	void deinit() {
-		mDispUpdate.reset();
-		mVtxBuf.deinit();
-		mpIL.reset();
+		return true;
 	}
 };
 
@@ -103,6 +118,14 @@ class cLightMgrUpdate : public iRdrJob {
 public:
 	void init(cUpdateQueue& queue) {
 		queue.add(eUpdatePriority::Light, tUpdateFunc(std::bind(&cLightMgrUpdate::update, this)), mLightUpdate);
+	}
+
+	void init(cUpdateGraph& graph) {
+		sUpdateDepRes rdrJobProlLight = graph.register_res("rdr_prologue_job_light");
+		sUpdateDepRes rdrJobProlAny = graph.register_res("rdr_prologue_job_*");
+		sUpdateDepRes light = graph.register_res("light");
+		graph.add(sUpdateDepDesc{ {}, {rdrJobProlLight, rdrJobProlAny, light} },
+			tUpdateFunc(std::bind(&cLightMgrUpdate::update, this)), mLightUpdate);
 	}
 
 	void update() {
@@ -134,15 +157,37 @@ public:
 		modelSys.register_update(updateQueue);
 		animSys.register_update(updateQueue);
 	}
+
+	sSceneImpl(entt::registry& registry, cUpdateGraph& graph)
+		: modelSys(registry)
+		, animSys(registry)
+	{
+		gnomon.init(graph);
+		lightMgr.init(graph);
+		modelSys.register_update(graph);
+		animSys.register_update(graph);
+	}
 };
 
 cScene::cScene(const std::string& name)
+#if USE_GRAPH_UPDATE
+	: mpUpdateGraph(std::make_unique<cUpdateGraph>())
+#else
 	: mpUpdateQueue(std::make_unique<cUpdateQueue>())
+#endif
 	, mpCameraMgr(std::make_unique<cCameraManager>())
+#if USE_GRAPH_UPDATE
+	, mpSceneImpl(std::make_unique<sSceneImpl>(registry, *mpUpdateGraph))
+#else
 	, mpSceneImpl(std::make_unique<sSceneImpl>(registry, *mpUpdateQueue))
+#endif
 	, mName(name)
 {
+#if USE_GRAPH_UPDATE
+	mpCameraMgr->init(*mpUpdateGraph);
+#else
 	mpCameraMgr->init(*mpUpdateQueue);
+#endif
 	load();
 	create_from_snapshot();
 }
@@ -263,7 +308,11 @@ void cScene::save() {
 }
 
 void cScene::update() {
+#if USE_GRAPH_UPDATE
+	mpUpdateGraph->exec();
+#else
 	mpUpdateQueue->begin_exec();
 	mpUpdateQueue->advance_exec(eUpdatePriority::End);
 	mpUpdateQueue->end_exec();
+#endif
 }

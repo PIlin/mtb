@@ -7,12 +7,14 @@
 class cCameraManager;
 class cSceneEditor;
 class cUpdateQueue;
+class cUpdateGraph;
 
 class cScene {
 	friend class cSceneEditor;
 
 	struct sSceneImpl;
 
+	std::unique_ptr<cUpdateGraph> mpUpdateGraph;
 	std::unique_ptr<cUpdateQueue> mpUpdateQueue;
 
 	entt::registry registry;
@@ -34,4 +36,5 @@ public:
 	const std::string& get_name() const { return mName; }
 
 	cUpdateQueue& get_update_queue() const { return *mpUpdateQueue.get(); }
+	cUpdateGraph& get_update_graph() const { return *mpUpdateGraph.get(); }
 };

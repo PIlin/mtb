@@ -22,6 +22,7 @@ public:
 	cModelDispSys(entt::registry& reg) : mRegistry(reg) {}
 
 	void register_update(cUpdateQueue& queue);
+	void register_update(cUpdateGraph& graph);
 	void update_begin();
 	void disp();
 	void update_end();

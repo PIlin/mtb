@@ -10,6 +10,17 @@ void cCameraManager::init(cUpdateQueue& queue) {
 	queue.add(eUpdatePriority::Camera, tUpdateFunc(std::bind(&cCameraManager::update_cam, this)), mCameraUpdate);
 }
 
+void cCameraManager::init(cUpdateGraph& graph) {
+	mTrackballCam.init(mCamera);
+
+	sUpdateDepRes rdrJobProlCam = graph.register_res("rdr_prologue_job_cam");
+	sUpdateDepRes rdrJobProlAny = graph.register_res("rdr_prologue_job_*");
+	sUpdateDepRes camera = graph.register_res("camera");
+
+	graph.add(sUpdateDepDesc{ {}, {rdrJobProlCam, rdrJobProlAny, camera} },
+		tUpdateFunc(std::bind(&cCameraManager::update_cam, this)), mCameraUpdate);
+}
+
 void cCameraManager::update_cam() {
 	mTrackballCam.update(mCamera);
 	cRdrQueueMgr::get().add_model_prologue_job(*this);

@@ -57,6 +57,22 @@ void cModelDispSys::register_update(cUpdateQueue& queue) {
 	}
 }
 
+void cModelDispSys::register_update(cUpdateGraph& graph) {
+	assert(!mDispUpdate);
+	sUpdateDepRes rdrJobProlModel = graph.register_res("rdr_prologue_job_mdl");
+	sUpdateDepRes rdrJobProlAny = graph.register_res("rdr_prologue_job_*");
+	sUpdateDepRes compAny = graph.register_res("components*");
+	sUpdateDepRes rdrJobModel = graph.register_res("rdr_job_mdl");
+	sUpdateDepRes rdrJobAny = graph.register_res("rdr_job_*");
+
+	graph.add(sUpdateDepDesc{ {}, {rdrJobProlModel, rdrJobProlAny} }, 
+		tUpdateFunc(std::bind(&cModelDispSys::update_begin, this)), mUpdateBegin);
+	graph.add(sUpdateDepDesc{ {compAny}, {rdrJobModel, rdrJobAny} },
+		tUpdateFunc(std::bind(&cModelDispSys::disp, this)), mDispUpdate);
+	graph.add(sUpdateDepDesc{ {rdrJobProlAny, rdrJobAny}, {} },
+		tUpdateFunc(std::bind(&cModelDispSys::update_end, this)), mUpdateEnd);
+}
+
 void cModelDispSys::update_begin() {
 	cRdrQueueMgr::get().add_model_prologue_job(mPrologueJob);
 }

@@ -11,6 +11,7 @@ public:
 	cAnimationSys(entt::registry& reg) : mRegistry(reg) {}
 
 	void register_update(cUpdateQueue& queue);
+	void register_update(cUpdateGraph& graph);
 	void update_anim();
 
 	static void register_to_editor(cSceneCompMetaReg& metaRegistry);

@@ -23,7 +23,15 @@ void cSceneEditor::init(cScene* pScene) {
 	mSelected = entt::null;
 	mDbgUpdate.reset();
 	if (pScene) {
+#if USE_GRAPH_UPDATE
+		cUpdateGraph& graph = pScene->get_update_graph();
+
+		sUpdateDepRes components = graph.register_res("components*");
+		graph.add(sUpdateDepDesc{ {}, {components} },
+			tUpdateFunc(std::bind(&cSceneEditor::dbg_ui, this)), mDbgUpdate);
+#else
 		pScene->get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cSceneEditor::dbg_ui, this)), mDbgUpdate);
+#endif
 	}
 }
 
