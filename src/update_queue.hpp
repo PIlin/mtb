@@ -156,6 +156,7 @@ class cUpdateGraph {
 	using NodeId = cUpdateGraphNode::NodeId;
 	using tNodes = std::unordered_map<NodeId, cUpdateGraphNode>;
 	using tAdjList = std::unordered_map<NodeId, std::vector<NodeId>>; // nodeid -> (nodeId,...)
+	using tNoInputList = std::vector<NodeId>;
 	using tPendingNodes = std::vector<cUpdateGraphNode>;
 	using tOrder = std::vector<NodeId>;
 
@@ -166,6 +167,8 @@ class cUpdateGraph {
 	using tResourceMap = std::unordered_map<uint32_t, sResource>;
 
 	struct sTopoSorter;
+	struct sTopoExecutor;
+	struct sTaskExecutor;
 
 public:
 	void add(const sUpdateDepDesc& desc, tUpdateFunc&& func, cUpdateSubscriberScope& scope);
@@ -179,9 +182,15 @@ private:
 	void build_adj_list();
 	void topo_sort();
 
+	void exec_node(NodeId id);
+
+	using tEdgeMap = std::unordered_map<uint32_t, std::vector<NodeId>>;
+	static void build_adj_list(const tEdgeMap& inEdgeMap, const tEdgeMap& outEdgeMap, tAdjList& adjList);
 private:
 	tNodes mNodes;
 	tAdjList mAdjList;
+	tAdjList mRevAdjList;
+	tNoInputList mNoInputList;
 	tOrder mOrder;
 	tPendingNodes mPending;
 	tResourceMap mResources;

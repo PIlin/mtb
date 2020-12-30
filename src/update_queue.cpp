@@ -2,7 +2,7 @@
 #include "update_queue.hpp"
 
 #include <cassert>
-
+#include <queue>
 
 //////
 
@@ -161,20 +161,81 @@ void cUpdateGraph::add(const sUpdateDepDesc& desc, tUpdateFunc&& func, cUpdateSu
 	mPending.emplace_back(id, desc, std::move(func), scope);
 }
 
+void cUpdateGraph::exec_node(NodeId id) {
+	auto it = mNodes.find(id);
+	assert(it != mNodes.end());
+	if (it != mNodes.end()) {
+		if (!it->second.exec()) {
+			mNodes.erase(it);
+			mIsDirty = true;
+		}
+	}
+}
+
+struct cUpdateGraph::sTopoExecutor {
+	cUpdateGraph& graph;
+	sTopoExecutor(cUpdateGraph& graph) : graph(graph) {}
+
+	void exec() {
+		for (NodeId id : graph.mOrder) {
+			graph.exec_node(id);
+		}
+	}
+};
+
+struct cUpdateGraph::sTaskExecutor {
+	cUpdateGraph& graph;
+
+	std::queue<NodeId> todo;
+
+	struct sPrereq {
+		uint32_t cur = 0;
+		uint32_t target = 0;
+	};
+	using tPrereqMap = std::unordered_map<NodeId, sPrereq>;
+	tPrereqMap prereqMap;
+
+	sTaskExecutor(cUpdateGraph& graph) : graph(graph) {}
+	void exec() {
+		for (const auto& [id, node] : graph.mNodes) {
+			auto inIt = graph.mRevAdjList.find(id);
+			const uint32_t target = (inIt != graph.mRevAdjList.end()) ? (uint32_t)inIt->second.size() : 0;
+			prereqMap[id] = sPrereq{ 0, target };
+		}
+
+		for (NodeId id : graph.mNoInputList) {
+			todo.push(id);
+		}
+
+		// essntially, a Kahn's algorithm
+		// https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
+		while (!todo.empty()) {
+			NodeId cur = todo.front();
+			todo.pop();
+			graph.exec_node(cur);
+
+			auto outIt = graph.mAdjList.find(cur);
+			if (outIt != graph.mAdjList.end()) {
+				for (NodeId next : outIt->second) {
+					sPrereq& prereq = prereqMap[next];
+					const uint32_t prereqCount = ++prereq.cur;
+					if (prereqCount >= prereq.target) {
+						assert(prereqCount == prereq.target);
+						todo.push(next);
+					}
+				}
+			}
+		}
+	}
+};
+
 void cUpdateGraph::exec() {
 	commit_pending();
 	update_dirty();
 
-	for (NodeId id : mOrder) {
-		auto it = mNodes.find(id);
-		assert(it != mNodes.end());
-		if (it != mNodes.end()) {
-			if (!it->second.exec()) {
-				mNodes.erase(it);
-				mIsDirty = true;
-			}
-		}
-	}
+	//using tExecutor = sTopoExecutor;
+	using tExecutor = sTaskExecutor;
+	tExecutor(*this).exec();
 }
 
 void cUpdateGraph::commit_pending() {
@@ -195,8 +256,24 @@ void cUpdateGraph::update_dirty() {
 	}
 }
 
+void cUpdateGraph::build_adj_list(const tEdgeMap& inEdgeMap, const tEdgeMap& outEdgeMap, tAdjList& adjList) {
+	for (const auto& p : outEdgeMap) {
+		auto it = inEdgeMap.find(p.first);
+		if (it != inEdgeMap.end()) {
+			for (NodeId outNode : p.second) {
+				for (NodeId inNode : it->second) {
+					if (outNode != inNode) {
+						adjList[outNode].push_back(inNode);
+					}
+				}
+			}
+		}
+	}
+}
+
 void cUpdateGraph::build_adj_list() {
 	mAdjList.clear();
+	mRevAdjList.clear();
 
 	using tEdgeMap = std::unordered_map<uint32_t, std::vector<NodeId>>;
 	tEdgeMap inEdgeMap;
@@ -207,23 +284,17 @@ void cUpdateGraph::build_adj_list() {
 		for (const sUpdateDepRes& dep : node.get_deps().inputs) {
 			inEdgeMap[dep.hash].push_back(id);
 		}
+		if (node.get_deps().inputs.empty()) {
+			mNoInputList.push_back(id);
+		}
+
 		for (const sUpdateDepRes& dep : node.get_deps().outputs) {
 			outEdgeMap[dep.hash].push_back(id);
 		}
 	}
 
-	for (const auto& p : outEdgeMap) {
-		auto it = inEdgeMap.find(p.first);
-		if (it != inEdgeMap.end()) {
-			for (NodeId outNode : p.second) {
-				for (NodeId inNode : it->second) {
-					if (outNode != inNode) {
-						mAdjList[outNode].push_back(inNode);
-					}
-				}
-			}
-		}
-	}
+	build_adj_list(inEdgeMap, outEdgeMap, mAdjList);
+	build_adj_list(outEdgeMap, inEdgeMap, mRevAdjList);
 }
 
 struct cUpdateGraph::sTopoSorter {
