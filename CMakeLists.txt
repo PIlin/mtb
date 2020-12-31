@@ -34,6 +34,7 @@ add_subdirectory("${THIRD_PARTY_DIR}/DirectXTK")
 add_subdirectory("${THIRD_PARTY_DIR}/assimp")
 add_subdirectory("${THIRD_PARTY_DIR}/cereal")
 add_subdirectory("${THIRD_PARTY_DIR}/entt")
+add_subdirectory("${THIRD_PARTY_DIR}/microprofile")
 
 project(mtb)
 
@@ -131,7 +132,7 @@ source_group("hlsl" FILES ${HLSL})
 
 add_executable(mtb ${SRC} ${HLSL})
 target_include_directories(mtb PRIVATE "src")
-target_link_libraries(mtb PRIVATE SDL2-static SDL2main imgui imguizmo DirectXTK assimp cereal EnTT d3d11 d3dcompiler)
+target_link_libraries(mtb PRIVATE SDL2-static SDL2main imgui imguizmo DirectXTK assimp cereal EnTT microprofile d3d11 d3dcompiler)
 
 
 set (BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
