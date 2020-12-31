@@ -153,7 +153,6 @@ void do_frame() {
 		cProfiler::get().draw();
 		gfx.end_frame();
 	}
-	cProfiler::get().flip();
 }
 
 bool poll_events(cInputMgr& inputMgr) {
@@ -205,6 +204,7 @@ void loop() {
 			MICROPROFILE_SCOPEI("main", "sleep", -1);
 			SDL_Delay(16 - spent);
 		}
+		cProfiler::get().flip();
 	}
 }
 
