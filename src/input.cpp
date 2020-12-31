@@ -81,3 +81,19 @@ void cInputMgr::update() {
 
 	mKMod = SDL_GetModState();
 }
+
+bool cInputMgr::try_lock(eInputLock lock) {
+	if (mInputLock == eInputLock::None) {
+		mInputLock = lock;
+		return true;
+	}
+	return mInputLock == lock;
+}
+
+bool cInputMgr::unlock(eInputLock lock) {
+	if (mInputLock == lock) {
+		mInputLock = eInputLock::None;
+		return true;
+	}
+	return false;
+}

@@ -9,6 +9,12 @@ struct SDL_MouseMotionEvent;
 struct SDL_MouseButtonEvent;
 struct SDL_TextInputEvent;
 
+enum class eInputLock {
+	None,
+	Profiler,
+	Camera
+};
+
 class cInputMgr {
 public:
 	enum eMouseBtn {
@@ -38,6 +44,9 @@ public:
 
 	std::vector<uint32_t> mTextInputs;
 	bool mTextinputEnabled = false;
+private:
+	eInputLock mInputLock;
+
 public:
 
 	cInputMgr();
@@ -71,6 +80,11 @@ public:
 
 	void enable_textinput(bool val) { mTextinputEnabled = val; }
 	std::vector<uint32_t> const& get_textinput() const { return mTextInputs; }
+
+	bool try_lock(eInputLock lock);
+	bool unlock(eInputLock lock);
+	bool is_locked() const { return mInputLock != eInputLock::None; }
+	bool is_locked(eInputLock lock) const { return mInputLock == lock; }
 };
 
 cInputMgr& get_input_mgr();

@@ -35,17 +35,37 @@ void cProfiler::init_ui() {
 	mpDrawList = std::make_unique<ImDrawList>(ImGui::GetDrawListSharedData());
 }
 
-void cProfiler::draw() {
-	{
-		cInputMgr& input = get_input_mgr();
+void cProfiler::update_input() {
+	cInputMgr& input = get_input_mgr();
+
+	bool hasInput = false;
+	if (!input.is_locked() || input.is_locked(eInputLock::Profiler)) {
 		if (input.kbtn_released(SDL_SCANCODE_F4)) {
 			MicroProfileToggleDisplayMode();
 		}
+		if (MicroProfileIsDrawing()) {
+			hasInput = input.try_lock(eInputLock::Profiler);
+		}
+		else {
+			input.unlock(eInputLock::Profiler);
+			hasInput = false;
+		}
+	}
+
+	if (hasInput) {
 		MicroProfileMousePosition(input.mMousePos.x, input.mMousePos.y, 0);
 		MicroProfileMouseButton(input.mbtn_state(cInputMgr::EMBLEFT), input.mbtn_state(cInputMgr::EMBRIGHT));
 	}
+	else {
+		MicroProfileMousePosition(0, 0, 0);
+		MicroProfileMouseButton(0, 0);
+	}
 
-	if (mpDrawList) {
+}
+
+void cProfiler::draw() {
+	update_input();
+	if (mpDrawList && MicroProfileIsDrawing()) {
 		const ImGuiIO& io = ImGui::GetIO();
 		mpDrawList->_ResetForNewFrame();
 		mpDrawList->PushTextureID(io.Fonts->TexID);

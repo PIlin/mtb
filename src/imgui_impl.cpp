@@ -159,22 +159,33 @@ void cImgui::update() {
 	io.DisplaySize = ImVec2(winSize.x, winSize.y);
 
 	auto& input = get_input_mgr();
-
-	io.MousePos = as_ImVec2(input.mMousePos);
-	for (int i = 0; i < cInputMgr::EMBLAST && i < LENGTHOF_ARRAY(io.MouseDown); ++i) {
-		io.MouseDown[i] = input.mbtn_state((cInputMgr::eMouseBtn)i);
+	if (input.is_locked()) {
+		for (int i = 0; i < cInputMgr::EMBLAST && i < LENGTHOF_ARRAY(io.MouseDown); ++i) {
+			io.MouseDown[i] = false;
+		}
+		for (int i = 0; i < cInputMgr::KEYS_COUNT && i < LENGTHOF_ARRAY(io.KeysDown); ++i) {
+			io.KeysDown[i] = false;
+		}
+		io.KeyCtrl = false;
+		io.KeyShift = false;
 	}
+	else {
+		io.MousePos = as_ImVec2(input.mMousePos);
+		for (int i = 0; i < cInputMgr::EMBLAST && i < LENGTHOF_ARRAY(io.MouseDown); ++i) {
+			io.MouseDown[i] = input.mbtn_state((cInputMgr::eMouseBtn)i);
+		}
 
-	for (int i = 0; i < cInputMgr::KEYS_COUNT && i < LENGTHOF_ARRAY(io.KeysDown); ++i) {
-		io.KeysDown[i] = input.kbtn_state(i);
-	}
-	io.KeyCtrl = input.kmod_state(KMOD_CTRL);
-	io.KeyShift = input.kmod_state(KMOD_SHIFT);
+		for (int i = 0; i < cInputMgr::KEYS_COUNT && i < LENGTHOF_ARRAY(io.KeysDown); ++i) {
+			io.KeysDown[i] = input.kbtn_state(i);
+		}
+		io.KeyCtrl = input.kmod_state(KMOD_CTRL);
+		io.KeyShift = input.kmod_state(KMOD_SHIFT);
 
-	auto const& text = input.get_textinput();
-	for (auto c : text) {
-		auto imchar = (ImWchar)c;
-		io.AddInputCharacter(imchar);
+		auto const& text = input.get_textinput();
+		for (auto c : text) {
+			auto imchar = (ImWchar)c;
+			io.AddInputCharacter(imchar);
+		}
 	}
 
 	ImGui::NewFrame();
