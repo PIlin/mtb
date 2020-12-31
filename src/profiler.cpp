@@ -79,6 +79,7 @@ void cProfiler::flip() {
 
 void cProfiler::draw_text(int x, int y, uint32_t color, const char* pText, uint32_t numCharacters) {
 	assert(mpDrawList);
+	color = 0xff000000 | color; // timers have a=0 for some reason
 	mpDrawList->AddText(ImVec2((float)x, (float)y), color, pText, pText + numCharacters);
 }
 void cProfiler::draw_box(int x, int y, int x1, int y1, uint32_t color, MicroProfileBoxType boxType) {
