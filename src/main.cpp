@@ -7,6 +7,7 @@ CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL_syswm.h>
 CLANG_DIAG_POP
 
+#include "profiler.hpp"
 #include "math.hpp"
 #include "rdr/gfx.hpp"
 #include "rdr/rdr.hpp"
@@ -102,6 +103,7 @@ private:
 
 
 struct sGlobals {
+	GlobalSingleton<cProfiler> profiler;
 	GlobalSingleton<cSDLWindow> win;
 	GlobalSingleton<cGfx> gfx;
 	GlobalSingleton<cShaderStorage> shaderStorage;
@@ -121,6 +123,7 @@ struct sGlobals {
 
 sGlobals globals;
 
+cProfiler& cProfiler::get() { return globals.profiler.get(); }
 cGfx& get_gfx() { return globals.gfx.get(); }
 cShaderStorage& cShaderStorage::get() { return globals.shaderStorage.get(); }
 cInputMgr& get_input_mgr() { return globals.input.get(); }
@@ -138,14 +141,19 @@ cRdrQueueMgr& cRdrQueueMgr::get() { return globals.rdrQueueMgr.get(); }
 cResourceMgr& cResourceMgr::get() { return globals.resourceMgr.get(); }
 
 void do_frame() {
-	auto& gfx = get_gfx();
-	gfx.begin_frame();
-	cImgui::get().update();
+	{
+		MICROPROFILE_SCOPEI("main", "do_frame", -1);
+		auto& gfx = get_gfx();
+		gfx.begin_frame();
+		cImgui::get().update();
 
-	cSceneMgr::get().update();
+		cSceneMgr::get().update();
 
-	cImgui::get().disp();
-	gfx.end_frame();
+		cImgui::get().disp();
+		cProfiler::get().draw();
+		gfx.end_frame();
+	}
+	cProfiler::get().flip();
 }
 
 bool poll_events(cInputMgr& inputMgr) {
@@ -180,11 +188,12 @@ void loop() {
 	auto& inputMgr = get_input_mgr();
 	while (!quit) {
 		Uint32 ticks = SDL_GetTicks();
-		inputMgr.preupdate();
-
-		quit = poll_events(inputMgr);
-		
-		inputMgr.update();
+		{
+			MICROPROFILE_SCOPEI("main", "input", -1);
+			inputMgr.preupdate();
+			quit = poll_events(inputMgr);
+			inputMgr.update();
+		}
 
 		if (!quit) {
 			do_frame();
@@ -193,6 +202,7 @@ void loop() {
 		Uint32 now = SDL_GetTicks();
 		Uint32 spent = now - ticks;
 		if (spent < 16) {
+			MICROPROFILE_SCOPEI("main", "sleep", -1);
 			SDL_Delay(16 - spent);
 		}
 	}
@@ -200,6 +210,7 @@ void loop() {
 
 int main(int argc, char* argv[]) {
 	cSDLInit sdl;
+	auto profiler = globals.profiler.ctor_scoped();
 	auto pathManager = globals.pathManager.ctor_scoped();
 	auto win = globals.win.ctor_scoped("TestBed - SPACE + mouse to control camera", 1200, 900, SDL_WINDOW_RESIZABLE);
 	auto input = globals.input.ctor_scoped();

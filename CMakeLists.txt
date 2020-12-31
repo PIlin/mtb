@@ -57,6 +57,8 @@ set(SRC
 	src/math.hpp
 	src/path_helpers.cpp
 	src/path_helpers.hpp
+	src/profiler.cpp
+	src/profiler.hpp
 	src/resource.hpp
 	src/resource_load.cpp
 	src/resource_load.hpp
