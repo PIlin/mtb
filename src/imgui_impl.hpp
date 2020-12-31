@@ -1,8 +1,13 @@
+#pragma once
+
 class cGfx;
 class cShader;
 struct ImDrawData;
 struct ImGuiContext;
 struct ID3D11InputLayout;
+
+#include "rdr/texture.hpp"
+#include "rdr/rdr.hpp"
 
 class cImgui : noncopyable {
 	ImGuiContext* mpContext = nullptr;
@@ -27,9 +32,9 @@ public:
 
 	static cImgui& get();
 
+	void render_callback(ImDrawData* drawData);
 protected:
 	static void render_callback_st(ImDrawData* drawData);
-	void render_callback(ImDrawData* drawData);
 
 	void load_fonts();
 };

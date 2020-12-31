@@ -11,6 +11,7 @@
 #include "rdr/gfx.hpp"
 #include "input.hpp"
 #include "rdr/camera.hpp"
+#include "profiler.hpp"
 
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -125,6 +126,8 @@ cImgui::cImgui(cGfx& gfx) {
 
 	//ImGuizmo::SetImGuiContext(mpContext);
 	ImGuizmo::SetOrthographic(false);
+
+	cProfiler::get().init_ui();
 }
 
 void cImgui::load_fonts() {

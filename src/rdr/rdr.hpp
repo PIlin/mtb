@@ -4,7 +4,7 @@
 #include <d3d11.h>
 
 #include "rdr_buf.hpp"
-
+#include "math.hpp"
 
 class cConstBufStorage;
 

@@ -1,3 +1,7 @@
+#pragma once
+
+#include "math.hpp"
+
 #include <bitset>
 #include <vector>
 
