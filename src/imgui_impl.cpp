@@ -159,17 +159,7 @@ void cImgui::update() {
 	io.DisplaySize = ImVec2(winSize.x, winSize.y);
 
 	auto& input = get_input_mgr();
-	if (input.is_locked()) {
-		for (int i = 0; i < cInputMgr::EMBLAST && i < LENGTHOF_ARRAY(io.MouseDown); ++i) {
-			io.MouseDown[i] = false;
-		}
-		for (int i = 0; i < cInputMgr::KEYS_COUNT && i < LENGTHOF_ARRAY(io.KeysDown); ++i) {
-			io.KeysDown[i] = false;
-		}
-		io.KeyCtrl = false;
-		io.KeyShift = false;
-	}
-	else {
+	if (!input.is_locked() || input.is_locked(eInputLock::TextInput)) {
 		io.MousePos = as_ImVec2(input.mMousePos);
 		for (int i = 0; i < cInputMgr::EMBLAST && i < LENGTHOF_ARRAY(io.MouseDown); ++i) {
 			io.MouseDown[i] = input.mbtn_state((cInputMgr::eMouseBtn)i);
@@ -186,6 +176,16 @@ void cImgui::update() {
 			auto imchar = (ImWchar)c;
 			io.AddInputCharacter(imchar);
 		}
+	}
+	else {
+		for (int i = 0; i < cInputMgr::EMBLAST && i < LENGTHOF_ARRAY(io.MouseDown); ++i) {
+			io.MouseDown[i] = false;
+		}
+		for (int i = 0; i < cInputMgr::KEYS_COUNT && i < LENGTHOF_ARRAY(io.KeysDown); ++i) {
+			io.KeysDown[i] = false;
+		}
+		io.KeyCtrl = false;
+		io.KeyShift = false;
 	}
 
 	ImGui::NewFrame();

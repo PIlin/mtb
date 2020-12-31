@@ -82,6 +82,13 @@ void cInputMgr::update() {
 	mKMod = SDL_GetModState();
 }
 
+void cInputMgr::enable_textinput(bool val) {
+	if (mTextinputEnabled != val && try_lock(eInputLock::TextInput)) {
+		mTextinputEnabled = val;
+		if (!val) {	unlock(eInputLock::TextInput); }
+	}
+}
+
 bool cInputMgr::try_lock(eInputLock lock) {
 	if (mInputLock == eInputLock::None) {
 		mInputLock = lock;

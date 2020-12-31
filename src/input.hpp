@@ -12,7 +12,8 @@ struct SDL_TextInputEvent;
 enum class eInputLock {
 	None,
 	Profiler,
-	Camera
+	Camera,
+	TextInput
 };
 
 class cInputMgr {
@@ -78,7 +79,7 @@ public:
 	bool kmod_state(uint32_t kmod) const { return !!(mKMod & kmod); }
 	bool kmod_state_prev(uint32_t kmod) const { return !!(mKModPrev & kmod); }
 
-	void enable_textinput(bool val) { mTextinputEnabled = val; }
+	void enable_textinput(bool val);
 	std::vector<uint32_t> const& get_textinput() const { return mTextInputs; }
 
 	bool try_lock(eInputLock lock);
