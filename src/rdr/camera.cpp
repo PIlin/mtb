@@ -143,21 +143,31 @@ void cTrackballCam::update(cCamera& cam) {
 		bNeedsUpdate = true;
 		updated = true;
 	}
-	
+
 	auto& input = get_input_mgr();
-	if (input.kbtn_pressed(SDL_SCANCODE_F1)) {
-		mCatchInput = !mCatchInput;
-	}
-	if (mCatchInput || input.kbtn_state(SDL_SCANCODE_SPACE)) {
-		bNeedsUpdate = true;
+
+	if (!input.is_locked() || input.is_locked(eInputLock::Camera)) {
+		if (input.kbtn_pressed(SDL_SCANCODE_F1)) {
+			mCatchInput = !mCatchInput;
+		}
+		if (mCatchInput || input.kbtn_held(SDL_SCANCODE_SPACE)) {
+			bNeedsUpdate = true;
+		}
+
+		if (bNeedsUpdate) {
+			bNeedsUpdate = input.try_lock(eInputLock::Camera);
+		}
+		else {
+			input.unlock(eInputLock::Camera);
+		}
+
+		if (bNeedsUpdate) {
+			updated = updated || update_trackball(cam);
+			updated = updated || update_distance(cam);
+			updated = updated || update_translation(cam);
+		}
 	}
 
-	if (!bNeedsUpdate) { return; }
-
-	
-	updated = updated || update_trackball(cam);
-	updated = updated || update_distance(cam);
-	updated = updated || update_translation(cam);
 	if (updated) {
 		cam.recalc();
 	}
