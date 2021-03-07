@@ -165,6 +165,8 @@ void cImgui::update() {
 		for (int i = 0; i < cInputMgr::EMBLAST && i < LENGTHOF_ARRAY(io.MouseDown); ++i) {
 			io.MouseDown[i] = input.mbtn_state((cInputMgr::eMouseBtn)i);
 		}
+		io.MouseWheel = (float)input.mMouseWheelDelta.y;
+		io.MouseWheelH = (float)input.mMouseWheelDelta.x;
 
 		for (int i = 0; i < cInputMgr::KEYS_COUNT && i < LENGTHOF_ARRAY(io.KeysDown); ++i) {
 			io.KeysDown[i] = input.kbtn_state(i);
