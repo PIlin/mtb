@@ -28,9 +28,9 @@ void cSceneEditor::init(cScene* pScene) {
 
 		sUpdateDepRes components = graph.register_res("components*");
 		graph.add(sUpdateDepDesc{ {}, {components} },
-			tUpdateFunc(std::bind(&cSceneEditor::dbg_ui, this)), mDbgUpdate);
+			MAKE_UPDATE_FUNC_THIS(cSceneEditor::dbg_ui), mDbgUpdate);
 #else
-		pScene->get_update_queue().add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cSceneEditor::dbg_ui, this)), mDbgUpdate);
+		pScene->get_update_queue().add(eUpdatePriority::Begin, MAKE_UPDATE_FUNC_THIS(cSceneEditor::dbg_ui), mDbgUpdate);
 #endif
 	}
 }

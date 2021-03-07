@@ -51,9 +51,9 @@ public:
 
 void cModelDispSys::register_update(cUpdateQueue& queue) {
 	if (!mDispUpdate) {
-		queue.add(eUpdatePriority::Begin, tUpdateFunc(std::bind(&cModelDispSys::update_begin, this)), mUpdateBegin);
-		queue.add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cModelDispSys::disp, this)), mDispUpdate);
-		queue.add(eUpdatePriority::End, tUpdateFunc(std::bind(&cModelDispSys::update_end, this)), mUpdateEnd);
+		queue.add(eUpdatePriority::Begin, MAKE_UPDATE_FUNC_THIS(cModelDispSys::update_begin), mUpdateBegin);
+		queue.add(eUpdatePriority::SceneDisp, MAKE_UPDATE_FUNC_THIS(cModelDispSys::disp), mDispUpdate);
+		queue.add(eUpdatePriority::End, MAKE_UPDATE_FUNC_THIS(cModelDispSys::update_end), mUpdateEnd);
 	}
 }
 
@@ -67,11 +67,11 @@ void cModelDispSys::register_update(cUpdateGraph& graph) {
 	sUpdateDepRes rdrJobAny = graph.register_res("rdr_job_*");
 
 	graph.add(sUpdateDepDesc{ {}, {rdrJobProlModel, rdrJobProlAny} }, 
-		tUpdateFunc(std::bind(&cModelDispSys::update_begin, this)), mUpdateBegin);
+		MAKE_UPDATE_FUNC_THIS(cModelDispSys::update_begin), mUpdateBegin);
 	graph.add(sUpdateDepDesc{ {compAny, rig}, {rdrJobModel, rdrJobAny} },
-		tUpdateFunc(std::bind(&cModelDispSys::disp, this)), mDispUpdate);
+		MAKE_UPDATE_FUNC_THIS(cModelDispSys::disp), mDispUpdate);
 	graph.add(sUpdateDepDesc{ {rdrJobProlAny, rdrJobAny}, {} },
-		tUpdateFunc(std::bind(&cModelDispSys::update_end, this)), mUpdateEnd);
+		MAKE_UPDATE_FUNC_THIS(cModelDispSys::update_end), mUpdateEnd);
 }
 
 void cModelDispSys::update_begin() {

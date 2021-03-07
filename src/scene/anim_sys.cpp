@@ -60,7 +60,7 @@ public:
 };
 
 void cAnimationSys::register_update(cUpdateQueue& queue) {
-	queue.add(eUpdatePriority::SceneAnimUpdate, tUpdateFunc(std::bind(&cAnimationSys::update_anim, this)), mAnimUpdate);
+	queue.add(eUpdatePriority::SceneAnimUpdate, MAKE_UPDATE_FUNC_THIS(cAnimationSys::update_anim), mAnimUpdate);
 }
 
 void cAnimationSys::register_update(cUpdateGraph& graph) {
@@ -69,7 +69,7 @@ void cAnimationSys::register_update(cUpdateGraph& graph) {
 	sUpdateDepRes compAny = graph.register_res("components*");
 
 	graph.add(sUpdateDepDesc{ {compAny}, {anim, rig} },
-		tUpdateFunc(std::bind(&cAnimationSys::update_anim, this)), mAnimUpdate);
+		MAKE_UPDATE_FUNC_THIS(cAnimationSys::update_anim), mAnimUpdate);
 }
 
 void cAnimationSys::update_anim() {

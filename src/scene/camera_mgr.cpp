@@ -7,7 +7,7 @@
 
 void cCameraManager::init(cUpdateQueue& queue) {
 	mTrackballCam.init(mCamera);
-	queue.add(eUpdatePriority::Camera, tUpdateFunc(std::bind(&cCameraManager::update_cam, this)), mCameraUpdate);
+	queue.add(eUpdatePriority::Camera, MAKE_UPDATE_FUNC_THIS(cCameraManager::update_cam), mCameraUpdate);
 }
 
 void cCameraManager::init(cUpdateGraph& graph) {
@@ -18,7 +18,7 @@ void cCameraManager::init(cUpdateGraph& graph) {
 	sUpdateDepRes camera = graph.register_res("camera");
 
 	graph.add(sUpdateDepDesc{ {}, {rdrJobProlCam, rdrJobProlAny, camera} },
-		tUpdateFunc(std::bind(&cCameraManager::update_cam, this)), mCameraUpdate);
+		MAKE_UPDATE_FUNC_THIS(cCameraManager::update_cam), mCameraUpdate);
 }
 
 void cCameraManager::update_cam() {

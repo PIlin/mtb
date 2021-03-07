@@ -62,13 +62,13 @@ public:
 			sUpdateDepRes rdrJobAny = graph.register_res("rdr_job_*");
 			sUpdateDepRes rdrJobGnomon = graph.register_res("rdr_job_gnomon");
 			graph.add(sUpdateDepDesc{ {}, {rdrJobGnomon, rdrJobAny} },
-				tUpdateFunc(std::bind(&cGnomon::disp, this)), mDispUpdate);
+				MAKE_UPDATE_FUNC_THIS(cGnomon::disp), mDispUpdate);
 		}
 	}
 
 	void init(cUpdateQueue& queue) {
 		if (init()) {
-			queue.add(eUpdatePriority::SceneDisp, tUpdateFunc(std::bind(&cGnomon::disp, this)), mDispUpdate);
+			queue.add(eUpdatePriority::SceneDisp, MAKE_UPDATE_FUNC_THIS(cGnomon::disp), mDispUpdate);
 		}
 	}
 
@@ -117,7 +117,7 @@ class cLightMgrUpdate : public iRdrJob {
 	cUpdateSubscriberScope mLightUpdate;
 public:
 	void init(cUpdateQueue& queue) {
-		queue.add(eUpdatePriority::Light, tUpdateFunc(std::bind(&cLightMgrUpdate::update, this)), mLightUpdate);
+		queue.add(eUpdatePriority::Light, MAKE_UPDATE_FUNC_THIS(cLightMgrUpdate::update), mLightUpdate);
 	}
 
 	void init(cUpdateGraph& graph) {
@@ -125,7 +125,7 @@ public:
 		sUpdateDepRes rdrJobProlAny = graph.register_res("rdr_prologue_job_*");
 		sUpdateDepRes light = graph.register_res("light");
 		graph.add(sUpdateDepDesc{ {}, {rdrJobProlLight, rdrJobProlAny, light} },
-			tUpdateFunc(std::bind(&cLightMgrUpdate::update, this)), mLightUpdate);
+			MAKE_UPDATE_FUNC_THIS(cLightMgrUpdate::update), mLightUpdate);
 	}
 
 	void update() {
@@ -308,6 +308,7 @@ void cScene::save() {
 }
 
 void cScene::update() {
+	MICROPROFILE_SCOPEI("main", "cScene::update()", -1);
 #if USE_GRAPH_UPDATE
 	mpUpdateGraph->exec();
 #else

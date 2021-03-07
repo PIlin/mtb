@@ -240,6 +240,7 @@ void cUpdateGraph::exec() {
 
 void cUpdateGraph::commit_pending() {
 	if (!mPending.empty()) {
+		MICROPROFILE_SCOPEI("main", "cUpdateGraph::commit_pending", -1);
 		for (cUpdateGraphNode& node : mPending) {
 			mNodes.emplace(node.get_id(), std::move(node));
 		}
@@ -250,6 +251,7 @@ void cUpdateGraph::commit_pending() {
 
 void cUpdateGraph::update_dirty() {
 	if (mIsDirty) {
+		MICROPROFILE_SCOPEI("main", "cUpdateGraph::update_dirty", -1);
 		build_adj_list();
 		topo_sort();
 		mIsDirty = false;

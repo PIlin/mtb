@@ -1,5 +1,7 @@
 #pragma once
 
+#include "microprofile.h"
+
 #include <array>
 #include <functional>
 #include <vector>
@@ -37,7 +39,32 @@ enum class eUpdatePriority : int32_t {
 	Last = Count
 };
 
-using tUpdateFunc = std::function<void()>;
+struct tUpdateFunc {
+	using tFunc = std::function<void()>;
+	tFunc mFunc;
+#if 1 == MICROPROFILE_ENABLED
+	MicroProfileToken mDbgProfileToken = MICROPROFILE_INVALID_TOKEN;
+#endif
+
+	tUpdateFunc() = default;
+	tUpdateFunc(tFunc&& f, cstr name)
+		: mFunc(std::move(f))
+#if 1 == MICROPROFILE_ENABLED
+		, mDbgProfileToken(MicroProfileGetToken("update", name, -1))
+#endif
+	{}
+
+	void operator()() { 
+#if 1 == MICROPROFILE_ENABLED
+		MicroProfileScopeHandler scope(mDbgProfileToken);
+#endif
+		mFunc(); 
+	}
+
+	operator bool() const { return static_cast<bool>(mFunc); }
+};
+
+#define MAKE_UPDATE_FUNC_THIS(MEMB) tUpdateFunc(std::bind(&MEMB, this), #MEMB)
 
 class cUpdateRecord : noncopyable {
 protected:
