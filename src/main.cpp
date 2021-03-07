@@ -186,6 +186,7 @@ void loop() {
 	
 	auto& inputMgr = get_input_mgr();
 	while (!quit) {
+		MICROPROFILE_SCOPEI("frame", "frame", -1);
 		Uint32 ticks = SDL_GetTicks();
 		{
 			MICROPROFILE_SCOPEI("main", "input", -1);
