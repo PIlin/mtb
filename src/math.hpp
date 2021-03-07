@@ -82,30 +82,39 @@ struct tvec2 {
 		y /= s;
 		return *this;
 	}
+
+	tvec2& operator+=(tvec2 const& v) {
+		x += v.x;
+		y += v.y;
+		return *this;
+	}
+	tvec2& operator-=(tvec2 const& v) {
+		x -= v.x;
+		y -= v.y;
+		return *this;
+	}
+	tvec2& operator*=(tvec2 const& v) {
+		x *= v.x;
+		y *= v.y;
+		return *this;
+	}
+	tvec2& operator/=(tvec2 const& v) {
+		x /= v.x;
+		y /= v.y;
+		return *this;
+	}
 	
-	friend tvec2 operator+(tvec2 const& a, tvec2 const& b) {
-		tvec2 res(a);
-		res.x += b.x;
-		res.y += b.y;
-		return res;
+	friend tvec2 operator+(tvec2 a, tvec2 const& b) {
+		return a += b;
 	}
-	friend tvec2 operator-(tvec2 const& a, tvec2 const& b) {
-		tvec2 res(a);
-		res.x -= b.x;
-		res.y -= b.y;
-		return res;
+	friend tvec2 operator-(tvec2 a, tvec2 const& b) {
+		return a -= b;
 	}
-	friend tvec2 operator*(tvec2 const& a, tvec2 const& b) {
-		tvec2 res(a);
-		res.x *= b.x;
-		res.y *= b.y;
-		return res;
+	friend tvec2 operator*(tvec2 a, tvec2 const& b) {
+		return a *= b;
 	}
-	friend tvec2 operator/(tvec2 const& a, tvec2 const& b) {
-		tvec2 res(a);
-		res.x /= b.x;
-		res.y /= b.y;
-		return res;
+	friend tvec2 operator/(tvec2 a, tvec2 const& b) {
+		return a /= b;
 	}
 	
 };
