@@ -11,6 +11,7 @@
 #include "scene/anim_sys.hpp"
 #include "scene/camera_mgr.hpp"
 #include "scene/model_sys.hpp"
+#include "scene/move_sys.hpp"
 #include "scene/position_component.hpp"
 #include "scene/rig_component.hpp"
 #include "scene/scene.hpp"
@@ -29,6 +30,7 @@ cSceneMgr::cSceneMgr()
 	sPositionComp::register_to_editor(*mpSceneEditor);
 	cModelDispSys::register_to_editor(*mpSceneEditor);
 	cAnimationSys::register_to_editor(*mpSceneEditor);
+	cMoveSys::register_to_editor(*mpSceneEditor);
 
 	load_scene("def.scene");
 }

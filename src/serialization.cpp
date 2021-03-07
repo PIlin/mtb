@@ -309,6 +309,13 @@ void sPositionCompParams::serialize(Archive& arc) {
 
 
 template <class Archive>
+void sMoveCompParams::serialize(Archive& arc) {
+	ARC(CEREAL_NVP(pos));
+	ARC(CEREAL_NVP(rad));
+}
+
+
+template <class Archive>
 void sModelCompParams::serialize(Archive& arc) {
 	ARC(FILEPATH_NVP(modelPath));
 	ARC(FILEPATH_NVP(materialPath));

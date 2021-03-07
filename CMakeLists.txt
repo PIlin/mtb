@@ -96,6 +96,8 @@ set(SRC
 	src/scene/camera_mgr.hpp
 	src/scene/model_sys.cpp
 	src/scene/model_sys.hpp
+	src/scene/move_sys.cpp
+	src/scene/move_sys.hpp
 	src/scene/position_component.cpp
 	src/scene/position_component.hpp
 	src/scene/rig_component.cpp

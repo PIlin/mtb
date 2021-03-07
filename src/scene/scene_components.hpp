@@ -23,6 +23,21 @@ struct sPositionCompParams {
 	void serialize(Archive& arc);
 };
 
+struct sMoveCompParams {
+	float pos = 0.0f;
+	float rad = 1.0f;
+
+	bool create(entt::registry& reg, entt::entity en) const;
+
+	bool dbg_ui(sSceneEditCtx& ctx);
+	static sMoveCompParams init_ui();
+	bool edit_component(entt::registry& reg, entt::entity en) const;
+	bool remove_component(entt::registry& reg, entt::entity en) const;
+
+	template <class Archive>
+	void serialize(Archive& arc);
+};
+
 struct sModelCompParams {
 	fs::path modelPath;
 	fs::path materialPath;
@@ -158,6 +173,7 @@ struct sSceneSnapshot {
 			switch (t) {
 #define CASE(T) case entt::type_info<T>::id(): func(t, ensure_list<T>(it, t));  break
 				CASE(sPositionCompParams);
+				CASE(sMoveCompParams);
 				CASE(sModelCompParams);
 				CASE(sRiggedModelCompParams);
 				CASE(sAnimationCompParams);
