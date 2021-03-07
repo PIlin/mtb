@@ -237,14 +237,14 @@ void cImgui::render_callback(ImDrawData* pDrawData) {
 	ImDrawList** const pDrawLists = pDrawData->CmdLists;
 
 	if (mVtx.get_vtx_count() < (uint32_t)pDrawData->TotalVtxCount) {
-		dbg_msg("imgui: reallocate vertex buffer, needs %d, current size %u vetices",
+		dbg_msg("imgui: reallocate vertex buffer, needs %d, current size %u vetices\n",
 			pDrawData->TotalVtxCount, mVtx.get_vtx_count());
 		mVtx = cVertexBuffer();
 		init_imgui_vtx_buffer(pDev, mVtx, pDrawData->TotalVtxCount);
 	}
 
 	if (mIdx.get_idx_count() < (uint32_t)pDrawData->TotalIdxCount) {
-		dbg_msg("imgui: reallocate index buffer, needs %d, current size %u indices",
+		dbg_msg("imgui: reallocate index buffer, needs %d, current size %u indices\n",
 			pDrawData->TotalIdxCount, mIdx.get_idx_count());
 		mIdx = cIndexBuffer();
 		init_imgui_idx_buffer(pDev, mIdx, pDrawData->TotalIdxCount);
