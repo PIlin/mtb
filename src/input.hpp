@@ -7,6 +7,7 @@
 
 struct SDL_MouseMotionEvent;
 struct SDL_MouseButtonEvent;
+struct SDL_MouseWheelEvent;
 struct SDL_TextInputEvent;
 
 enum class eInputLock {
@@ -34,6 +35,8 @@ public:
 	vec2i mMousePosPrev = { 0, 0 };
 	vec2i mMousePosStart[EMBLAST];
 
+	vec2i mMouseWheelDelta = { 0, 0 };
+
 	std::bitset<EMBLAST> mMouseBtn;
 	std::bitset<EMBLAST> mMouseBtnPrev;
 
@@ -54,6 +57,7 @@ public:
 		
 	void on_mouse_button(SDL_MouseButtonEvent const& ev);
 	void on_mouse_motion(SDL_MouseMotionEvent const& ev);
+	void on_mouse_wheel(SDL_MouseWheelEvent const& ev);
 	void on_text_input(SDL_TextInputEvent const& ev);
 
 	void preupdate();

@@ -17,6 +17,10 @@ void cInputMgr::on_mouse_motion(SDL_MouseMotionEvent const& ev) {
 	mMousePos = { ev.x, ev.y };
 }
 
+void cInputMgr::on_mouse_wheel(SDL_MouseWheelEvent const& ev) {
+	mMouseWheelDelta += vec2i(ev.x, ev.y);
+}
+
 static int sdl_mouse_btn_to_input(Uint8 btn) {
 	switch (btn) {
 	case SDL_BUTTON_LEFT: return cInputMgr::EMBLEFT;
@@ -51,6 +55,8 @@ void cInputMgr::preupdate() {
 	mMouseBtnPrev = mMouseBtn;
 	mKeysPrev = mKeys;
 	mKModPrev = mKMod;
+
+	mMouseWheelDelta = { 0, 0 };
 
 	if (mTextinputEnabled) {
 		SDL_StartTextInput();
