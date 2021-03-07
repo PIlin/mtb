@@ -53,12 +53,14 @@ void cProfiler::update_input() {
 	}
 
 	if (hasInput) {
+		MicroProfileModKey(input.kmod_state(KMOD_CTRL));
 		MicroProfileMousePosition(input.mMousePos.x, input.mMousePos.y, 0);
 		MicroProfileMouseButton(input.mbtn_state(cInputMgr::EMBLEFT), input.mbtn_state(cInputMgr::EMBRIGHT));
 	}
 	else {
 		MicroProfileMousePosition(0, 0, 0);
 		MicroProfileMouseButton(0, 0);
+		MicroProfileModKey(0);
 	}
 
 }
