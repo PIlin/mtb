@@ -1,6 +1,8 @@
 #include "common.hpp"
 #include "update_queue.hpp"
 
+#include "imgui.h"
+
 #include <cassert>
 #include <queue>
 
@@ -35,7 +37,7 @@ cUpdateRecord::~cUpdateRecord() {
 	}
 }
 
-bool cUpdateRecord::exec() {
+bool cUpdateRecord::exec() const {
 	if (is_valid()) {
 		assert(mFunc);
 		mFunc();
@@ -165,11 +167,45 @@ void cUpdateGraph::exec_node(NodeId id) {
 	auto it = mNodes.find(id);
 	assert(it != mNodes.end());
 	if (it != mNodes.end()) {
-		if (!it->second.exec()) {
+		cUpdateGraphNode& node = it->second;
+		if (!dbg_on_exec_node(node))
+			return;
+		if (!node.exec()) {
 			mNodes.erase(it);
 			mIsDirty = true;
 		}
 	}
+}
+
+bool cUpdateGraph::dbg_on_exec_node(cUpdateGraphNode const& node) {
+	bool isEnabled = true;
+	if (ImGui::Begin("update graph"))
+	{
+		ImGui::PushID(node.get_id());
+		ImGui::Columns(3);
+
+		auto stateIter = mDbgNodeState.insert(std::make_pair(node.get_id(), true)).first;
+		ImGui::Checkbox("##enabled", &stateIter->second); ImGui::SameLine();
+		isEnabled = stateIter->second;
+
+		ImGui::Text("%u %s", node.get_id(), node.get_dbg_name());
+		ImGui::NextColumn();
+
+		for (sUpdateDepRes const& d : node.get_deps().inputs) {
+			bool& state = mDbgResourceHighlight[d.hash];
+			ImGui::Selectable(d.name.p, &state);
+		}
+		ImGui::NextColumn();
+		for (sUpdateDepRes const& d : node.get_deps().outputs) {
+			bool& state = mDbgResourceHighlight[d.hash];
+			ImGui::Selectable(d.name.p, &state);
+		}
+		ImGui::NextColumn();
+		ImGui::Separator();
+		ImGui::PopID();
+	}
+	ImGui::End();
+	return isEnabled;
 }
 
 struct cUpdateGraph::sTopoExecutor {

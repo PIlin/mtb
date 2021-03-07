@@ -42,6 +42,7 @@ enum class eUpdatePriority : int32_t {
 struct tUpdateFunc {
 	using tFunc = std::function<void()>;
 	tFunc mFunc;
+	cstr mDbgName;
 #if 1 == MICROPROFILE_ENABLED
 	MicroProfileToken mDbgProfileToken = MICROPROFILE_INVALID_TOKEN;
 #endif
@@ -49,12 +50,13 @@ struct tUpdateFunc {
 	tUpdateFunc() = default;
 	tUpdateFunc(tFunc&& f, cstr name)
 		: mFunc(std::move(f))
+		, mDbgName(name)
 #if 1 == MICROPROFILE_ENABLED
 		, mDbgProfileToken(MicroProfileGetToken("update", name, -1))
 #endif
 	{}
 
-	void operator()() { 
+	void operator()() const { 
 #if 1 == MICROPROFILE_ENABLED
 		MicroProfileScopeHandler scope(mDbgProfileToken);
 #endif
@@ -62,6 +64,8 @@ struct tUpdateFunc {
 	}
 
 	operator bool() const { return static_cast<bool>(mFunc); }
+
+	cstr get_dbg_name() const { return mDbgName; }
 };
 
 #define MAKE_UPDATE_FUNC_THIS(MEMB) tUpdateFunc(std::bind(&MEMB, this), #MEMB)
@@ -96,8 +100,9 @@ public:
 
 	void invalidate();
 
-	bool exec();
+	bool exec() const;
 	//bool operator<(const cUpdateRecord& other);
+	cstr get_dbg_name() const { return mFunc.get_dbg_name(); }
 };
 
 class cUpdateQueue {
@@ -177,6 +182,7 @@ public:
 	NodeId get_id() const { return mId; }
 	const sUpdateDepDesc& get_deps() const { return mDesc; }
 	using cUpdateRecord::exec;
+	using cUpdateRecord::get_dbg_name;
 };
 
 class cUpdateGraph {
@@ -211,6 +217,8 @@ private:
 
 	void exec_node(NodeId id);
 
+	bool dbg_on_exec_node(cUpdateGraphNode const& node);
+
 	using tEdgeMap = std::unordered_map<uint32_t, std::vector<NodeId>>;
 	static void build_adj_list(const tEdgeMap& inEdgeMap, const tEdgeMap& outEdgeMap, tAdjList& adjList);
 private:
@@ -223,5 +231,8 @@ private:
 	tResourceMap mResources;
 	bool mIsDirty = false;
 	NodeId mIdGen = 0;
+
+	std::unordered_map<uint32_t, bool> mDbgResourceHighlight;
+	std::unordered_map<NodeId, bool> mDbgNodeState;
 };
 
