@@ -54,7 +54,7 @@ void cProfiler::update_input() {
 
 	if (hasInput) {
 		MicroProfileModKey(input.kmod_state(KMOD_CTRL));
-		MicroProfileMousePosition(input.mMousePos.x, input.mMousePos.y, 0);
+		MicroProfileMousePosition(input.mMousePos.x, input.mMousePos.y, input.mMouseWheelDelta.y);
 		MicroProfileMouseButton(input.mbtn_state(cInputMgr::EMBLEFT), input.mbtn_state(cInputMgr::EMBRIGHT));
 	}
 	else {
