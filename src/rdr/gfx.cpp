@@ -3,6 +3,7 @@
 #include "gfx.hpp"
 
 #include "path_helpers.hpp"
+#include "microprofile.h"
 
 #include <d3dcompiler.h>
 
@@ -116,6 +117,7 @@ void cGfx::on_window_size_changed(uint32_t w, uint32_t h) {
 }
 
 void cGfx::begin_frame() {
+	MICROPROFILE_SCOPEI("main", "cGfx::begin_frame", -1);
 	mbInFrame = true;
 	float clrClr[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	mDev.mpImmCtx->ClearRenderTargetView(mRTV.mpRTV, clrClr);
@@ -123,6 +125,7 @@ void cGfx::begin_frame() {
 }
 
 void cGfx::end_frame() {
+	MICROPROFILE_SCOPEI("main", "cGfx::end_frame", -1);
 	mDev.mpSwapChain->Present(0, 0);
 	mbInFrame = false;
 }

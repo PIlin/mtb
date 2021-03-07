@@ -153,6 +153,7 @@ static ImVec2 as_ImVec2(vec2i v) {
 }
 
 void cImgui::update() {
+	MICROPROFILE_SCOPEI("main", "cImgui::update", -1);
 	ImGuiIO& io = ImGui::GetIO();
 
 	const vec2f winSize = get_window_size();
@@ -197,6 +198,7 @@ void cImgui::update() {
 }
 
 void cImgui::disp() {
+	MICROPROFILE_SCOPEI("main", "cImgui::disp", -1);
 	ImGui::Render();
 }
 
