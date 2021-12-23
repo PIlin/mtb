@@ -172,6 +172,7 @@ bool poll_events(cInputMgr& inputMgr) {
 			break;
 		case SDL_MOUSEWHEEL:
 			inputMgr.on_mouse_wheel(ev.wheel);
+			break;
 		case SDL_TEXTINPUT:
 			inputMgr.on_text_input(ev.text);
 			break;
