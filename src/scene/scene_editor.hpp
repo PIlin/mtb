@@ -30,7 +30,7 @@ namespace nSceneEdit {
 	struct sComponentReg : public iComponentReg {
 		sComponentReg(const char* szName) {
 			name = szName;
-			id = entt::type_info<T>::id();
+			id = entt::type_id<T>().hash();
 		}
 
 		virtual void ui(entt::registry& reg, entt::entity en, sSceneEditCtx& ctx) override {
@@ -57,7 +57,7 @@ namespace nSceneEdit {
 	struct sParamReg : public iParamReg {
 		sParamReg(const char* szName) {
 			name = szName;
-			id = entt::type_info<T>::id();
+			id = entt::type_id<T>().hash();
 		}
 
 		virtual void ui(entt::registry& reg, sSceneSnapshot& snapshot, entt::entity en, sSceneEditCtx& ctx) override {

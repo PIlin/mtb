@@ -18,13 +18,14 @@ CLANG_DIAG_POP
 
 #include <entt/core/type_info.hpp>
 
-#define IMPL_RES_TYPE_ID_FUNC(TYPE)  ResourceTypeId TYPE::type_id() { return entt::type_info<TYPE>::id(); }
+#define IMPL_RES_TYPE_ID_FUNC(TYPE)  ResourceTypeId TYPE::type_id() { return entt::type_id<TYPE>().hash(); }
 IMPL_RES_TYPE_ID_FUNC(cModelData)
 IMPL_RES_TYPE_ID_FUNC(cModelMaterial)
 IMPL_RES_TYPE_ID_FUNC(cRigData)
 IMPL_RES_TYPE_ID_FUNC(cAnimationDataList)
 IMPL_RES_TYPE_ID_FUNC(cAnimationList)
 #undef IMPL_RES_TYPE_ID_FUNC
+
 
 namespace nResLoader {
 

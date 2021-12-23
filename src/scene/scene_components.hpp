@@ -171,7 +171,7 @@ struct sSceneSnapshot {
 		for (entt::id_type t : paramsOrder) {
 			auto it = params.find(t);
 			switch (t) {
-#define CASE(T) case entt::type_info<T>::id(): func(t, ensure_list<T>(it, t));  break
+#define CASE(T) case entt::type_hash<T>().value(): func(t, ensure_list<T>(it, t));  break
 				CASE(sPositionCompParams);
 				CASE(sMoveCompParams);
 				CASE(sModelCompParams);

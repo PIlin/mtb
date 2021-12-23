@@ -79,7 +79,7 @@ void cModelDispSys::update_begin() {
 }
 
 void cModelDispSys::disp() {
-	if (!mRegistry.empty<cModelComp>()) {
+	if (!mRegistry.view<cModelComp>().empty()) {
 		cRdrQueueMgr::get().add_model_job(*this);
 	}
 }
@@ -150,12 +150,12 @@ bool sModelCompParams::create(entt::registry& reg, entt::entity en) const {
 
 
 bool sModelCompParams::edit_component(entt::registry& reg, entt::entity en) const {
-	reg.remove_if_exists<cModelComp>(en);
+	reg.remove<cModelComp>(en);
 	return create(reg, en);
 }
 
 bool sModelCompParams::remove_component(entt::registry& reg, entt::entity en) const {
-	return reg.remove_if_exists<cModelComp>(en) > 0;
+	return reg.remove<cModelComp>(en) > 0;
 }
 
 bool sModelCompParams::dbg_ui(sSceneEditCtx& ctx) {
@@ -191,7 +191,7 @@ bool sRiggedModelCompParams::create_rig(entt::registry& reg, entt::entity en) co
 
 
 bool sRiggedModelCompParams::edit_component(entt::registry& reg, entt::entity en) const {
-	reg.remove_if_exists<cRigComp>(en);
+	reg.remove<cRigComp>(en);
 	if (Base::edit_component(reg, en)) {
 		return create_rig(reg, en);
 	}
@@ -199,7 +199,7 @@ bool sRiggedModelCompParams::edit_component(entt::registry& reg, entt::entity en
 }
 
 bool sRiggedModelCompParams::remove_component(entt::registry& reg, entt::entity en) const {
-	bool removed = reg.remove_if_exists<cRigComp>(en);
+	bool removed = reg.remove<cRigComp>(en);
 	bool removedBase = Base::remove_component(reg, en);
 	return removed || removedBase;
 }
@@ -252,8 +252,8 @@ bool sFbxRiggedModelParams::edit_component(entt::registry& reg, entt::entity en)
 
 bool sFbxRiggedModelParams::remove_component(entt::registry& reg, entt::entity en) const {
 	size_t removed = 0;
-	removed += reg.remove_if_exists<cModelComp>(en);
-	removed += reg.remove_if_exists<cRigComp>(en);
+	removed += reg.remove<cModelComp>(en);
+	removed += reg.remove<cRigComp>(en);
 	return removed > 0;
 }
 

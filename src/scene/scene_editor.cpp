@@ -36,9 +36,9 @@ void cSceneEditor::init(cScene* pScene) {
 }
 
 static const char* format_entity(std::string& buf, entt::entity en, const sSceneSnapshot& snapshot) {
-	buf = std::to_string((uint32_t)entt::registry::entity(en));
+	buf = std::to_string((uint32_t)entt::to_entity(en));
 	buf += ':';
-	buf += std::to_string((uint32_t)entt::registry::version(en));
+	buf += std::to_string((uint32_t)entt::to_version(en));
 
 	if (snapshot.entityIds.find(en) == snapshot.entityIds.end()) {
 		buf += " (dyn)";
@@ -111,7 +111,10 @@ void cSceneEditor::show_entity_components(entt::entity en, sSceneEditCtx& ctx) {
 		entt::registry& reg = mpScene->registry;
 
 		std::vector<entt::id_type> componentTypes;
-		reg.visit(en, [&](entt::id_type t) { componentTypes.push_back(t); });
+		for (const auto& pool : reg.storage()) {
+			if (pool.second.contains(en))
+				componentTypes.push_back(pool.first);
+		}
 		sort_components_by_order(componentTypes);
 
 		for (auto t : componentTypes) {

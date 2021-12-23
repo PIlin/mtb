@@ -90,7 +90,7 @@ bool sMoveCompParams::edit_component(entt::registry& reg, entt::entity en) const
 }
 
 bool sMoveCompParams::remove_component(entt::registry& reg, entt::entity en) const {
-	return reg.remove_if_exists<cMoveComp>(en) > 0;
+	return reg.remove<cMoveComp>(en) > 0;
 }
 
 bool sMoveCompParams::dbg_ui(sSceneEditCtx& ctx) {

@@ -37,7 +37,7 @@ bool sPositionCompParams::edit_component(entt::registry& reg, entt::entity en) c
 }
 
 bool sPositionCompParams::remove_component(entt::registry& reg, entt::entity en) const {
-	return reg.remove_if_exists<sPositionComp>(en) > 0;
+	return reg.remove<sPositionComp>(en) > 0;
 }
 
 bool sPositionCompParams::dbg_ui(sSceneEditCtx& ctx) {

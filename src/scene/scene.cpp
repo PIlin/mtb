@@ -296,7 +296,7 @@ void cScene::load() {
 		}
 
 		auto insertParam = [](sSceneSnapshot& snapshot, auto* pList) {
-			entt::id_type t = entt::type_info<std::remove_pointer<decltype(pList)>::type::TParams>::id();
+			entt::id_type t = entt::type_id<std::remove_pointer<decltype(pList)>::type::TParams>().hash();
 			snapshot.paramsOrder.push_back(t);
 			snapshot.params.emplace(t, std::unique_ptr<iParamList>(pList));
 		};
