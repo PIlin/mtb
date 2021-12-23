@@ -95,7 +95,6 @@ cImgui::cImgui(cGfx& gfx) {
 	io.KeyMap[ImGuiKey_X] = SDL_SCANCODE_X;
 	io.KeyMap[ImGuiKey_Y] = SDL_SCANCODE_Y;
 	io.KeyMap[ImGuiKey_Z] = SDL_SCANCODE_Z;
-	io.RenderDrawListsFn = render_callback_st;
 	
 	// NOTE: imgui uses ::fopen - no way to pass wchar or utf8
 	mIniFilepath = cPathManager::build_settings_path("imgui.ini").string();
@@ -202,10 +201,8 @@ void cImgui::update() {
 void cImgui::disp() {
 	MICROPROFILE_SCOPEI("main", "cImgui::disp", -1);
 	ImGui::Render();
-}
-
-void cImgui::render_callback_st(ImDrawData* drawData) {
-	get().render_callback(drawData);
+	if (ImDrawData* drawData = ImGui::GetDrawData())
+		render_callback(drawData);
 }
 
 static DirectX::XMMATRIX calc_imgui_ortho(ImGuiIO& io) {
@@ -316,7 +313,7 @@ void cImgui::render_callback(ImDrawData* pDrawData) {
 					(LONG)pCmd->ClipRect.z, (LONG)pCmd->ClipRect.w };
 				pCtx->RSSetScissorRects(1, &rect);
 
-				cTexture* pTex = reinterpret_cast<cTexture*>(pCmd->TextureId);
+				cTexture* pTex = reinterpret_cast<cTexture*>(pCmd->GetTexID());
 				if (pTex) {
 					pTex->set_PS(pCtx, 0);
 				}

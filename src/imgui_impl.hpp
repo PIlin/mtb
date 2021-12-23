@@ -34,7 +34,6 @@ public:
 
 	void render_callback(ImDrawData* drawData);
 protected:
-	static void render_callback_st(ImDrawData* drawData);
 
 	void load_fonts();
 };
