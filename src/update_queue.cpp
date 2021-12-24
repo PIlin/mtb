@@ -284,6 +284,7 @@ struct cUpdateGraph::sTaskExecutor {
 			prereqMap[id] = sPrereq{ 0, target };
 		}
 
+		assert(graph.mNoInputList.size() <= graph.mNodes.size());
 		for (NodeId id : graph.mNoInputList) {
 			todo.push(id);
 		}
@@ -396,6 +397,7 @@ void cUpdateGraph::build_adj_list(const tEdgeMap& inEdgeMap, const tEdgeMap& out
 void cUpdateGraph::build_adj_list() {
 	mAdjList.clear();
 	mRevAdjList.clear();
+	mNoInputList.clear();
 
 	tEdgeMap inEdgeMap;
 	tEdgeMap outEdgeMap;
