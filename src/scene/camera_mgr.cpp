@@ -2,6 +2,7 @@
 #include "math.hpp"
 #include "res/path_helpers.hpp"
 #include "rdr/rdr.hpp"
+#include "rdr/dbg_draw.hpp"
 #include "camera_mgr.hpp"
 
 
@@ -23,6 +24,7 @@ void cCameraManager::init(cUpdateGraph& graph) {
 void cCameraManager::update_cam() {
 	mTrackballCam.update(mCamera);
 	cRdrQueueMgr::get().add_model_prologue_job(*this);
+	cDbgDrawMgr::get().set_camera(mCamera);
 }
 
 void cCameraManager::disp_job(cRdrContext const& rdrCtx) const {
@@ -30,13 +32,5 @@ void cCameraManager::disp_job(cRdrContext const& rdrCtx) const {
 }
 
 void cCameraManager::upload_cam(cRdrContext const& rdrCtx) const {
-	auto pCtx = rdrCtx.get_ctx();
-	auto& camCBuf = rdrCtx.get_cbufs().mCameraCBuf;
-	camCBuf.mData.viewProj = mCamera.mView.mViewProj;
-	camCBuf.mData.view = mCamera.mView.mView;
-	camCBuf.mData.proj = mCamera.mView.mProj;
-	camCBuf.mData.camPos = mCamera.mView.mPos;
-	camCBuf.update(pCtx);
-	camCBuf.set_VS(pCtx);
-	camCBuf.set_PS(pCtx);
+	nRdrHelpers::upload_cam_cbuf(rdrCtx, mCamera.mView);
 }

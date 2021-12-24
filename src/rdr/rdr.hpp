@@ -8,6 +8,11 @@
 
 class cConstBufStorage;
 
+struct sSimpleVtx {
+	float mPos[3];
+	float mClr[4];
+};
+
 struct sModelVtx {
 	vec3 pos;
 	vec3 nrm;
@@ -151,4 +156,5 @@ public:
 	ID3D11DeviceContext* get_ctx() const { return mpCtx; }
 	cConstBufStorage& get_cbufs() const { return mConstBufStorage; }
 };
+
 

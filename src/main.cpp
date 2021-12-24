@@ -21,6 +21,7 @@ CLANG_DIAG_POP
 #include "res/path_helpers.hpp"
 #include "res/resource_mgr.hpp"
 #include "dbg_ui.hpp"
+#include "rdr/dbg_draw.hpp"
 
 class cSDLInit {
 public:
@@ -121,6 +122,7 @@ struct sGlobals {
 	GlobalSingleton<cRdrQueueMgr> rdrQueueMgr;
 	GlobalSingleton<cResourceMgr> resourceMgr;
 	GlobalSingleton<cDbgToolsMgr> dbgToolsMgr;
+	GlobalSingleton<cDbgDrawMgr> dbgDrawMgr;
 };
 
 sGlobals globals;
@@ -142,6 +144,7 @@ cSceneMgr& cSceneMgr::get() { return globals.sceneMgr.get(); }
 cRdrQueueMgr& cRdrQueueMgr::get() { return globals.rdrQueueMgr.get(); }
 cResourceMgr& cResourceMgr::get() { return globals.resourceMgr.get(); }
 cDbgToolsMgr& cDbgToolsMgr::get() { return globals.dbgToolsMgr.get(); }
+cDbgDrawMgr& cDbgDrawMgr::get() { return globals.dbgDrawMgr.get(); }
 
 void do_frame() {
 	{
@@ -153,6 +156,7 @@ void do_frame() {
 		cSceneMgr::get().update();
 
 		cDbgToolsMgr::get().update();
+		cDbgDrawMgr::get().disp();
 		cImgui::get().disp();
 		cProfiler::get().draw();
 		gfx.end_frame();
@@ -234,6 +238,7 @@ int main(int argc, char* argv[]) {
 	auto dpts = globals.depthStates.ctor_scoped(get_gfx().get_dev());
 	auto rdrQueueMgr = globals.rdrQueueMgr.ctor_scoped(get_gfx());
 	auto imgui = globals.imgui.ctor_scoped(get_gfx());
+	auto dbgDraw = globals.dbgDrawMgr.ctor_scoped(get_gfx());
 	auto scene = globals.sceneMgr.ctor_scoped();
 
 	loop();

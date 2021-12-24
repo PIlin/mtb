@@ -1,5 +1,7 @@
 #pragma once
 
+#include "math.hpp"
+
 namespace std::filesystem { class path; }
 namespace fs = std::filesystem;
 
@@ -86,3 +88,8 @@ public:
 	template <class Archive>
 	void serialize(Archive& arc);
 };
+
+class cRdrContext;
+namespace nRdrHelpers {
+	void upload_cam_cbuf(cRdrContext const& rdrCtx, sCameraView const& camView);
+}

@@ -19,10 +19,7 @@ namespace dx = DirectX;
 
 
 class cGnomon : public iRdrJob {
-	struct sVtx {
-		float mPos[3];
-		float mClr[4];
-	};
+	using sVtx = sSimpleVtx;
 
 	cShader* mpVS = nullptr;
 	cShader* mpPS = nullptr;

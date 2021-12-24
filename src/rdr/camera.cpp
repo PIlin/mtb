@@ -3,6 +3,8 @@
 #include "res/path_helpers.hpp"
 #include "camera.hpp"
 #include "input.hpp"
+#include "cbufs.hpp"
+#include "rdr.hpp"
 
 CLANG_DIAG_PUSH
 CLANG_DIAG_IGNORE("-Wpragma-pack")
@@ -260,3 +262,18 @@ bool cTrackballCam::update_translation(cCamera& cam) {
 
 	return true;
 }
+
+namespace nRdrHelpers {
+	void upload_cam_cbuf(cRdrContext const& rdrCtx, sCameraView const& camView) {
+		auto pCtx = rdrCtx.get_ctx();
+		auto& camCBuf = rdrCtx.get_cbufs().mCameraCBuf;
+		camCBuf.mData.viewProj = camView.mViewProj;
+		camCBuf.mData.view = camView.mView;
+		camCBuf.mData.proj = camView.mProj;
+		camCBuf.mData.camPos = camView.mPos;
+		camCBuf.update(pCtx);
+		camCBuf.set_VS(pCtx);
+		camCBuf.set_PS(pCtx);
+	}
+}
+
