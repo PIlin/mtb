@@ -43,6 +43,8 @@ set(SRC
 	src/assimp_loader.hpp
 	src/common.cpp
 	src/common.hpp
+	src/dbg_ui.cpp
+	src/dbg_ui.hpp
 	src/hou_geo.cpp
 	src/hou_geo.hpp
 	src/imgui.hpp

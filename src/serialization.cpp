@@ -2,6 +2,7 @@
 
 #include "math.hpp"
 #include "common.hpp"
+#include "dbg_ui.hpp"
 #include "rdr/rdr.hpp"
 #include "path_helpers.hpp"
 #include "rdr/texture.hpp"
@@ -372,3 +373,22 @@ bool sSceneSnapshot::load(const fs::path& filepath) {
 bool sSceneSnapshot::save(const fs::path& filepath) {
 	return save_to_json(*this, filepath);
 }
+
+
+
+template <class Archive>
+void sDbgTools::serialize(Archive& arc) {
+	ARC(CEREAL_NVP(scene_editor));
+	ARC(CEREAL_NVP(update_queue));
+	ARC(CEREAL_NVP(light_mgr));
+	ARC(CEREAL_NVP(imgui_demo));
+}
+
+bool sDbgTools::load(const fs::path& filepath) {
+	return load_from_json(*this, filepath);
+}
+
+bool sDbgTools::save(const fs::path& filepath) {
+	return save_to_json(*this, filepath);
+}
+

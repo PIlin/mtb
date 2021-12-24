@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "update_queue.hpp"
 
+#include "dbg_ui.hpp"
 #include "imgui.h"
 
 #include <cassert>
@@ -192,61 +193,60 @@ void cUpdateGraph::exec_node(NodeId id) {
 
 bool cUpdateGraph::dbg_on_exec_node(cUpdateGraphNode const& node) {
 	bool isEnabled = true;
-	if (ImGui::Begin("update graph"))
-	{
-		ImGui::PushID(node.get_id());
-		if (ImGui::BeginTable("updatenode", 3, ImGuiTableFlags_Borders)) {
-			ImGui::TableNextColumn();
+	if (cDbgToolsMgr::tools().update_queue) {
+		if (ImGui::Begin("update graph")) {
+			ImGui::PushID(node.get_id());
+			if (ImGui::BeginTable("updatenode", 3, ImGuiTableFlags_Borders)) {
+				ImGui::TableNextColumn();
 
-			auto stateIter = mDbgNodeState.insert(std::make_pair(node.get_id(), true)).first;
-			ImGui::Checkbox("##enabled", &stateIter->second); ImGui::SameLine();
-			isEnabled = stateIter->second;
+				auto stateIter = mDbgNodeState.insert(std::make_pair(node.get_id(), true)).first;
+				ImGui::Checkbox("##enabled", &stateIter->second); ImGui::SameLine();
+				isEnabled = stateIter->second;
 
-			ImGui::Text("%u %s", node.get_id(), node.get_dbg_name());
-			ImGui::TableNextColumn();
+				ImGui::Text("%u %s", node.get_id(), node.get_dbg_name());
+				ImGui::TableNextColumn();
 
+				auto renderTable = [&](const char* tableName, const std::vector<sUpdateDepRes>& deps) {
+					ImGuiSelectableFlags flags = 0;
+					ImVec2 alignment = { 1.0, 0.5 };
 
+					if (ImGui::BeginTable(tableName, 2)) {
+						for (sUpdateDepRes const& d : deps) {
+							bool& state = mDbgResourceHighlight[d];
+							bool& stateGroup = mDbgResourceHighlight[d.get_group()];
 
-			auto renderTable = [&](const char* tableName, const std::vector<sUpdateDepRes>& deps) {
-				ImGuiSelectableFlags flags = 0;
-				ImVec2 alignment = { 1.0, 0.5 };
+							ImGui::PushID(d.hashGroup);
+							ImGui::PushID(d.hashType);
 
-				if (ImGui::BeginTable(tableName, 2)) {
-					for (sUpdateDepRes const& d : deps) {
-						bool& state = mDbgResourceHighlight[d];
-						bool& stateGroup = mDbgResourceHighlight[d.get_group()];
+							ImGui::TableNextRow();
+							ImGui::TableSetColumnIndex(0);
+							ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, alignment);
+							ImGui::Selectable(d.nameGroup, &stateGroup, flags);
+							ImGui::PopStyleVar();
 
-						ImGui::PushID(d.hashGroup);
-						ImGui::PushID(d.hashType);
+							if (d.nameType) {
+								ImGui::TableSetColumnIndex(1);
+								ImGui::Selectable(d.nameType, &state, flags);
+							}
 
-						ImGui::TableNextRow();
-						ImGui::TableSetColumnIndex(0);
-						ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, alignment);
-						ImGui::Selectable(d.nameGroup, &stateGroup, flags);
-						ImGui::PopStyleVar();
-
-						if (d.nameType) {
-							ImGui::TableSetColumnIndex(1);
-							ImGui::Selectable(d.nameType, &state, flags);
+							ImGui::PopID();
+							ImGui::PopID();
 						}
-
-						ImGui::PopID();
-						ImGui::PopID();
+						ImGui::EndTable();
 					}
-					ImGui::EndTable();
-				}
-			};
+				};
 
-			renderTable("tableInputs", node.get_deps().inputs);
+				renderTable("tableInputs", node.get_deps().inputs);
 
-			ImGui::TableNextColumn();
-			renderTable("tableOutputs", node.get_deps().outputs);
+				ImGui::TableNextColumn();
+				renderTable("tableOutputs", node.get_deps().outputs);
 
-			ImGui::EndTable();
+				ImGui::EndTable();
+			}
+			ImGui::PopID();
 		}
-		ImGui::PopID();
+		ImGui::End();
 	}
-	ImGui::End();
 	return isEnabled;
 }
 
@@ -314,10 +314,12 @@ void cUpdateGraph::exec() {
 	commit_pending();
 	update_dirty();
 
-	if (ImGui::Begin("update graph")) {
-		ImGui::Checkbox("Use topo executor", &mDbgUseTopoExecutor);
+	if (bool& isOpen = cDbgToolsMgr::tools().update_queue) {
+		if (ImGui::Begin("update graph", &isOpen)) {
+			ImGui::Checkbox("Use topo executor", &mDbgUseTopoExecutor);
+		}
+		ImGui::End();
 	}
-	ImGui::End();
 
 	if (mDbgUseTopoExecutor)
 		sTopoExecutor(*this).exec();

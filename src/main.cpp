@@ -20,6 +20,7 @@ CLANG_DIAG_POP
 #include <imgui.h>
 #include "rdr/rdr_queue.hpp"
 #include "resource_mgr.hpp"
+#include "dbg_ui.hpp"
 
 class cSDLInit {
 public:
@@ -119,6 +120,7 @@ struct sGlobals {
 	GlobalSingleton<cSceneMgr> sceneMgr;
 	GlobalSingleton<cRdrQueueMgr> rdrQueueMgr;
 	GlobalSingleton<cResourceMgr> resourceMgr;
+	GlobalSingleton<cDbgToolsMgr> dbgToolsMgr;
 };
 
 sGlobals globals;
@@ -139,6 +141,7 @@ cPathManager& cPathManager::get() { return globals.pathManager.get(); }
 cSceneMgr& cSceneMgr::get() { return globals.sceneMgr.get(); }
 cRdrQueueMgr& cRdrQueueMgr::get() { return globals.rdrQueueMgr.get(); }
 cResourceMgr& cResourceMgr::get() { return globals.resourceMgr.get(); }
+cDbgToolsMgr& cDbgToolsMgr::get() { return globals.dbgToolsMgr.get(); }
 
 void do_frame() {
 	{
@@ -149,6 +152,7 @@ void do_frame() {
 
 		cSceneMgr::get().update();
 
+		cDbgToolsMgr::get().update();
 		cImgui::get().disp();
 		cProfiler::get().draw();
 		gfx.end_frame();
@@ -216,6 +220,7 @@ int main(int argc, char* argv[]) {
 	cSDLInit sdl;
 	auto profiler = globals.profiler.ctor_scoped();
 	auto pathManager = globals.pathManager.ctor_scoped();
+	auto dbgUi = globals.dbgToolsMgr.ctor_scoped();
 	auto win = globals.win.ctor_scoped("TestBed - SPACE + mouse to control camera", 1200, 900, SDL_WINDOW_RESIZABLE);
 	auto input = globals.input.ctor_scoped();
 	auto gfx = globals.gfx.ctor_scoped(globals.win.get().get_handle());

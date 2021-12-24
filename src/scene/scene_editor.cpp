@@ -9,6 +9,7 @@
 #include "scene_mgr.hpp"
 #include "scene_components.hpp"
 
+#include "dbg_ui.hpp"
 #include "imgui.hpp"
 
 #include <entt/entt.hpp>
@@ -50,23 +51,26 @@ static const char* format_entity(std::string& buf, entt::entity en, const sScene
 void cSceneEditor::dbg_ui() {
 	if (!mpScene) return;
 
-	sSceneEditCtx ctx;
-	ctx.camView = mpScene->mpCameraMgr->get_cam().mView;
+	if (bool& isOpen = cDbgToolsMgr::tools().scene_editor) {
+		sSceneEditCtx ctx;
+		ctx.camView = mpScene->mpCameraMgr->get_cam().mView;
 
-	ImGui::Begin("scene");
-	ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-	if (ImGui::TreeNode("Entities")) {
-		show_entity_list(ctx);
+		if (ImGui::Begin("scene", &isOpen)) {
+			ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+			if (ImGui::TreeNode("Entities")) {
+				show_entity_list(ctx);
 
-		if (mSelected != entt::null) {
-			ImGui::PushID((int)mSelected);
-			show_entity_params(mSelected, ctx);
-			show_entity_components(mSelected, ctx);
-			ImGui::PopID();
+				if (mSelected != entt::null) {
+					ImGui::PushID((int)mSelected);
+					show_entity_params(mSelected, ctx);
+					show_entity_components(mSelected, ctx);
+					ImGui::PopID();
+				}
+				ImGui::TreePop();
+			}
 		}
-		ImGui::TreePop();
+		ImGui::End();
 	}
-	ImGui::End();
 }
 
 void cSceneEditor::show_entity_list(sSceneEditCtx& ctx) {

@@ -7,6 +7,7 @@
 #include "cbufs.hpp"
 #include "gfx.hpp"
 #include "imgui.hpp"
+#include "dbg_ui.hpp"
 
 namespace dx = DirectX;
 
@@ -112,27 +113,29 @@ void cLightMgr::disp(cRdrContext const& rdrCtx) const {
 }
 
 void cLightMgr::dbg_ui() {
-	ImGui::Begin("light");
-	char buf[64];
-	for (int i = 0; i < LENGTHOF_ARRAY(mPointLights); ++i) {
-		auto& pl = mPointLights[i];
+	if (bool& isOpen = cDbgToolsMgr::tools().light_mgr) {
+		if (ImGui::Begin("light", &isOpen)) {
+			char buf[64];
+			for (int i = 0; i < LENGTHOF_ARRAY(mPointLights); ++i) {
+				auto& pl = mPointLights[i];
 
-		::sprintf_s(buf, "point #%d", i);
-		if (ImGui::CollapsingHeader(buf)) {
-			ImGui::PushID(buf);
+				::sprintf_s(buf, "point #%d", i);
+				if (ImGui::CollapsingHeader(buf)) {
+					ImGui::PushID(buf);
 
-			ImGui::SliderFloat3("pos", reinterpret_cast<float*>(&pl.pos), -5.0f, 5.0f);
-			ImguiSlideFloat3_1("clr", reinterpret_cast<float*>(&pl.clr), 0.0f, 1.0f);
-			ImGui::Checkbox("enabled", &pl.enabled);
+					ImGui::SliderFloat3("pos", reinterpret_cast<float*>(&pl.pos), -5.0f, 5.0f);
+					ImguiSlideFloat3_1("clr", reinterpret_cast<float*>(&pl.clr), 0.0f, 1.0f);
+					ImGui::Checkbox("enabled", &pl.enabled);
 
-			ImGui::PopID();
+					ImGui::PopID();
+				}
+			}
+
+			if (ImGui::Button("Save")) {
+				save(get_light_settings_path());
+			}
 		}
+		ImGui::End();
 	}
-
-	if (ImGui::Button("Save")) {
-		save(get_light_settings_path());
-	}
-
-	ImGui::End();
 }
 
