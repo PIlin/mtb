@@ -27,6 +27,8 @@ public:
 
 	void set_camera(const cCamera& cam);
 	void draw_line(const vec3& a, const vec3& b);
+	void draw_line(const vec3& a, const vec3& b, const vec4& clr);
+	void draw_line(const vec3& a, const vec3& b, const vec4& clrA, const vec4& clrB);
 
 private:
 	void disp_lines(cGfx& gfx);

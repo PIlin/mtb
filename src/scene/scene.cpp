@@ -9,6 +9,7 @@
 #include "rdr/gfx.hpp"
 #include "rdr/sh.hpp"
 #include "rdr/light.hpp"
+#include "rdr/color.hpp"
 
 #include "model_sys.hpp"
 #include "anim_sys.hpp"
@@ -93,12 +94,12 @@ private:
 		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
 		sVtx vtx[6] = {
-			{ { 0.0f, 0.0f, 0.0f }, {{ 1.0, 0.0f, 0.0f, 1.0f }} },
-			{ { 1.0f, 0.0f, 0.0f }, {{ 1.0, 0.0f, 0.0f, 1.0f }} },
-			{ { 0.0f, 0.0f, 0.0f }, {{ 0.0, 1.0f, 0.0f, 1.0f }} },
-			{ { 0.0f, 1.0f, 0.0f }, {{ 0.0, 1.0f, 0.0f, 1.0f }} },
-			{ { 0.0f, 0.0f, 0.0f }, {{ 0.0, 0.0f, 1.0f, 1.0f }} },
-			{ { 0.0f, 0.0f, 1.0f }, {{ 0.0, 0.0f, 1.0f, 1.0f }} },
+			{ { 0.0f, 0.0f, 0.0f }, nColor::red },
+			{ { 1.0f, 0.0f, 0.0f }, nColor::red },
+			{ { 0.0f, 0.0f, 0.0f }, nColor::green },
+			{ { 0.0f, 1.0f, 0.0f }, nColor::green },
+			{ { 0.0f, 0.0f, 0.0f }, nColor::blue },
+			{ { 0.0f, 0.0f, 1.0f }, nColor::blue },
 		};
 
 		mVtxBuf.init(pDev, vtx, LENGTHOF_ARRAY(vtx), sizeof(vtx[0]));

@@ -76,6 +76,7 @@ set(SRC
 	src/rdr/camera.cpp
 	src/rdr/camera.hpp
 	src/rdr/cbufs.hpp
+	src/rdr/color.hpp
 	src/rdr/dbg_draw.cpp
 	src/rdr/dbg_draw.hpp
 	src/rdr/gfx.cpp

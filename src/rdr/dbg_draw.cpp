@@ -2,6 +2,7 @@
 #include "dbg_draw.hpp"
 #include "gfx.hpp"
 #include "cbufs.hpp"
+#include "color.hpp"
 
 namespace dx = DirectX;
 
@@ -95,13 +96,19 @@ void cDbgDrawMgr::set_camera(const cCamera& cam) {
 ////
 
 void cDbgDrawMgr::draw_line(const vec3& a, const vec3& b) {
+	draw_line(a, b, nColor::white);
+}
+
+void cDbgDrawMgr::draw_line(const vec3& a, const vec3& b, const vec4& clr) {
+	draw_line(a, b, clr, clr);
+}
+
+void cDbgDrawMgr::draw_line(const vec3& a, const vec3& b, const vec4& clrA, const vec4& clrB) {
 	sSimpleVtx& va = mLineVertices.emplace_back();
 	sSimpleVtx& vb = mLineVertices.emplace_back();
 
 	va.pos = a;
 	vb.pos = b;
-
-	vec4 white = { { 1, 1, 1, 1 } };
-	va.clr = white;
-	vb.clr = white;
+	va.clr = clrA;
+	vb.clr = clrB;
 }
