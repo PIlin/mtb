@@ -1,5 +1,8 @@
 #pragma once
 
+namespace std::filesystem { class path; }
+namespace fs = std::filesystem;
+
 struct sCameraView {
 	DirectX::XMMATRIX mView;
 	DirectX::XMMATRIX mProj;

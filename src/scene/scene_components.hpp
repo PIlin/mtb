@@ -1,6 +1,6 @@
 #pragma once
 
-#include "path_helpers.hpp"
+#include "res/path_helpers.hpp"
 #include <entt/fwd.hpp>
 #include <map>
 #include <set>

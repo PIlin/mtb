@@ -2,7 +2,7 @@
 
 #include "math.hpp"
 #include "common.hpp"
-#include "path_helpers.hpp"
+#include "res/path_helpers.hpp"
 #include "rdr/texture.hpp"
 #include "rdr/rdr.hpp"
 #include "rdr/cbufs.hpp"

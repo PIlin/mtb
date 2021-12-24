@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "math.hpp"
 #include "sh.hpp"
-#include "path_helpers.hpp"
+#include "res/path_helpers.hpp"
 #include "light.hpp"
 #include "rdr.hpp"
 #include "cbufs.hpp"

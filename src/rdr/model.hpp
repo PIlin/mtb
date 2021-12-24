@@ -3,7 +3,8 @@
 #include <memory>
 #include <string>
 
-#include "resource.hpp"
+#include "res/resource.hpp"
+#include "res/path_helpers.hpp"
 
 #include "cbufs.hpp"
 

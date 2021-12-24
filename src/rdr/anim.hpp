@@ -1,7 +1,7 @@
 #pragma once 
 
 #include <unordered_map>
-#include "resource.hpp"
+#include "res/resource.hpp"
 
 class cRigData;
 class cRig;

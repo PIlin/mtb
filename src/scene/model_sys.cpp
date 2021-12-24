@@ -3,14 +3,14 @@
 #include "rdr/gfx.hpp"
 #include "rdr/rdr.hpp"
 #include "model_sys.hpp"
-#include "path_helpers.hpp"
 #include "position_component.hpp"
 #include "rig_component.hpp"
 #include "scene_components.hpp"
 #include "scene_editor.hpp"
 
 #include "rdr/model.hpp"
-#include "resource_load.hpp"
+#include "res/path_helpers.hpp"
+#include "res/resource_load.hpp"
 #include "imgui.hpp"
 
 #include <entt/entt.hpp>

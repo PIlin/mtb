@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "path_helpers.hpp"
+#include "res/path_helpers.hpp"
 #include "json_helpers.hpp"
 
 CLANG_DIAG_PUSH

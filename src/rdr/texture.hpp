@@ -5,7 +5,8 @@ struct ID3D11Resource;
 struct ID3D11ShaderResourceView;
 struct ID3D11DeviceContext;
 
-#include "path_helpers.hpp"
+namespace std::filesystem { class path; }
+namespace fs = std::filesystem;
 
 class cTexture : noncopyable {
 	moveable_ptr<ID3D11Resource> mpTex;

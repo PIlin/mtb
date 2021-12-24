@@ -2,14 +2,13 @@
 #include "math.hpp"
 #include "rdr.hpp"
 #include "gfx.hpp"
-#include "path_helpers.hpp"
 #include "texture.hpp"
 #include "model.hpp"
-#include "hou_geo.hpp"
-#include "path_helpers.hpp"
-#include "assimp_loader.hpp"
 #include "imgui.hpp"
 #include "rdr_queue.hpp"
+#include "res/path_helpers.hpp"
+#include "res/hou_geo.hpp"
+#include "res/assimp_loader.hpp"
 
 CLANG_DIAG_PUSH
 CLANG_DIAG_IGNORE("-Wpragma-pack")

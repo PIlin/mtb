@@ -1,7 +1,10 @@
 #pragma once
-#include "resource.hpp"
+#include "res/resource.hpp"
 
 #include <string>
+
+namespace std::filesystem { class path; }
+namespace fs = std::filesystem;
 
 class cAssimpLoader;
 class cRdrContext;

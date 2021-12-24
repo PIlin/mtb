@@ -2,6 +2,9 @@
 
 #include "imgui.h"
 
+namespace std::filesystem { class path; }
+namespace fs = std::filesystem;
+
 struct sCameraView;
 
 bool ImguiSlideFloat3_1(char const* label, float v[3], float v_min, float v_max, const char* display_format = "%.3f");

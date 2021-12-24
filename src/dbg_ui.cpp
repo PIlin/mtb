@@ -1,8 +1,7 @@
-#include "path_helpers.hpp"
 #include "math.hpp"
 #include "dbg_ui.hpp"
 #include "imgui.hpp"
-
+#include "res/path_helpers.hpp"
 
 sDbgTools& cDbgToolsMgr::tools() {
 	return get().mToolFlags;

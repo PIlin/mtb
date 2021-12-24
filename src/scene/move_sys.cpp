@@ -1,14 +1,13 @@
 #include "common.hpp"
-#include "path_helpers.hpp"
 #include "move_sys.hpp"
-
 #include "math.hpp"
 
 #include "scene_editor.hpp"
 
 #include "position_component.hpp"
 #include "scene_components.hpp"
-#include "resource_load.hpp"
+#include "res/path_helpers.hpp"
+#include "res/resource_load.hpp"
 
 #include "imgui.hpp"
 

@@ -2,7 +2,7 @@
 #include "math.hpp"
 #include "gfx.hpp"
 
-#include "path_helpers.hpp"
+#include "res/path_helpers.hpp"
 #include "microprofile.h"
 
 #include <d3dcompiler.h>

@@ -4,8 +4,8 @@
 #include <string>
 
 #include "common.hpp"
-#include "path_helpers.hpp"
 #include "texture.hpp"
+#include "res/path_helpers.hpp"
 
 #include "DDSTextureLoader.h"
 #include "WICTextureLoader.h"

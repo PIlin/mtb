@@ -1,6 +1,6 @@
 #include "math.hpp"
 #include "common.hpp"
-#include "path_helpers.hpp"
+#include "res/path_helpers.hpp"
 #include "camera.hpp"
 #include "input.hpp"
 

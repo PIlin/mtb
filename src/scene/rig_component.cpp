@@ -1,6 +1,5 @@
 #include "common.hpp"
 #include "math.hpp"
-#include "path_helpers.hpp"
 #include "rig_component.hpp"
 
 void XM_CALLCONV cRigComp::update_rig_mtx(DirectX::XMMATRIX wmtx) {

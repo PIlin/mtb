@@ -11,7 +11,6 @@ CLANG_DIAG_POP
 #include "math.hpp"
 #include "rdr/gfx.hpp"
 #include "rdr/rdr.hpp"
-#include "path_helpers.hpp"
 #include "input.hpp"
 #include "rdr/camera.hpp"
 #include "rdr/texture.hpp"
@@ -19,7 +18,8 @@ CLANG_DIAG_POP
 #include "scene/scene_mgr.hpp"
 #include <imgui.h>
 #include "rdr/rdr_queue.hpp"
-#include "resource_mgr.hpp"
+#include "res/path_helpers.hpp"
+#include "res/resource_mgr.hpp"
 #include "dbg_ui.hpp"
 
 class cSDLInit {

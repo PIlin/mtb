@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "path_helpers.hpp"
 #include "anim_sys.hpp"
 #include "rig_component.hpp"
 
@@ -8,7 +7,8 @@
 #include "scene_editor.hpp"
 
 #include "scene_components.hpp"
-#include "resource_load.hpp"
+#include "res/path_helpers.hpp"
+#include "res/resource_load.hpp"
 
 #include "rdr/anim.hpp"
 #include "imgui.hpp"

@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "dbg_ui.hpp"
 #include "rdr/rdr.hpp"
-#include "path_helpers.hpp"
+#include "res/path_helpers.hpp"
 #include "rdr/texture.hpp"
 #include "rdr/model.hpp"
 #include "rdr/camera.hpp"

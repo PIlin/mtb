@@ -39,14 +39,10 @@ add_subdirectory("${THIRD_PARTY_DIR}/microprofile")
 project(mtb)
 
 set(SRC
-	src/assimp_loader.cpp
-	src/assimp_loader.hpp
 	src/common.cpp
 	src/common.hpp
 	src/dbg_ui.cpp
 	src/dbg_ui.hpp
-	src/hou_geo.cpp
-	src/hou_geo.hpp
 	src/imgui.hpp
 	src/imgui_impl.cpp
 	src/imgui_impl.hpp
@@ -57,18 +53,23 @@ set(SRC
 	src/main.cpp
 	src/math.cpp
 	src/math.hpp
-	src/path_helpers.cpp
-	src/path_helpers.hpp
 	src/profiler.cpp
 	src/profiler.hpp
-	src/resource.hpp
-	src/resource_load.cpp
-	src/resource_load.hpp
-	src/resource_mgr.cpp
-	src/resource_mgr.hpp
 	src/serialization.cpp
 	src/update_queue.cpp
 	src/update_queue.hpp
+
+	src/res/assimp_loader.cpp
+	src/res/assimp_loader.hpp
+	src/res/hou_geo.cpp
+	src/res/hou_geo.hpp
+	src/res/path_helpers.cpp
+	src/res/path_helpers.hpp
+	src/res/resource.hpp
+	src/res/resource_load.cpp
+	src/res/resource_load.hpp
+	src/res/resource_mgr.cpp
+	src/res/resource_mgr.hpp
 
 	src/rdr/anim.cpp
 	src/rdr/anim.hpp

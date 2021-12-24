@@ -3,10 +3,10 @@
 
 #include "common.hpp"
 #include "math.hpp"
-#include "path_helpers.hpp"
+#include "res/path_helpers.hpp"
 #include "anim.hpp"
 #include "rig.hpp"
-#include "assimp_loader.hpp"
+#include "res/assimp_loader.hpp"
 #include "json_helpers.hpp"
 
 CLANG_DIAG_PUSH
