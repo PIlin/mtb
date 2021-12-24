@@ -185,7 +185,7 @@ void cUpdateGraph::exec_node(NodeId id) {
 			return;
 		if (!node.exec()) {
 			mNodes.erase(it);
-			mIsDirty = true;
+			mark_dirty();
 		}
 	}
 }
@@ -314,9 +314,15 @@ void cUpdateGraph::exec() {
 	commit_pending();
 	update_dirty();
 
-	//using tExecutor = sTopoExecutor;
-	using tExecutor = sTaskExecutor;
-	tExecutor(*this).exec();
+	if (ImGui::Begin("update graph")) {
+		ImGui::Checkbox("Use topo executor", &mDbgUseTopoExecutor);
+	}
+	ImGui::End();
+
+	if (mDbgUseTopoExecutor)
+		sTopoExecutor(*this).exec();
+	else
+		sTaskExecutor(*this).exec();
 }
 
 void cUpdateGraph::commit_pending() {
@@ -327,6 +333,7 @@ void cUpdateGraph::commit_pending() {
 		}
 		mPending.clear();
 		mIsDirty = true;
+		mark_dirty();
 	}
 }
 
@@ -337,6 +344,12 @@ void cUpdateGraph::update_dirty() {
 		mIsDirty = false;
 	}
 }
+
+void cUpdateGraph::mark_dirty() {
+	mIsDirty = true;
+	mIsOrderDirty = true;
+}
+
 
 void cUpdateGraph::build_adj_list(const tEdgeMap& inEdgeMap, const tEdgeMap& outEdgeMap, tAdjList& adjList) {
 	auto addAdjacency = [&adjList](const std::vector<NodeId>& out, const std::vector<NodeId>& in) {

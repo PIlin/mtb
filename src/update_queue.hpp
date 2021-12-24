@@ -252,6 +252,7 @@ private:
 
 	void commit_pending();
 	void update_dirty();
+	void mark_dirty();
 	void build_adj_list();
 	void topo_sort();
 
@@ -273,6 +274,7 @@ private:
 	bool mIsOrderDirty = false;
 	NodeId mIdGen = 0;
 
+	bool mDbgUseTopoExecutor = false;
 	std::unordered_map<sResourceHash, bool, sResourceHash::hash> mDbgResourceHighlight;
 	std::unordered_map<NodeId, bool> mDbgNodeState;
 };
