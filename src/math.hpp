@@ -12,6 +12,12 @@ inline float RAD2DEG(const float rad) {
 
 struct vec3 {
 	float x, y, z;
+
+	static vec3 XM_CALLCONV from_vector(DirectX::FXMVECTOR vec) {
+		vec3 res;
+		DirectX::XMStoreFloat3(reinterpret_cast<DirectX::XMFLOAT3*>(&res), vec);
+		return res;
+	}
 };
 struct vec4 {
 	DirectX::XMFLOAT4 mVal;

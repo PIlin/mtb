@@ -112,3 +112,18 @@ void cDbgDrawMgr::draw_line(const vec3& a, const vec3& b, const vec4& clrA, cons
 	va.clr = clrA;
 	vb.clr = clrB;
 }
+
+void cDbgDrawMgr::draw_gnomon(const sXform& xform, float len) {
+	draw_gnomon(xform.build_mtx(), len);
+}
+
+void XM_CALLCONV cDbgDrawMgr::draw_gnomon(DirectX::FXMMATRIX mtx, float len) {
+	vec3 o = vec3::from_vector(dx::XMVector4Transform(dx::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), mtx));
+	vec3 x = vec3::from_vector(dx::XMVector4Transform(dx::XMVectorSet(len, 0.0f, 0.0f, 1.0f), mtx));
+	vec3 y = vec3::from_vector(dx::XMVector4Transform(dx::XMVectorSet(0.0f, len, 0.0f, 1.0f), mtx));
+	vec3 z = vec3::from_vector(dx::XMVector4Transform(dx::XMVectorSet(0.0f, 0.0f, len, 1.0f), mtx));
+
+	draw_line(o, x, nColor::red);
+	draw_line(o, y, nColor::green);
+	draw_line(o, z, nColor::blue);
+}
