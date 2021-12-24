@@ -9,8 +9,8 @@
 class cConstBufStorage;
 
 struct sSimpleVtx {
-	float mPos[3];
-	float mClr[4];
+	vec3 pos;
+	vec4 clr;
 };
 
 struct sModelVtx {

@@ -1,7 +1,7 @@
 #pragma pack_matrix(row_major)
 
 struct sVSSimple {
-	float4 pos : POSITION;
+	float3 pos : POSITION;
 	float4 clr : COLOR;
 };
 

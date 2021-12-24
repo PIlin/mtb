@@ -84,8 +84,8 @@ private:
 		if (!mpPS) return false;
 
 		D3D11_INPUT_ELEMENT_DESC vdsc[] = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sVtx, mPos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(sVtx, mClr), D3D11_INPUT_PER_VERTEX_DATA, 0 }
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(sVtx, clr), D3D11_INPUT_PER_VERTEX_DATA, 0 }
 		};
 		auto pDev = get_gfx().get_dev();
 		auto& code = mpVS->get_code();
@@ -93,12 +93,12 @@ private:
 		if (!SUCCEEDED(hr)) throw sD3DException(hr, "CreateInputLayout failed");
 
 		sVtx vtx[6] = {
-			{ { 0.0f, 0.0f, 0.0f }, { 1.0, 0.0f, 0.0f, 1.0f } },
-			{ { 1.0f, 0.0f, 0.0f }, { 1.0, 0.0f, 0.0f, 1.0f } },
-			{ { 0.0f, 0.0f, 0.0f }, { 0.0, 1.0f, 0.0f, 1.0f } },
-			{ { 0.0f, 1.0f, 0.0f }, { 0.0, 1.0f, 0.0f, 1.0f } },
-			{ { 0.0f, 0.0f, 0.0f }, { 0.0, 0.0f, 1.0f, 1.0f } },
-			{ { 0.0f, 0.0f, 1.0f }, { 0.0, 0.0f, 1.0f, 1.0f } },
+			{ { 0.0f, 0.0f, 0.0f }, {{ 1.0, 0.0f, 0.0f, 1.0f }} },
+			{ { 1.0f, 0.0f, 0.0f }, {{ 1.0, 0.0f, 0.0f, 1.0f }} },
+			{ { 0.0f, 0.0f, 0.0f }, {{ 0.0, 1.0f, 0.0f, 1.0f }} },
+			{ { 0.0f, 1.0f, 0.0f }, {{ 0.0, 1.0f, 0.0f, 1.0f }} },
+			{ { 0.0f, 0.0f, 0.0f }, {{ 0.0, 0.0f, 1.0f, 1.0f }} },
+			{ { 0.0f, 0.0f, 1.0f }, {{ 0.0, 0.0f, 1.0f, 1.0f }} },
 		};
 
 		mVtxBuf.init(pDev, vtx, LENGTHOF_ARRAY(vtx), sizeof(vtx[0]));

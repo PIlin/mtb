@@ -13,8 +13,8 @@ cDbgDrawMgr::cDbgDrawMgr(cGfx& gfx) {
 	if (!mpPS) return;
 
 	D3D11_INPUT_ELEMENT_DESC vdsc[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sSimpleVtx, mPos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(sSimpleVtx, mClr), D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(sSimpleVtx, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(sSimpleVtx, clr), D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	auto pDev = get_gfx().get_dev();
 	auto& code = mpVS->get_code();
@@ -98,11 +98,10 @@ void cDbgDrawMgr::draw_line(const vec3& a, const vec3& b) {
 	sSimpleVtx& va = mLineVertices.emplace_back();
 	sSimpleVtx& vb = mLineVertices.emplace_back();
 
-	memcpy(va.mPos, &a, sizeof(vec3));
-	memcpy(vb.mPos, &b, sizeof(vec3));
+	va.pos = a;
+	vb.pos = b;
 
-	float white[4] = { 1, 1, 1, 1 };
-
-	memcpy(va.mClr, white, sizeof(white));
-	memcpy(vb.mClr, white, sizeof(white));
+	vec4 white = { { 1, 1, 1, 1 } };
+	va.clr = white;
+	vb.clr = white;
 }
