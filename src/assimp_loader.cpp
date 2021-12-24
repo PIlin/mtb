@@ -11,6 +11,7 @@ CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/config.h>
+#include <assimp/DefaultLogger.hpp>
 CLANG_DIAG_POP
 
 
@@ -26,7 +27,28 @@ static void list_meshes(aiScene const* pScene, aiNode const* pNode, std::vector<
 cAssimpLoader::cAssimpLoader() = default;
 cAssimpLoader::~cAssimpLoader() = default;
 
+struct sLoggerStreamScope : Assimp::LogStream {
+	static constexpr unsigned int severity =
+		Assimp::Logger::Debugging | Assimp::Logger::Info | Assimp::Logger::Err | Assimp::Logger::Warn;
+
+	sLoggerStreamScope() {
+		Assimp::DefaultLogger::create("", Assimp::Logger::NORMAL);
+		//Assimp::DefaultLogger::get()->attachStream(this, severity);
+	}
+
+	~sLoggerStreamScope() {
+		//Assimp::DefaultLogger::get()->detatchStream(this);
+	}
+
+	virtual void write(const char* message) override {
+		dbg_msg1(message);
+	}
+};
+
+
 bool cAssimpLoader::load(const fs::path& filepath, uint32_t flags) {
+	sLoggerStreamScope log;
+
 	auto pImporter = std::make_unique<Assimp::Importer>();
 	pImporter->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
 		aiPrimitiveType_LINE | aiPrimitiveType_POINT | aiPrimitiveType_POLYGON);
