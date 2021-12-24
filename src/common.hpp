@@ -26,6 +26,11 @@ public:
 	cstr(char const* p) : p(p) {}
 
 	operator char const* () const { return p; }
+	operator bool() const { return !empty(); }
+
+	bool empty() const {
+		return !(p && p[0] != '\0');
+	}
 
 	size_t length() const {
 		if (p)

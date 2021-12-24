@@ -64,9 +64,9 @@ void cAnimationSys::register_update(cUpdateQueue& queue) {
 }
 
 void cAnimationSys::register_update(cUpdateGraph& graph) {
-	sUpdateDepRes anim = graph.register_res("anim");
-	sUpdateDepRes rig = graph.register_res("rig");
-	sUpdateDepRes compAny = graph.register_res("components*");
+	sUpdateDepRes anim = graph.register_res("components", "anim");
+	sUpdateDepRes rig = graph.register_res("components", "rig");
+	sUpdateDepRes compAny = graph.register_res("components", nullptr);
 
 	graph.add(sUpdateDepDesc{ {compAny}, {anim, rig} },
 		MAKE_UPDATE_FUNC_THIS(cAnimationSys::update_anim), mAnimUpdate);

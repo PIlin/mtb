@@ -59,16 +59,16 @@ void cModelDispSys::register_update(cUpdateQueue& queue) {
 
 void cModelDispSys::register_update(cUpdateGraph& graph) {
 	assert(!mDispUpdate);
-	sUpdateDepRes rdrJobProlModel = graph.register_res("rdr_prologue_job_mdl");
-	sUpdateDepRes rdrJobProlAny = graph.register_res("rdr_prologue_job_*");
-	sUpdateDepRes compAny = graph.register_res("components*");
-	sUpdateDepRes rig = graph.register_res("rig");
-	sUpdateDepRes rdrJobModel = graph.register_res("rdr_job_mdl");
-	sUpdateDepRes rdrJobAny = graph.register_res("rdr_job_*");
+	sUpdateDepRes rdrJobProlModel = graph.register_res("rdr_prologue_job", "rdr_prologue_job_mdl");
+	sUpdateDepRes rdrJobProlAny = graph.register_res("rdr_prologue_job", nullptr);
+	sUpdateDepRes compPos = graph.register_res("components", "position");
+	sUpdateDepRes rig = graph.register_res("components", "rig");
+	sUpdateDepRes rdrJobModel = graph.register_res("rdr_job", "rdr_job_mdl");
+	sUpdateDepRes rdrJobAny = graph.register_res("rdr_job", nullptr);
 
-	graph.add(sUpdateDepDesc{ {}, {rdrJobProlModel, rdrJobProlAny} }, 
+	graph.add(sUpdateDepDesc{ {}, {rdrJobProlModel} }, 
 		MAKE_UPDATE_FUNC_THIS(cModelDispSys::update_begin), mUpdateBegin);
-	graph.add(sUpdateDepDesc{ {compAny, rig}, {rdrJobModel, rdrJobAny} },
+	graph.add(sUpdateDepDesc{ {compPos, rig}, {rdrJobModel} },
 		MAKE_UPDATE_FUNC_THIS(cModelDispSys::disp), mDispUpdate);
 	graph.add(sUpdateDepDesc{ {rdrJobProlAny, rdrJobAny}, {} },
 		MAKE_UPDATE_FUNC_THIS(cModelDispSys::update_end), mUpdateEnd);

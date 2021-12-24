@@ -138,13 +138,19 @@ private:
 
 
 struct sUpdateDepRes {
-	uint32_t hash;
-	cstr name;
+	uint32_t hashGroup;
+	uint32_t hashType;
+	cstr nameGroup;
+	cstr nameType;
 
-	sUpdateDepRes(uint32_t hash, cstr name) 
-		: hash(hash)
-		, name(name)
+	sUpdateDepRes(uint32_t hashGroup, cstr nameGroup, uint32_t hashType, cstr nameType) 
+		: hashGroup(hashGroup)
+		, hashType(hashType)
+		, nameGroup(nameGroup)
+		, nameType(nameType)
 	{}
+
+	sUpdateDepRes get_group() const { return sUpdateDepRes(hashGroup, nameGroup, 0, nullptr); }
 };
 
 struct sUpdateDepDesc {
@@ -193,11 +199,43 @@ class cUpdateGraph {
 	using tPendingNodes = std::vector<cUpdateGraphNode>;
 	using tOrder = std::vector<NodeId>;
 
-	struct sResource {
-		uint32_t hash;
-		std::string name;
+	struct sResourceHash {
+		uint32_t group;
+		uint32_t type;
+
+		sResourceHash() = default;
+		sResourceHash(uint32_t group, uint32_t type)
+			: group(group)
+			, type(type)
+		{}
+
+		sResourceHash(const sUpdateDepRes& res)
+			: group(res.hashGroup)
+			, type(res.hashType)
+		{}
+
+		bool operator==(const sResourceHash& other) const { return group == other.group && type == other.type; }
+		bool operator!=(const sResourceHash& other) const { return !(*this == other); }
+
+		sResourceHash get_group() const { return sResourceHash{ group, 0 }; }
+
+		struct hash
+		{
+			std::size_t operator()(sResourceHash const& h) const noexcept
+			{
+				const uint64_t value = uint64_t(h.group) | uint64_t(h.type) << 32;
+				return std::hash<uint64_t>{}(value);
+			}
+		};
 	};
-	using tResourceMap = std::unordered_map<uint32_t, sResource>;
+
+	struct sResource {
+		sResourceHash hash;
+		std::string nameGroup;
+		std::string nameType;
+	};
+
+	using tResourceMap = std::unordered_map<sResourceHash, sResource, sResourceHash::hash>;
 
 	struct sTopoSorter;
 	struct sTopoExecutor;
@@ -207,9 +245,11 @@ public:
 	void add(const sUpdateDepDesc& desc, tUpdateFunc&& func, cUpdateSubscriberScope& scope);
 	void exec();
 
-	sUpdateDepRes register_res(cstr name);
+	sUpdateDepRes register_res(cstr nameGroup, cstr nameType);
 
 private:
+	sUpdateDepRes register_res_impl(cstr nameGroup, cstr nameType);
+
 	void commit_pending();
 	void update_dirty();
 	void build_adj_list();
@@ -219,7 +259,7 @@ private:
 
 	bool dbg_on_exec_node(cUpdateGraphNode const& node);
 
-	using tEdgeMap = std::unordered_map<uint32_t, std::vector<NodeId>>;
+	using tEdgeMap = std::unordered_map<sResourceHash, std::vector<NodeId>, sResourceHash::hash>;
 	static void build_adj_list(const tEdgeMap& inEdgeMap, const tEdgeMap& outEdgeMap, tAdjList& adjList);
 private:
 	tNodes mNodes;
@@ -230,9 +270,10 @@ private:
 	tPendingNodes mPending;
 	tResourceMap mResources;
 	bool mIsDirty = false;
+	bool mIsOrderDirty = false;
 	NodeId mIdGen = 0;
 
-	std::unordered_map<uint32_t, bool> mDbgResourceHighlight;
+	std::unordered_map<sResourceHash, bool, sResourceHash::hash> mDbgResourceHighlight;
 	std::unordered_map<NodeId, bool> mDbgNodeState;
 };
 

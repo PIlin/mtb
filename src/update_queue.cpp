@@ -147,15 +147,28 @@ cUpdateGraphNode::cUpdateGraphNode(NodeId id, const sUpdateDepDesc& desc, tUpdat
 	, mId(id)
 {}
 
-sUpdateDepRes cUpdateGraph::register_res(cstr name) {
-	uint32_t hash = hash_fnv_1a_cstr(name);
-	auto it = mResources.find(hash);
+sUpdateDepRes cUpdateGraph::register_res(cstr nameGroup, cstr nameType) {
+	if (nameType) {
+		register_res_impl(nameGroup, nullptr);
+	}
+	return register_res_impl(nameGroup, nameType);
+}
+
+sUpdateDepRes cUpdateGraph::register_res_impl(cstr nameGroup, cstr nameType) {
+	uint32_t hashGroup = hash_fnv_1a_cstr(nameGroup);
+	uint32_t hashType = nameType ? hash_fnv_1a_cstr(nameType) : 0;
+	assert(!nameType || hashType != 0);
+
+	sResourceHash h{ hashGroup, hashType };
+
+	auto it = mResources.find(h);
 	if (mResources.end() == it) {
-		it = mResources.emplace(hash, sResource{ hash, name }).first;
+		it = mResources.emplace(h, sResource{ h, nameGroup, nameType ? nameType : cstr("") }).first;
 	}
 	assert(it->first == it->second.hash);
-	assert(name.p == it->second.name);
-	return sUpdateDepRes(hash, it->second.name.c_str());
+	assert(nameGroup.p == it->second.nameGroup);
+	assert(!nameType || nameType.p == it->second.nameType);
+	return sUpdateDepRes(hashGroup, it->second.nameGroup.c_str(), hashType, it->second.nameType.c_str());
 }
 
 void cUpdateGraph::add(const sUpdateDepDesc& desc, tUpdateFunc&& func, cUpdateSubscriberScope& scope) {
@@ -182,26 +195,55 @@ bool cUpdateGraph::dbg_on_exec_node(cUpdateGraphNode const& node) {
 	if (ImGui::Begin("update graph"))
 	{
 		ImGui::PushID(node.get_id());
-		ImGui::Columns(3);
+		if (ImGui::BeginTable("updatenode", 3, ImGuiTableFlags_Borders)) {
+			ImGui::TableNextColumn();
 
-		auto stateIter = mDbgNodeState.insert(std::make_pair(node.get_id(), true)).first;
-		ImGui::Checkbox("##enabled", &stateIter->second); ImGui::SameLine();
-		isEnabled = stateIter->second;
+			auto stateIter = mDbgNodeState.insert(std::make_pair(node.get_id(), true)).first;
+			ImGui::Checkbox("##enabled", &stateIter->second); ImGui::SameLine();
+			isEnabled = stateIter->second;
 
-		ImGui::Text("%u %s", node.get_id(), node.get_dbg_name());
-		ImGui::NextColumn();
+			ImGui::Text("%u %s", node.get_id(), node.get_dbg_name());
+			ImGui::TableNextColumn();
 
-		for (sUpdateDepRes const& d : node.get_deps().inputs) {
-			bool& state = mDbgResourceHighlight[d.hash];
-			ImGui::Selectable(d.name.p, &state);
+
+
+			auto renderTable = [&](const char* tableName, const std::vector<sUpdateDepRes>& deps) {
+				ImGuiSelectableFlags flags = 0;
+				ImVec2 alignment = { 1.0, 0.5 };
+
+				if (ImGui::BeginTable(tableName, 2)) {
+					for (sUpdateDepRes const& d : deps) {
+						bool& state = mDbgResourceHighlight[d];
+						bool& stateGroup = mDbgResourceHighlight[d.get_group()];
+
+						ImGui::PushID(d.hashGroup);
+						ImGui::PushID(d.hashType);
+
+						ImGui::TableNextRow();
+						ImGui::TableSetColumnIndex(0);
+						ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, alignment);
+						ImGui::Selectable(d.nameGroup, &stateGroup, flags);
+						ImGui::PopStyleVar();
+
+						if (d.nameType) {
+							ImGui::TableSetColumnIndex(1);
+							ImGui::Selectable(d.nameType, &state, flags);
+						}
+
+						ImGui::PopID();
+						ImGui::PopID();
+					}
+					ImGui::EndTable();
+				}
+			};
+
+			renderTable("tableInputs", node.get_deps().inputs);
+
+			ImGui::TableNextColumn();
+			renderTable("tableOutputs", node.get_deps().outputs);
+
+			ImGui::EndTable();
 		}
-		ImGui::NextColumn();
-		for (sUpdateDepRes const& d : node.get_deps().outputs) {
-			bool& state = mDbgResourceHighlight[d.hash];
-			ImGui::Selectable(d.name.p, &state);
-		}
-		ImGui::NextColumn();
-		ImGui::Separator();
 		ImGui::PopID();
 	}
 	ImGui::End();
@@ -213,6 +255,9 @@ struct cUpdateGraph::sTopoExecutor {
 	sTopoExecutor(cUpdateGraph& graph) : graph(graph) {}
 
 	void exec() {
+		graph.topo_sort();
+		assert(!graph.mIsOrderDirty);
+
 		for (NodeId id : graph.mOrder) {
 			graph.exec_node(id);
 		}
@@ -289,23 +334,47 @@ void cUpdateGraph::update_dirty() {
 	if (mIsDirty) {
 		MICROPROFILE_SCOPEI("main", "cUpdateGraph::update_dirty", -1);
 		build_adj_list();
-		topo_sort();
 		mIsDirty = false;
 	}
 }
 
 void cUpdateGraph::build_adj_list(const tEdgeMap& inEdgeMap, const tEdgeMap& outEdgeMap, tAdjList& adjList) {
-	for (const auto& p : outEdgeMap) {
-		auto it = inEdgeMap.find(p.first);
-		if (it != inEdgeMap.end()) {
-			for (NodeId outNode : p.second) {
-				for (NodeId inNode : it->second) {
-					if (outNode != inNode) {
-						adjList[outNode].push_back(inNode);
-					}
+	auto addAdjacency = [&adjList](const std::vector<NodeId>& out, const std::vector<NodeId>& in) {
+		for (NodeId outNode : out) {
+			for (NodeId inNode : in) {
+				if (outNode != inNode) {
+					adjList[outNode].push_back(inNode);
 				}
 			}
 		}
+	};
+
+	for (const auto& pOut : outEdgeMap) {
+		const sResourceHash& outRh = pOut.first;
+		if (outRh.type != 0) {
+			auto it = inEdgeMap.find(outRh);
+			if (it != inEdgeMap.end()) {
+				addAdjacency(pOut.second, it->second);
+			}
+			it = inEdgeMap.find(outRh.get_group());
+			if (it != inEdgeMap.end()) {
+				addAdjacency(pOut.second, it->second);
+			}
+		}
+		else {
+			// output is group - connect to all inputs of same group
+			for (const auto& pIn : inEdgeMap) {
+				if (pIn.first.group == outRh.group) {
+					addAdjacency(pOut.second, pIn.second);
+				}
+			}
+		}
+	}
+
+	for (auto& p : adjList) {
+		std::vector<NodeId>& v = p.second;
+		std::sort(v.begin(), v.end());
+		v.erase(std::unique(v.begin(), v.end()), v.end());
 	}
 }
 
@@ -313,21 +382,20 @@ void cUpdateGraph::build_adj_list() {
 	mAdjList.clear();
 	mRevAdjList.clear();
 
-	using tEdgeMap = std::unordered_map<uint32_t, std::vector<NodeId>>;
 	tEdgeMap inEdgeMap;
 	tEdgeMap outEdgeMap;
 	for (const auto& idNode : mNodes) {
 		const NodeId id = idNode.first;
 		const auto& node = idNode.second;
 		for (const sUpdateDepRes& dep : node.get_deps().inputs) {
-			inEdgeMap[dep.hash].push_back(id);
+			inEdgeMap[dep].push_back(id);
 		}
 		if (node.get_deps().inputs.empty()) {
 			mNoInputList.push_back(id);
 		}
 
 		for (const sUpdateDepRes& dep : node.get_deps().outputs) {
-			outEdgeMap[dep.hash].push_back(id);
+			outEdgeMap[dep].push_back(id);
 		}
 	}
 
@@ -388,7 +456,12 @@ private:
 };
 
 void cUpdateGraph::topo_sort() {
-	sTopoSorter sorter(*this);
-	sorter.sort();
-	mOrder = std::move(sorter.order);
+	if (mIsOrderDirty) {
+		MICROPROFILE_SCOPEI("main", "cUpdateGraph::topo_sort", -1);
+
+		sTopoSorter sorter(*this);
+		sorter.sort();
+		mOrder = std::move(sorter.order);
+		mIsOrderDirty = false;
+	}
 }

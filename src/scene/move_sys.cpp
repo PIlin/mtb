@@ -57,10 +57,9 @@ void cMoveSys::register_update(cUpdateQueue& queue) {
 
 void cMoveSys::register_update(cUpdateGraph& graph) {
 	//sUpdateDepRes move = graph.register_res("move");
-	sUpdateDepRes pos = graph.register_res("position");
-	sUpdateDepRes compAny = graph.register_res("components*");
+	sUpdateDepRes pos = graph.register_res("components", "position");
 
-	graph.add(sUpdateDepDesc{ {}, {pos, compAny} },
+	graph.add(sUpdateDepDesc{ {}, {pos} },
 		MAKE_UPDATE_FUNC_THIS(cMoveSys::update), mMoveUpdate);
 }
 

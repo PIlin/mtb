@@ -60,9 +60,8 @@ public:
 
 	void init(cUpdateGraph& graph) {
 		if (init()) {
-			sUpdateDepRes rdrJobAny = graph.register_res("rdr_job_*");
-			sUpdateDepRes rdrJobGnomon = graph.register_res("rdr_job_gnomon");
-			graph.add(sUpdateDepDesc{ {}, {rdrJobGnomon, rdrJobAny} },
+			sUpdateDepRes rdrJobGnomon = graph.register_res("rdr_job", "rdr_job_gnomon");
+			graph.add(sUpdateDepDesc{ {}, {rdrJobGnomon} },
 				MAKE_UPDATE_FUNC_THIS(cGnomon::disp), mDispUpdate);
 		}
 	}
@@ -122,10 +121,9 @@ public:
 	}
 
 	void init(cUpdateGraph& graph) {
-		sUpdateDepRes rdrJobProlLight = graph.register_res("rdr_prologue_job_light");
-		sUpdateDepRes rdrJobProlAny = graph.register_res("rdr_prologue_job_*");
-		sUpdateDepRes light = graph.register_res("light");
-		graph.add(sUpdateDepDesc{ {}, {rdrJobProlLight, rdrJobProlAny, light} },
+		sUpdateDepRes rdrJobProlLight = graph.register_res("rdr_prologue_job", "rdr_prologue_job_light");
+		sUpdateDepRes light = graph.register_res("global", "light");
+		graph.add(sUpdateDepDesc{ {}, {rdrJobProlLight, light} },
 			MAKE_UPDATE_FUNC_THIS(cLightMgrUpdate::update), mLightUpdate);
 	}
 

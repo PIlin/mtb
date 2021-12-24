@@ -26,7 +26,7 @@ void cSceneEditor::init(cScene* pScene) {
 #if USE_GRAPH_UPDATE
 		cUpdateGraph& graph = pScene->get_update_graph();
 
-		sUpdateDepRes components = graph.register_res("components*");
+		sUpdateDepRes components = graph.register_res("components", nullptr);
 		graph.add(sUpdateDepDesc{ {}, {components} },
 			MAKE_UPDATE_FUNC_THIS(cSceneEditor::dbg_ui), mDbgUpdate);
 #else

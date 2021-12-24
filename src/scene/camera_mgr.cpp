@@ -13,11 +13,10 @@ void cCameraManager::init(cUpdateQueue& queue) {
 void cCameraManager::init(cUpdateGraph& graph) {
 	mTrackballCam.init(mCamera);
 
-	sUpdateDepRes rdrJobProlCam = graph.register_res("rdr_prologue_job_cam");
-	sUpdateDepRes rdrJobProlAny = graph.register_res("rdr_prologue_job_*");
-	sUpdateDepRes camera = graph.register_res("camera");
+	sUpdateDepRes rdrJobProlCam = graph.register_res("rdr_prologue_job", "rdr_prologue_job_cam");
+	sUpdateDepRes camera = graph.register_res("global", "camera");
 
-	graph.add(sUpdateDepDesc{ {}, {rdrJobProlCam, rdrJobProlAny, camera} },
+	graph.add(sUpdateDepDesc{ {}, {rdrJobProlCam, camera} },
 		MAKE_UPDATE_FUNC_THIS(cCameraManager::update_cam), mCameraUpdate);
 }
 
