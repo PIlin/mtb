@@ -26,6 +26,8 @@ cDbgDrawMgr::cDbgDrawMgr(cGfx& gfx) {
 }
 
 void cDbgDrawMgr::disp() {
+	disp_camera_grid();
+
 	auto& gfx = get_gfx();
 	auto pDev = gfx.get_dev();
 	auto pCtx = gfx.get_imm_ctx();
@@ -35,7 +37,7 @@ void cDbgDrawMgr::disp() {
 
 	gfx.apply_default_rt_vp(pCtx);
 	
-	nRdrHelpers::upload_cam_cbuf(cRdrContext(pCtx, cConstBufStorage::get_global()), mCamView);
+	nRdrHelpers::upload_cam_cbuf(cRdrContext(pCtx, cConstBufStorage::get_global()), mCam.mView);
 
 	{
 		auto& cbuf = cConstBufStorage::get_global().mMeshCBuf;
@@ -90,7 +92,7 @@ void cDbgDrawMgr::flush() {
 }
 
 void cDbgDrawMgr::set_camera(const cCamera& cam) {
-	mCamView = cam.mView;
+	mCam = cam;
 }
 
 ////
@@ -127,3 +129,54 @@ void XM_CALLCONV cDbgDrawMgr::draw_gnomon(DirectX::FXMMATRIX mtx, float len) {
 	draw_line(o, y, nColor::green);
 	draw_line(o, z, nColor::blue);
 }
+
+void cDbgDrawMgr::disp_camera_grid() {
+	dx::XMVECTOR xz = dx::XMPlaneFromPointNormal(dx::XMVectorZero(), dx::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f));
+	dx::XMVECTOR root = dx::XMPlaneIntersectLine(xz, mCam.mPos, mCam.mTgt);
+	if (dx::XMVector4IsNaN(root))
+		return;
+
+	//draw_gnomon(dx::XMMatrixTranslationFromVector(root), 0.3f);
+	int count = 60;
+	float s = 0.5f;
+
+	float sMajor = s * 2;
+	dx::XMVECTOR svec = dx::XMVectorSet(sMajor, sMajor, sMajor, 1.0f);
+	root = dx::XMVectorDivide(root, svec);
+	root = dx::XMVectorFloor(root);
+	root = dx::XMVectorMultiply(root, svec);
+
+	vec4 r;
+	dx::XMStoreFloat4(&r.mVal, root);
+
+	//draw_gnomon(dx::XMMatrixTranslationFromVector(root), 0.3f);
+
+	
+	vec2f o = { r.mVal.x, r.mVal.z };
+	const vec2f step = { s, s };
+
+	o = o - step * float(count / 2);
+
+	const float y = 0.0f;
+	const float cMajor = 0.75f;
+	const vec4 clrMajor = { { cMajor, cMajor, cMajor, 0.8f } };
+	const float cMinor = 0.75f;
+	const vec4 clrMinor = { { cMinor, cMinor, cMinor, 0.3f } };
+	auto v3 = [](const vec2f& v2, float y) { return vec3{ v2.x, y, v2.y }; };
+	
+	for (int i = 0; i <= count; ++i) {
+		const vec4& clr = (i % 2) ? clrMinor : clrMajor;
+		{
+			vec2f oxz = vec2f(float(i), 0.0f) * step + o;
+			vec2f exz = vec2f(float(i), float(count)) * step + o;
+			draw_line(v3(oxz, y), v3(exz, y), clr);
+		}
+		{
+			vec2f oxz = vec2f(0.0f, float(i)) * step + o;
+			vec2f exz = vec2f(float(count), float(i)) * step + o;
+			draw_line(v3(oxz, y), v3(exz, y), clr);
+		}
+	}
+}
+
+

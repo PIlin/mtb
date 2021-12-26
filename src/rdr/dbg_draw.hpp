@@ -9,7 +9,7 @@ class cGfx;
 class cShader;
 
 class cDbgDrawMgr {
-	sCameraView mCamView;
+	cCamera mCam;
 	std::vector<sSimpleVtx> mLineVertices;
 
 	cVertexBuffer mVtxBuf;
@@ -33,7 +33,10 @@ public:
 	void draw_gnomon(const sXform& xform, float len);
 	void XM_CALLCONV draw_gnomon(DirectX::FXMMATRIX mtx, float len);
 
+
 private:
+	void disp_camera_grid();
+
 	void disp_lines(cGfx& gfx);
 	void flush();
 };
