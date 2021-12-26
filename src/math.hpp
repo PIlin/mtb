@@ -68,25 +68,17 @@ struct tvec2 {
 		return !(*this == o);
 	}
 
-	tvec2& operator+(T s) {
-		x += s;
-		y += s;
-		return *this;
+	tvec2 operator+(T s) const {
+		return tvec2(x + s, y + s);
 	}
-	tvec2& operator-(T s) {
-		x -= s;
-		y -= s;
-		return *this;
+	tvec2 operator-(T s) const {
+		return tvec2(x - s, y - s);
 	}
-	tvec2& operator*(T s) {
-		x *= s;
-		y *= s;
-		return *this;
+	tvec2 operator*(T s) const {
+		return tvec2(x * s, y * s);
 	}
-	tvec2& operator/(T s) {
-		x /= s;
-		y /= s;
-		return *this;
+	tvec2 operator/(T s) const {
+		return tvec2(x / s, y / s);
 	}
 
 	tvec2& operator+=(tvec2 const& v) {
