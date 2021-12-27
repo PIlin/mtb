@@ -4,7 +4,8 @@
 #include "rdr/rdr.hpp"
 #include "rdr/dbg_draw.hpp"
 #include "camera_mgr.hpp"
-
+#include "dbg_ui.hpp"
+#include "imgui.hpp"
 
 void cCameraManager::init(cUpdateQueue& queue) {
 	mTrackballCam.init(mCamera);
@@ -23,6 +24,16 @@ void cCameraManager::init(cUpdateGraph& graph) {
 
 void cCameraManager::update_cam() {
 	mTrackballCam.update(mCamera);
+
+	if (bool& isOpen = cDbgToolsMgr::tools().camera_mgr) {
+		if (ImGui::Begin("Camera mgr", &isOpen)) {
+			if (mCamera.dbg_edit()) {
+				mTrackballCam.init(mCamera);
+			}
+		}
+		ImGui::End();
+	}
+
 	cRdrQueueMgr::get().add_model_prologue_job(*this);
 	cDbgDrawMgr::get().set_camera(mCamera);
 }

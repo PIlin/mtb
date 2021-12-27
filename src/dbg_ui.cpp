@@ -25,6 +25,7 @@ void cDbgToolsMgr::update() {
 			ImGui::MenuItem("Scene editor", "", &mToolFlags.scene_editor);
 			ImGui::MenuItem("Update queue", "", &mToolFlags.update_queue);
 			ImGui::MenuItem("Light", "", &mToolFlags.light_mgr);
+			ImGui::MenuItem("Camera", "", &mToolFlags.camera_mgr);
 			ImGui::MenuItem("ImGui demo", "", &mToolFlags.imgui_demo);
 			ImGui::EndMenu();
 		}

@@ -5,6 +5,7 @@
 #include "input.hpp"
 #include "cbufs.hpp"
 #include "rdr.hpp"
+#include "imgui.hpp"
 
 CLANG_DIAG_PUSH
 CLANG_DIAG_IGNORE("-Wpragma-pack")
@@ -47,24 +48,19 @@ cCamera::~cCamera() {
 }
 
 void cCamera::set_default() {
-	//mPos = dx::XMVectorSet(1.0f, 2.0f, 3.0f, 1.0f);
-	mPos = dx::XMVectorSet(0.5f, 0.1f, 1.0f, 1.0f);
-	mTgt = dx::XMVectorSet(0.0f, 0.1f, 0.0f, 1.0f);
+	mPos = dx::XMVectorSet(1.0f, 2.0f, 3.0f, 1.0f);
+	mTgt = dx::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 	mUp = dx::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
-	auto dir = dx::XMVectorSubtract(mPos, mTgt);
-	auto x = dx::XMVector3Cross(mUp, dir);
-	mUp = dx::XMVector3Cross(dir, x);
-	mUp = dx::XMVector3Normalize(mUp);
-
+	norm_up();
 
 	mFovY = DEG2RAD(45.0f);
 	//mFovY = dx::XM_PIDIV2;
 
 	set_aspect_from_window_size(get_window_size());
 
-	mNearZ = 0.001f;
-	mFarZ = 1000.0f;
+	mNearZ = 0.01f;
+	mFarZ = 300.0f;
 
 	recalc();
 }
@@ -79,6 +75,38 @@ void cCamera::set_aspect_from_window_size(vec2f windowSize) {
 	mAspect = windowSize.x / windowSize.y;
 }
 
+void cCamera::norm_up() {
+	auto dir = dx::XMVectorSubtract(mPos, mTgt);
+	auto x = dx::XMVector3Cross(mUp, dir);
+	mUp = dx::XMVector3Cross(dir, x);
+	mUp = dx::XMVector3Normalize(mUp);
+}
+
+bool cCamera::dbg_edit() {
+	bool updated = false;
+	updated = ImguiDragXmVector3("cam.mPos", mPos) || updated;
+	updated = ImguiDragXmVector3("cam.mTgt", mTgt) || updated;
+	updated = ImguiDragXmVector3("cam.mUp", mUp) || updated;
+
+	if (updated) {
+		norm_up();
+	}
+
+	updated = ImGui::SliderAngle("fovY", &mFovY, 1.0f, 180.0f) || updated;
+	updated = ImGui::SliderFloat("aspect", &mAspect, 0.01f, 10.0f) || updated;
+	updated = ImGui::SliderFloat("nearZ", &mNearZ, 0.0001f, 10000.0f, "%.5f", ImGuiSliderFlags_Logarithmic) || updated;
+	updated = ImGui::SliderFloat("farZ", &mFarZ, 0.0001f, 10000.0f, "%.5f", ImGuiSliderFlags_Logarithmic) || updated;
+
+	if (ImGui::Button("Set default")) {
+		set_default();
+		return true;
+	}
+
+	if (updated) {
+		recalc();
+	}
+	return updated;
+}
 
 void cTrackball::update(vec2i pos, vec2i prev, float r) {
 	vec2f fpos = pos;

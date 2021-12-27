@@ -391,6 +391,27 @@ bool ImguiDragFloat3_1(char const* label, float v[3], float v_speed, const char*
 	return res;
 }
 
+bool ImguiDragXmVector3(char const* label, DirectX::XMVECTOR& vec, float v_speed /*= 1.0f*/, const char* display_format /*= "%.3f"*/) {
+	vec4 tmp;
+	dx::XMStoreFloat4(&tmp.mVal, vec);
+	if (ImGui::DragFloat3(label, &tmp.mVal.x, v_speed, 0.0f, 0.0f, display_format)) {
+		vec = dx::XMLoadFloat4(&tmp.mVal);
+		return true;
+	}
+	return false;
+}
+
+bool ImguiDragXmVector4(char const* label, DirectX::XMVECTOR& vec, float v_speed /*= 1.0f*/, const char* display_format /*= "%.3f"*/) {
+	vec4 tmp;
+	dx::XMStoreFloat4(&tmp.mVal, vec);
+	if (ImGui::DragFloat4(label, &tmp.mVal.x, v_speed, 0.0f, 0.0f, display_format)) {
+		vec = dx::XMLoadFloat4(&tmp.mVal);
+		return true;
+	}
+	return false;
+}
+
+
 struct sXformGizmoState {
 	ImGuizmo::OPERATION mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
 	ImGuizmo::MODE mCurrentGizmoMode = ImGuizmo::LOCAL;

@@ -382,6 +382,7 @@ void sDbgTools::serialize(Archive& arc) {
 	ARC(CEREAL_NVP(update_queue));
 	ARC(CEREAL_NVP(light_mgr));
 	ARC(CEREAL_NVP(imgui_demo));
+	ARC(CEREAL_NVP(camera_mgr));
 }
 
 bool sDbgTools::load(const fs::path& filepath) {

@@ -41,6 +41,8 @@ public:
 
 	void set_aspect_from_window_size(vec2f windowSize);
 
+	void norm_up();
+	bool dbg_edit();
 public:
 	bool save(const fs::path& filepath);
 	bool load(const fs::path& filepath);
