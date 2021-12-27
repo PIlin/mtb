@@ -60,8 +60,7 @@ public:
 
 	void update(vec2i pos, vec2i prev, float r = 0.8f);
 	void update(vec2f pos, vec2f prev, float r = 0.8f);
-	void apply(cCamera& cam);
-	void apply(cCamera& cam, DirectX::XMVECTOR dir);
+	void apply(cCamera& cam, DirectX::XMVECTOR dir) const;
 	void set_home();
 };
 
@@ -70,7 +69,7 @@ class cTrackballCam {
 	bool mCatchInput = false;
 	vec2f mWindowSize;
 public:
-	void init(cCamera& cam);
+	void init(const cCamera& cam);
 	void update(cCamera& cam);
 protected:
 	bool update_trackball(cCamera& cam);

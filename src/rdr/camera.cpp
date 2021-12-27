@@ -52,6 +52,11 @@ void cCamera::set_default() {
 	mTgt = dx::XMVectorSet(0.0f, 0.1f, 0.0f, 1.0f);
 	mUp = dx::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
+	auto dir = dx::XMVectorSubtract(mPos, mTgt);
+	auto x = dx::XMVector3Cross(mUp, dir);
+	mUp = dx::XMVector3Cross(dir, x);
+	mUp = dx::XMVector3Normalize(mUp);
+
 
 	mFovY = DEG2RAD(45.0f);
 	//mFovY = dx::XM_PIDIV2;
@@ -122,7 +127,7 @@ void cTrackball::update(vec2f pos, vec2f prev, float r) {
 	mSpin = spin;
 }
 
-void cTrackball::apply(cCamera& cam, DirectX::XMVECTOR dir) {
+void cTrackball::apply(cCamera& cam, DirectX::XMVECTOR dir) const {
 	dir = dx::XMVector3Rotate(dir, mQuat);
 	cam.mPos = dx::XMVectorAdd(cam.mTgt, dir);
 
@@ -175,11 +180,15 @@ void cTrackballCam::update(cCamera& cam) {
 	}
 }
 
-void cTrackballCam::init(cCamera& cam) {
+void cTrackballCam::init(const cCamera& cam) {
+	dx::XMMATRIX mtx;
 	auto dir = dx::XMVectorSubtract(cam.mPos, cam.mTgt);
-	auto angle = dx::XMVector3AngleBetweenVectors(dir, dx::g_XMIdentityR2);
-	auto a = dx::XMVectorGetX(angle);
-	tb.mQuat = dx::XMQuaternionRotationAxis(cam.mUp, a);
+	mtx.r[0] = dx::XMVector3Normalize(dx::XMVector3Cross(cam.mUp, dir));
+	mtx.r[1] = dx::XMVector3Normalize(cam.mUp);
+	mtx.r[2] = dx::XMVector3Normalize(dir);
+	mtx.r[3] = dx::g_XMIdentityR3;
+	tb.mQuat = dx::XMQuaternionRotationMatrix(mtx);
+
 	mWindowSize = get_window_size();
 }
 
