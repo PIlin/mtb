@@ -14,6 +14,7 @@
 #include "model_sys.hpp"
 #include "anim_sys.hpp"
 #include "camera_mgr.hpp"
+#include "input_sys.hpp"
 #include "move_sys.hpp"
 
 namespace dx = DirectX;
@@ -143,31 +144,35 @@ struct cScene::sSceneImpl {
 	cModelDispSys modelSys;
 	cAnimationSys animSys;
 	cMoveSys moveSys;
-
+	cInputSys inputSys;
 public:
 
 	sSceneImpl(entt::registry& registry, cUpdateQueue& updateQueue)
 		: modelSys(registry)
 		, animSys(registry)
 		, moveSys(registry)
+		, inputSys(registry)
 	{
 		gnomon.init(updateQueue);
 		lightMgr.init(updateQueue);
 		modelSys.register_update(updateQueue);
 		animSys.register_update(updateQueue);
 		moveSys.register_update(updateQueue);
+		inputSys.register_update(updateQueue);
 	}
 
 	sSceneImpl(entt::registry& registry, cUpdateGraph& graph)
 		: modelSys(registry)
 		, animSys(registry)
 		, moveSys(registry)
+		, inputSys(registry)
 	{
 		gnomon.init(graph);
 		lightMgr.init(graph);
 		modelSys.register_update(graph);
 		animSys.register_update(graph);
 		moveSys.register_update(graph);
+		inputSys.register_update(graph);
 	}
 };
 

@@ -347,6 +347,10 @@ void sAnimationCompParams::serialize(Archive& arc) {
 }
 
 
+template <class Archive>
+void sInputCompParams::serialize(Archive& arc) {
+}
+
 
 template <typename Params>
 template <class Archive>

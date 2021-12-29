@@ -50,23 +50,44 @@ public:
 	}
 };
 
+///////////////////////
+
+void sMoveRequestComp::update(sPositionComp& pos) {
+	auto mtx = dx::XMMatrixTranslation(request.x, request.y, request.z);
+	pos.wmtx *= mtx;
+}
+
+///////////////////////
+
+
 void cMoveSys::register_update(cUpdateQueue& queue) {
 	queue.add(eUpdatePriority::SceneAnimUpdate, MAKE_UPDATE_FUNC_THIS(cMoveSys::update), mMoveUpdate);
 }
 
 void cMoveSys::register_update(cUpdateGraph& graph) {
 	//sUpdateDepRes move = graph.register_res("move");
+	sUpdateDepRes moveReq = graph.register_res("components", "moveReq");
 	sUpdateDepRes pos = graph.register_res("components", "position");
 
-	graph.add(sUpdateDepDesc{ {}, {pos} },
+	graph.add(sUpdateDepDesc{ {moveReq}, {pos} },
 		MAKE_UPDATE_FUNC_THIS(cMoveSys::update), mMoveUpdate);
 }
 
 void cMoveSys::update() {
-	auto view = mRegistry.view<sPositionComp, cMoveComp>();
-	view.each([](sPositionComp& pos, cMoveComp& move) {
-		move.update(pos);
-	});
+	{
+		auto view = mRegistry.view<sPositionComp, cMoveComp>();
+		view.each([](sPositionComp& pos, cMoveComp& move) {
+			move.update(pos);
+		});
+	}
+
+	{
+		auto view = mRegistry.view<sPositionComp, sMoveRequestComp>();
+		view.each([](sPositionComp& pos, sMoveRequestComp& move) {
+			move.update(pos);
+		});
+		mRegistry.clear<sMoveRequestComp>();
+	}
 }
 
 void cMoveSys::register_to_editor(cSceneCompMetaReg& metaRegistry) {

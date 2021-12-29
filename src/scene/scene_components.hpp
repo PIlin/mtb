@@ -107,6 +107,18 @@ struct sAnimationCompParams {
 	void serialize(Archive& arc);
 };
 
+struct sInputCompParams {
+	bool create(entt::registry& reg, entt::entity en) const;
+
+	bool dbg_ui(sSceneEditCtx& ctx);
+	static sInputCompParams init_ui();
+	bool edit_component(entt::registry& reg, entt::entity en) const;
+	bool remove_component(entt::registry& reg, entt::entity en) const;
+
+	template <class Archive>
+	void serialize(Archive& arc);
+};
+
 ////////////////////////////////
 
 struct iParamList {
@@ -178,6 +190,7 @@ struct sSceneSnapshot {
 				CASE(sRiggedModelCompParams);
 				CASE(sAnimationCompParams);
 				CASE(sFbxRiggedModelParams);
+				CASE(sInputCompParams);
 #undef CASE
 			}
 		}

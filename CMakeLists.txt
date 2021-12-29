@@ -100,6 +100,8 @@ set(SRC
 	src/scene/anim_sys.hpp
 	src/scene/camera_mgr.cpp
 	src/scene/camera_mgr.hpp
+	src/scene/input_sys.cpp
+	src/scene/input_sys.hpp
 	src/scene/model_sys.cpp
 	src/scene/model_sys.hpp
 	src/scene/move_sys.cpp

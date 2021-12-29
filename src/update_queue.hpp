@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.hpp"
 #include "microprofile.h"
 
 #include <array>

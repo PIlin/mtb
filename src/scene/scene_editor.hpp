@@ -34,8 +34,10 @@ namespace nSceneEdit {
 		}
 
 		virtual void ui(entt::registry& reg, entt::entity en, sSceneEditCtx& ctx) override {
-			if (T* p = reg.try_get<T>(en)) {
-				p->dbg_ui(ctx);
+			if constexpr (!std::is_empty_v<T>) {
+				if (T* p = reg.try_get<T>(en)) {
+					p->dbg_ui(ctx);
+				}
 			}
 		}
 	};
