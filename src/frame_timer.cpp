@@ -5,21 +5,36 @@
 
 #include <vector>
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+
 void cFrameTimer::init_loop() {
 	std::chrono::duration<double> ft(1.0 / 60.0);
 	mIdealFrameDur = std::chrono::duration_cast<frame_clock::duration>(ft);
 	mNextFrameDur = mIdealFrameDur;
 	mFrameBeginTime = frame_clock::now();
+
+	mpWaitableTimer.reset(CreateWaitableTimer(nullptr, TRUE, nullptr));
+	set_waitable_timer();
 }
 
 void cFrameTimer::sleep() {
-	auto frameEndTime = frame_clock::now();
-	auto spent = frameEndTime - mFrameBeginTime;
-	if (spent < mNextFrameDur) {
-		auto left = mNextFrameDur - spent;
+	if (mpWaitableTimer && mIsWaitableTimerSet) {
 		MICROPROFILE_SCOPEI("main", "sleep", -1);
-		//std::this_thread::sleep_until(frameBeginTime + frameTarget);
-		std::this_thread::sleep_until(frameEndTime + left);
+		if (WaitForSingleObject(mpWaitableTimer, INFINITE) != WAIT_OBJECT_0) {
+			dbg_msg("WaitForSingleObject failed: %x\n", GetLastError());
+			mpWaitableTimer.reset();
+		}
+		mIsWaitableTimerSet = false;
+	}
+	else {
+		auto frameEndTime = frame_clock::now();
+		auto spent = frameEndTime - mFrameBeginTime;
+		if (spent < mNextFrameDur) {
+			MICROPROFILE_SCOPEI("main", "sleep", -1);
+			std::this_thread::sleep_until(mFrameBeginTime + mNextFrameDur);
+		}
 	}
 }
 
@@ -30,8 +45,26 @@ void cFrameTimer::frame_flip() {
 	mNextFrameDur = mIdealFrameDur - overTime;
 	mFrameBeginTime = now;
 	mRealFrameTime = realFrameTime;
+	set_waitable_timer();
 	//dbg_msg("begin %zd, ft %zd, rt %zu, o %zu, \n",
 	//	mFrameBeginTime.time_since_epoch(), mNextFrameDur.count(), realFrameTime.count(), overTime.count());
+}
+
+void cFrameTimer::set_waitable_timer() {
+	if (mpWaitableTimer && mUseWaitableTimer) {
+		using namespace std::chrono;
+		LARGE_INTEGER t;
+		t.QuadPart = -(duration_cast<nanoseconds>(mNextFrameDur).count() / 100);
+		t.QuadPart = std::min<LONGLONG>(t.QuadPart, 0);
+		BOOL res = SetWaitableTimer(mpWaitableTimer, &t, 0, nullptr, nullptr, FALSE);
+		if (res == 0) {
+			dbg_msg("cFrameTimer::set_waitable_timer failed: err %x\n", GetLastError());
+			mpWaitableTimer.reset();
+		}
+		else {
+			mIsWaitableTimerSet = true;
+		}
+	}
 }
 
 template <typename T>
@@ -86,6 +119,10 @@ struct cFrameTimer::sDbgCounters {
 void cFrameTimer::dbg_ui() {
 	if (bool& enabled = cDbgToolsMgr::tools().frame_timer) {
 		if (ImGui::Begin("Frame timer", &enabled)) {
+			ImGui::Checkbox("Use waitable timer", &mUseWaitableTimer);
+
+			ImGui::Separator();
+
 			if (!mpDbg) {
 				mpDbg = std::make_unique<sDbgCounters>();
 			}

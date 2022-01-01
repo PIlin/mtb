@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common.hpp"
+
 #include <chrono>
 #include <memory>
 
@@ -10,10 +12,14 @@ public:
 private:
 	struct sDbgCounters;
 
-	frame_clock::duration mIdealFrameDur;
-	frame_clock::duration mNextFrameDur;
-	frame_clock::time_point mFrameBeginTime;
-	frame_clock::duration mRealFrameTime;
+	frame_clock::duration mIdealFrameDur = {};
+	frame_clock::duration mNextFrameDur = {};
+	frame_clock::time_point mFrameBeginTime = {};
+	frame_clock::duration mRealFrameTime = {};
+	
+	winhandle_ptr mpWaitableTimer;
+	bool mIsWaitableTimerSet = false;
+	bool mUseWaitableTimer = true;
 
 	std::unique_ptr<sDbgCounters> mpDbg;
 
@@ -29,4 +35,7 @@ public:
 	void frame_flip();
 
 	void dbg_ui();
+
+private:
+	void set_waitable_timer();
 };

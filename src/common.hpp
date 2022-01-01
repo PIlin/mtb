@@ -94,7 +94,9 @@ struct base_ptr {
 	}
 
 	T* operator->() const { return p; }
-	T& operator*() const { return *p; }
+	template<class Q = T>
+	auto operator*() const -> typename std::enable_if<std::is_void_v<Q>, Q&>::type
+	{ return *p; }
 
 	T** pp() { return &p; }
 
@@ -126,6 +128,11 @@ struct com_ptr_releaser {
 
 template <typename T>
 using com_ptr = base_ptr<T, com_ptr_releaser>;
+
+struct winhandle_releaser {
+	void operator()(void* p);
+};
+using winhandle_ptr = base_ptr<void, winhandle_releaser>;
 
 template <int A> struct aligned;
 template <> struct __declspec(align(1)) aligned < 1 > {};

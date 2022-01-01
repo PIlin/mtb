@@ -7,6 +7,16 @@
 #define NOMINMAX
 #include <Windows.h>
 
+void winhandle_releaser::operator()(void* p) {
+	if (p) {
+		BOOL res = CloseHandle(p);
+		if (res == 0) {
+			DWORD err = GetLastError();
+			dbg_msg("CloseHandle failed: %x\n", err);
+		}
+	}
+}
+
 void dbg_msg1(cstr format) {
 	::OutputDebugStringA(format);
 }
