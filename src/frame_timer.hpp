@@ -20,6 +20,7 @@ private:
 	winhandle_ptr mpWaitableTimer;
 	bool mIsWaitableTimerSet = false;
 	bool mUseWaitableTimer = true;
+	bool mUseVsync = false;
 
 	int mIdealFrameRate = 0;
 
@@ -33,6 +34,7 @@ public:
 	~cFrameTimer();
 
 	void set_ideal_framerate(int rate);
+	bool use_vsync() const { return mUseVsync; }
 
 	void init_loop();
 	void sleep();

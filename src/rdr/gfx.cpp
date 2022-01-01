@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "math.hpp"
 #include "gfx.hpp"
+#include "frame_timer.hpp"
 
 #include "res/path_helpers.hpp"
 #include "microprofile.h"
@@ -126,7 +127,11 @@ void cGfx::begin_frame() {
 
 void cGfx::end_frame() {
 	MICROPROFILE_SCOPEI("main", "cGfx::end_frame", -1);
-	mDev.mpSwapChain->Present(0, 0);
+	const UINT interval = cFrameTimer::get().use_vsync()
+		? 1
+		: 0;
+
+	mDev.mpSwapChain->Present(interval, 0);
 	mbInFrame = false;
 }
 

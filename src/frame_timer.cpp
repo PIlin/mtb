@@ -25,6 +25,9 @@ void cFrameTimer::init_loop() {
 }
 
 void cFrameTimer::sleep() {
+	if (mUseVsync)
+		return;
+
 	if (mpWaitableTimer && mIsWaitableTimerSet) {
 		MICROPROFILE_SCOPEI("main", "sleep", -1);
 		if (WaitForSingleObject(mpWaitableTimer, INFINITE) != WAIT_OBJECT_0) {
@@ -125,10 +128,14 @@ struct cFrameTimer::sDbgCounters {
 void cFrameTimer::dbg_ui() {
 	if (bool& enabled = cDbgToolsMgr::tools().frame_timer) {
 		if (ImGui::Begin("Frame timer", &enabled)) {
-			ImGui::Checkbox("Use waitable timer", &mUseWaitableTimer);
+			ImGui::Checkbox("VSync", &mUseVsync);
+			
+			if (!mUseVsync) {
+				ImGui::Checkbox("Use waitable timer", &mUseWaitableTimer);
 
-			if (ImGui::SliderInt("Ideal frame rate", &mIdealFrameRate, 1, 300)) {
-				set_ideal_framerate(mIdealFrameRate);
+				if (ImGui::SliderInt("Ideal frame rate", &mIdealFrameRate, 1, 300)) {
+					set_ideal_framerate(mIdealFrameRate);
+				}
 			}
 
 			ImGui::Separator();
