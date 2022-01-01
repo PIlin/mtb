@@ -2,6 +2,7 @@
 #include "scene_editor.hpp"
 #include "scene_components.hpp"
 #include "move_sys.hpp"
+#include "frame_timer.hpp"
 
 #include "input.hpp"
 #include <SDL_scancode.h>
@@ -38,11 +39,14 @@ void cInputSys::update_input() {
 	const bool isLeft = input.kbtn_state(SDL_SCANCODE_A);
 	const bool isRight = input.kbtn_state(SDL_SCANCODE_D);
 
+	const float ft = cFrameTimer::get().get_framt_time_sec();
+	const float speed = 2.5f * ft;
+
 	vec2f req {0, 0};
-	if (isFwd) req.y = 1.0f;
-	else if (isBack) req.y = -1.0f;
-	if (isLeft) req.x = 1.0f;
-	else if (isRight) req.x = -1.0f;
+	if (isFwd) req.y = speed;
+	else if (isBack) req.y = -speed;
+	if (isLeft) req.x = speed;
+	else if (isRight) req.x = -speed;
 
 	if (req == vec2f{ 0, 0 })
 		return;

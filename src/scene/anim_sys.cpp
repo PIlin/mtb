@@ -74,10 +74,7 @@ void cAnimationSys::register_update(cUpdateGraph& graph) {
 }
 
 void cAnimationSys::update_anim() {
-	using namespace std::chrono;
-	auto ft = cFrameTimer::get().get_frame_time();
-	constexpr duration<double> targetTime(1.0 / 60.0);
-	const float speedMul = float(ft / targetTime);
+	const float speedMul = cFrameTimer::get().get_frame_time_mul();
 
 	auto view = mRegistry.view<cAnimationComp, cRigComp>();
 	view.each([speedMul](cAnimationComp& anim, cRigComp& rig) {

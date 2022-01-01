@@ -16,6 +16,8 @@ private:
 	frame_clock::duration mNextFrameDur = {};
 	frame_clock::time_point mFrameBeginTime = {};
 	frame_clock::duration mRealFrameTime = {};
+	float mFrameTimeMul = 1.0f;
+	float mFrameTimeSec = 0.0f;
 	
 	winhandle_ptr mpWaitableTimer;
 	bool mIsWaitableTimerSet = false;
@@ -28,7 +30,9 @@ private:
 
 public:
 	static cFrameTimer& get();
-	const frame_clock::duration& get_frame_time() { return mRealFrameTime; }
+	const frame_clock::duration& get_frame_time() const { return mRealFrameTime; }
+	float get_framt_time_sec() const { return mFrameTimeSec; }
+	float get_frame_time_mul() const { return mFrameTimeMul; }
 
 	cFrameTimer();
 	~cFrameTimer();
@@ -44,4 +48,5 @@ public:
 
 private:
 	void set_waitable_timer();
+	void update_frame_time_mul();
 };

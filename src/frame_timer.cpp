@@ -60,6 +60,8 @@ void cFrameTimer::frame_flip() {
 	mFrameBeginTime = now;
 	mRealFrameTime = realFrameTime;
 	set_waitable_timer();
+	update_frame_time_mul();
+
 	//dbg_msg("begin %zd, ft %zd, rt %zu, o %zu, \n",
 	//	mFrameBeginTime.time_since_epoch(), mNextFrameDur.count(), realFrameTime.count(), overTime.count());
 }
@@ -79,6 +81,15 @@ void cFrameTimer::set_waitable_timer() {
 			mIsWaitableTimerSet = true;
 		}
 	}
+}
+
+void cFrameTimer::update_frame_time_mul() {
+	using namespace std::chrono;
+	auto ft = get_frame_time();
+	constexpr duration<double> targetTime(1.0 / 60.0);
+	
+	mFrameTimeMul = float(ft / targetTime);
+	mFrameTimeSec = duration_cast<duration<float>>(ft).count();
 }
 
 template <typename T>
