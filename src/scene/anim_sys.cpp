@@ -3,6 +3,7 @@
 #include "rig_component.hpp"
 
 #include "math.hpp"
+#include "frame_timer.hpp"
 
 #include "scene_editor.hpp"
 
@@ -30,7 +31,7 @@ public:
 		, mCurAnim(curAnim)
 	{}
 
-	void update(cRig& rig) {
+	void update(cRig& rig, float speedMul) {
 		assert(mpAnimList);
 
 		const int32_t animCount = mpAnimList->get_count();
@@ -39,7 +40,7 @@ public:
 			float lastFrame = anim.get_last_frame();
 
 			anim.eval(rig, mFrame);
-			mFrame += mSpeed;
+			mFrame += mSpeed * speedMul;
 			if (mFrame >= lastFrame)
 				mFrame = 0.0f;
 		}
@@ -73,9 +74,14 @@ void cAnimationSys::register_update(cUpdateGraph& graph) {
 }
 
 void cAnimationSys::update_anim() {
+	using namespace std::chrono;
+	auto ft = cFrameTimer::get().get_frame_time();
+	constexpr duration<double> targetTime(1.0 / 60.0);
+	const float speedMul = float(ft / targetTime);
+
 	auto view = mRegistry.view<cAnimationComp, cRigComp>();
-	view.each([](cAnimationComp& anim, cRigComp& rig) {
-		anim.update(rig.get());
+	view.each([speedMul](cAnimationComp& anim, cRigComp& rig) {
+		anim.update(rig.get(), speedMul);
 	});
 }
 
