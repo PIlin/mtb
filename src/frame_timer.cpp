@@ -49,9 +49,14 @@ void cFrameTimer::sleep() {
 void cFrameTimer::frame_flip() {
 	auto now = frame_clock::now();
 	auto realFrameTime = now - mFrameBeginTime;
-	auto overTime = realFrameTime - mNextFrameDur;
-	mNextFrameDur = mIdealFrameDur - overTime;
-	mNextFrameDur = std::max(mNextFrameDur, frame_clock::duration::zero());
+	if (!mUseVsync) {
+		auto overTime = realFrameTime - mNextFrameDur;
+		mNextFrameDur = mIdealFrameDur - overTime;
+		mNextFrameDur = std::max(mNextFrameDur, frame_clock::duration::zero());
+	}
+	else {
+		mNextFrameDur = mIdealFrameDur;
+	}
 	mFrameBeginTime = now;
 	mRealFrameTime = realFrameTime;
 	set_waitable_timer();
