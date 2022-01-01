@@ -43,6 +43,7 @@ void cFrameTimer::frame_flip() {
 	auto realFrameTime = now - mFrameBeginTime;
 	auto overTime = realFrameTime - mNextFrameDur;
 	mNextFrameDur = mIdealFrameDur - overTime;
+	mNextFrameDur = std::max(mNextFrameDur, frame_clock::duration::zero());
 	mFrameBeginTime = now;
 	mRealFrameTime = realFrameTime;
 	set_waitable_timer();
