@@ -21,6 +21,8 @@ private:
 	bool mIsWaitableTimerSet = false;
 	bool mUseWaitableTimer = true;
 
+	int mIdealFrameRate = 0;
+
 	std::unique_ptr<sDbgCounters> mpDbg;
 
 public:
@@ -29,6 +31,8 @@ public:
 
 	cFrameTimer();
 	~cFrameTimer();
+
+	void set_ideal_framerate(int rate);
 
 	void init_loop();
 	void sleep();

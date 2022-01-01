@@ -9,9 +9,14 @@
 #define NOMINMAX
 #include <Windows.h>
 
-void cFrameTimer::init_loop() {
-	std::chrono::duration<double> ft(1.0 / 60.0);
+void cFrameTimer::set_ideal_framerate(int rate) {
+	if (rate < 1) { rate = 1; }
+	std::chrono::duration<double> ft(1.0 / rate);
 	mIdealFrameDur = std::chrono::duration_cast<frame_clock::duration>(ft);
+	mIdealFrameRate = rate;
+}
+
+void cFrameTimer::init_loop() {
 	mNextFrameDur = mIdealFrameDur;
 	mFrameBeginTime = frame_clock::now();
 
@@ -122,6 +127,10 @@ void cFrameTimer::dbg_ui() {
 		if (ImGui::Begin("Frame timer", &enabled)) {
 			ImGui::Checkbox("Use waitable timer", &mUseWaitableTimer);
 
+			if (ImGui::SliderInt("Ideal frame rate", &mIdealFrameRate, 1, 300)) {
+				set_ideal_framerate(mIdealFrameRate);
+			}
+
 			ImGui::Separator();
 
 			if (!mpDbg) {
@@ -165,5 +174,7 @@ void cFrameTimer::dbg_ui() {
 	}
 }
 
-cFrameTimer::cFrameTimer() = default;
+cFrameTimer::cFrameTimer() {
+	set_ideal_framerate(60);
+}
 cFrameTimer::~cFrameTimer() = default;
