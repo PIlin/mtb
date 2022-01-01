@@ -17,11 +17,13 @@ void cFrameTimer::set_ideal_framerate(int rate) {
 }
 
 void cFrameTimer::init_loop() {
+	mpWaitableTimer.reset(CreateWaitableTimer(nullptr, TRUE, nullptr));
+
 	mNextFrameDur = mIdealFrameDur;
 	mFrameBeginTime = frame_clock::now();
-
-	mpWaitableTimer.reset(CreateWaitableTimer(nullptr, TRUE, nullptr));
+	mRealFrameDur = mIdealFrameDur;
 	set_waitable_timer();
+	update_frame_time_mul();
 }
 
 void cFrameTimer::sleep() {
@@ -58,7 +60,7 @@ void cFrameTimer::frame_flip() {
 		mNextFrameDur = mIdealFrameDur;
 	}
 	mFrameBeginTime = now;
-	mRealFrameTime = realFrameTime;
+	mRealFrameDur = realFrameTime;
 	set_waitable_timer();
 	update_frame_time_mul();
 
@@ -85,7 +87,7 @@ void cFrameTimer::set_waitable_timer() {
 
 void cFrameTimer::update_frame_time_mul() {
 	using namespace std::chrono;
-	auto ft = get_frame_time();
+	auto ft = get_frame_dur();
 	constexpr duration<double> targetTime(1.0 / 60.0);
 	
 	mFrameTimeMul = float(ft / targetTime);
@@ -165,7 +167,7 @@ void cFrameTimer::dbg_ui() {
 
 			auto overTime = mIdealFrameDur - mNextFrameDur;
 
-			float ft = duration_cast<millisecf>(mRealFrameTime).count();
+			float ft = duration_cast<millisecf>(mRealFrameDur).count();
 			float ov = duration_cast<millisecf>(overTime).count();
 			float nf = duration_cast<millisecf>(mNextFrameDur).count();
 

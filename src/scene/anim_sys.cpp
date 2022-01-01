@@ -74,7 +74,7 @@ void cAnimationSys::register_update(cUpdateGraph& graph) {
 }
 
 void cAnimationSys::update_anim() {
-	const float speedMul = cFrameTimer::get().get_frame_time_mul();
+	const float speedMul = cFrameTimer::get().get_frame_dur_mul();
 
 	auto view = mRegistry.view<cAnimationComp, cRigComp>();
 	view.each([speedMul](cAnimationComp& anim, cRigComp& rig) {

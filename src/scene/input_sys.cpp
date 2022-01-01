@@ -39,7 +39,7 @@ void cInputSys::update_input() {
 	const bool isLeft = input.kbtn_state(SDL_SCANCODE_A);
 	const bool isRight = input.kbtn_state(SDL_SCANCODE_D);
 
-	const float ft = cFrameTimer::get().get_framt_time_sec();
+	const float ft = cFrameTimer::get().get_frame_dur_sec();
 	const float speed = 2.5f * ft;
 
 	vec2f req {0, 0};

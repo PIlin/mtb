@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "move_sys.hpp"
 #include "math.hpp"
+#include "frame_timer.hpp"
 
 #include "scene_editor.hpp"
 
@@ -30,7 +31,7 @@ public:
 
 	void update(sPositionComp& posComp) {
 		const float rotTime = 5;
-		mPos += (1.0f / 60.0f) / rotTime;
+		mPos += cFrameTimer::get().get_frame_dur_sec() / rotTime;
 		float intPart;
 		if (mPos > 1.0f) mPos = modf(mPos, &intPart);
 

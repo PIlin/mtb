@@ -12,6 +12,7 @@
 #include "input.hpp"
 #include "rdr/camera.hpp"
 #include "profiler.hpp"
+#include "frame_timer.hpp"
 
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -157,6 +158,7 @@ void cImgui::update() {
 
 	const vec2f winSize = get_window_size();
 	io.DisplaySize = ImVec2(winSize.x, winSize.y);
+	io.DeltaTime = cFrameTimer::get().get_frame_dur_sec();
 
 	auto& input = get_input_mgr();
 	if (!input.is_locked() || input.is_locked(eInputLock::TextInput)) {

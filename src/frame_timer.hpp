@@ -15,7 +15,7 @@ private:
 	frame_clock::duration mIdealFrameDur = {};
 	frame_clock::duration mNextFrameDur = {};
 	frame_clock::time_point mFrameBeginTime = {};
-	frame_clock::duration mRealFrameTime = {};
+	frame_clock::duration mRealFrameDur = {};
 	float mFrameTimeMul = 1.0f;
 	float mFrameTimeSec = 0.0f;
 	
@@ -30,9 +30,9 @@ private:
 
 public:
 	static cFrameTimer& get();
-	const frame_clock::duration& get_frame_time() const { return mRealFrameTime; }
-	float get_framt_time_sec() const { return mFrameTimeSec; }
-	float get_frame_time_mul() const { return mFrameTimeMul; }
+	const frame_clock::duration& get_frame_dur() const { return mRealFrameDur; }
+	float get_frame_dur_sec() const { return mFrameTimeSec; }
+	float get_frame_dur_mul() const { return mFrameTimeMul; }
 
 	cFrameTimer();
 	~cFrameTimer();
