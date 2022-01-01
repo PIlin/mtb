@@ -225,7 +225,7 @@ void loop() {
 int main(int argc, char* argv[]) {
 	cSDLInit sdl;
 	auto profiler = globals.profiler.ctor_scoped();
-	auto frameTimer = globals.profiler.ctor_scoped();
+	auto frameTimer = globals.frameTimer.ctor_scoped();
 	auto pathManager = globals.pathManager.ctor_scoped();
 	auto dbgUi = globals.dbgToolsMgr.ctor_scoped();
 	auto win = globals.win.ctor_scoped("TestBed - SPACE + mouse to control camera", 1200, 900, SDL_WINDOW_RESIZABLE);

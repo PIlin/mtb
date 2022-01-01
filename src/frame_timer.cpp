@@ -126,3 +126,6 @@ void cFrameTimer::dbg_ui() {
 		ImGui::End();
 	}
 }
+
+cFrameTimer::cFrameTimer() = default;
+cFrameTimer::~cFrameTimer() = default;

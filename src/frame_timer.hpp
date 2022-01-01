@@ -21,6 +21,9 @@ public:
 	static cFrameTimer& get();
 	const frame_clock::duration& get_frame_time() { return mRealFrameTime; }
 
+	cFrameTimer();
+	~cFrameTimer();
+
 	void init_loop();
 	void sleep();
 	void frame_flip();

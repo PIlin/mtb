@@ -2,6 +2,7 @@
 
 #define NOMINMAX
 
+#include <cassert>
 #include <cstdint>
 #include <algorithm>
 #include <type_traits>
@@ -150,6 +151,9 @@ template <typename T>
 class GlobalSingleton {
 	using Storage = typename ::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type;
 	Storage mData;
+#if !defined(NDEBUG)
+	bool mIsConstructed;
+#endif
 public:
 	struct sScope : noncopyable {
 		GlobalSingleton<T>* pObj;
@@ -165,14 +169,26 @@ public:
 
 	template <typename ... Args>
 	void ctor(Args&&... args) {
+#if !defined(NDEBUG)
+		assert(!mIsConstructed);
+		mIsConstructed = true;
+#endif
 		::new(&mData) T(std::forward<Args>(args)...);
 	}
 	template <typename ... Args>
 	sScope ctor_scoped(Args&&... args) {
+#if !defined(NDEBUG)
+		assert(!mIsConstructed);
+		mIsConstructed = true;
+#endif
 		::new(&mData) T(std::forward<Args>(args)...);
 		return sScope(*this);
 	}
 	void dtor() {
+#if !defined(NDEBUG)
+		assert(mIsConstructed);
+		mIsConstructed = false;
+#endif
 		T& t = get();
 		t.~T();
 	}
