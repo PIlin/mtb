@@ -31,4 +31,5 @@ private:
 private:
 
 	std::unique_ptr<ImDrawList> mpDrawList;
+	bool mNoInput = false;
 };

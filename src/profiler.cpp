@@ -41,9 +41,20 @@ void cProfiler::update_input() {
 	bool hasInput = false;
 	if (!input.is_locked() || input.is_locked(eInputLock::Profiler)) {
 		if (input.kbtn_released(SDL_SCANCODE_F4)) {
-			MicroProfileToggleDisplayMode();
+			if (mNoInput) {
+				mNoInput = false;
+			}
+			else {
+				if (input.kmod_state(KMOD_CTRL)) {
+					mNoInput = true;
+				}
+				else {
+					MicroProfileToggleDisplayMode();
+				}
+			}
 		}
-		if (MicroProfileIsDrawing()) {
+		
+		if (MicroProfileIsDrawing() && !mNoInput) {
 			hasInput = input.try_lock(eInputLock::Profiler);
 		}
 		else {
