@@ -7,6 +7,7 @@ struct sDbgTools {
 	bool update_queue = true;
 	bool light_mgr = true;
 	bool camera_mgr = false;
+	bool frame_timer = false;
 	bool imgui_demo = false;
 
 	bool save(const fs::path& filepath);

@@ -1,6 +1,7 @@
 #include "math.hpp"
 #include "dbg_ui.hpp"
 #include "imgui.hpp"
+#include "frame_timer.hpp"
 #include "res/path_helpers.hpp"
 
 sDbgTools& cDbgToolsMgr::tools() {
@@ -26,6 +27,7 @@ void cDbgToolsMgr::update() {
 			ImGui::MenuItem("Update queue", "", &mToolFlags.update_queue);
 			ImGui::MenuItem("Light", "", &mToolFlags.light_mgr);
 			ImGui::MenuItem("Camera", "", &mToolFlags.camera_mgr);
+			ImGui::MenuItem("Frame timer", "", &mToolFlags.frame_timer);
 			ImGui::MenuItem("ImGui demo", "", &mToolFlags.imgui_demo);
 			ImGui::EndMenu();
 		}
@@ -35,4 +37,6 @@ void cDbgToolsMgr::update() {
 	if (tools().imgui_demo) {
 		ImGui::ShowDemoWindow(&tools().imgui_demo);
 	}
+
+	cFrameTimer::get().dbg_ui();
 }

@@ -7,6 +7,7 @@ CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL_syswm.h>
 CLANG_DIAG_POP
 
+#include "frame_timer.hpp"
 #include "profiler.hpp"
 #include "math.hpp"
 #include "rdr/gfx.hpp"
@@ -106,6 +107,7 @@ private:
 
 struct sGlobals {
 	GlobalSingleton<cProfiler> profiler;
+	GlobalSingleton<cFrameTimer> frameTimer;
 	GlobalSingleton<cSDLWindow> win;
 	GlobalSingleton<cGfx> gfx;
 	GlobalSingleton<cShaderStorage> shaderStorage;
@@ -128,6 +130,7 @@ struct sGlobals {
 sGlobals globals;
 
 cProfiler& cProfiler::get() { return globals.profiler.get(); }
+cFrameTimer& cFrameTimer::get() { return globals.frameTimer.get(); }
 cGfx& get_gfx() { return globals.gfx.get(); }
 cShaderStorage& cShaderStorage::get() { return globals.shaderStorage.get(); }
 cInputMgr& get_input_mgr() { return globals.input.get(); }
@@ -196,9 +199,11 @@ void loop() {
 	bool quit = false;
 	
 	auto& inputMgr = get_input_mgr();
+	cFrameTimer& timer = cFrameTimer::get();
+	timer.init_loop();
 	while (!quit) {
 		MICROPROFILE_SCOPEI("frame", "frame", -1);
-		Uint32 ticks = SDL_GetTicks();
+		
 		{
 			MICROPROFILE_SCOPEI("main", "input", -1);
 			inputMgr.preupdate();
@@ -210,19 +215,17 @@ void loop() {
 			do_frame();
 		}
 
-		Uint32 now = SDL_GetTicks();
-		Uint32 spent = now - ticks;
-		if (spent < 16) {
-			MICROPROFILE_SCOPEI("main", "sleep", -1);
-			SDL_Delay(16 - spent);
-		}
+		timer.sleep();
 		cProfiler::get().flip();
+
+		timer.frame_flip();
 	}
 }
 
 int main(int argc, char* argv[]) {
 	cSDLInit sdl;
 	auto profiler = globals.profiler.ctor_scoped();
+	auto frameTimer = globals.profiler.ctor_scoped();
 	auto pathManager = globals.pathManager.ctor_scoped();
 	auto dbgUi = globals.dbgToolsMgr.ctor_scoped();
 	auto win = globals.win.ctor_scoped("TestBed - SPACE + mouse to control camera", 1200, 900, SDL_WINDOW_RESIZABLE);

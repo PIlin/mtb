@@ -1,6 +1,7 @@
 #pragma once 
 
 #include "imgui.h"
+#include "math.hpp"
 
 namespace std::filesystem { class path; }
 namespace fs = std::filesystem;

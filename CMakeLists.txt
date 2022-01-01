@@ -43,6 +43,8 @@ set(SRC
 	src/common.hpp
 	src/dbg_ui.cpp
 	src/dbg_ui.hpp
+	src/frame_timer.cpp
+	src/frame_timer.hpp
 	src/imgui.hpp
 	src/imgui_impl.cpp
 	src/imgui_impl.hpp
