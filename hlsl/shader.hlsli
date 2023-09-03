@@ -69,7 +69,7 @@ cbuffer Light : register(b3) {
 	float4 g_lightSH[7];
 };
 
-#define MAX_SKIN_MTX 64
+#define MAX_SKIN_MTX 96
 cbuffer Skin : register(b4) {
 	float4x4 g_skin[MAX_SKIN_MTX];
 }
