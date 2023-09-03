@@ -235,7 +235,7 @@ void cImgui::render_callback(ImDrawData* pDrawData) {
 	gfx.apply_default_rt_vp(pCtx);
 
 	const int count = pDrawData->CmdListsCount;
-	ImDrawList** const pDrawLists = pDrawData->CmdLists;
+	ImVector<ImDrawList*> const& pDrawLists = pDrawData->CmdLists;
 
 	if (mVtx.get_vtx_count() < (uint32_t)pDrawData->TotalVtxCount) {
 		dbg_msg("imgui: reallocate vertex buffer, needs %d, current size %u vetices\n",

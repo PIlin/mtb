@@ -90,13 +90,12 @@ void cProfiler::draw() {
 		drawData.Valid = true;
 
 		std::array<ImDrawList*, 1> pDrawLists = { mpDrawList.get()/*, mpDrawListText.get()*/ };
-		drawData.CmdLists = &pDrawLists.front();
-		drawData.CmdListsCount = (int)pDrawLists.size();
 		drawData.DisplayPos = ImVec2(0.0f, 0.0f);
 		drawData.DisplaySize = io.DisplaySize;
 		drawData.FramebufferScale = io.DisplayFramebufferScale;
 		drawData.TotalVtxCount = drawData.TotalIdxCount = 0;
 		for (ImDrawList* pList : pDrawLists) {
+			drawData.AddDrawList(pList);
 			drawData.TotalVtxCount += pList->VtxBuffer.Size;
 			drawData.TotalIdxCount += pList->IdxBuffer.Size;
 		}
