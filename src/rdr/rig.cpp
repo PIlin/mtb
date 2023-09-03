@@ -166,7 +166,10 @@ bool cRigData::load(cAssimpLoader& loader) {
 		auto bit = bonesMap.find(nh.mpNode->mName.C_Str());
 		if (bit != bonesMap.end()) {
 			nh.mBoneIdx = bit->second;
-			mark_required(nodeHie, i);
+			// TODO: would be nice to skip bones without any weights
+			// Requires some remapping in model loader
+			if (true || bones[nh.mBoneIdx].mpBone->mNumWeights > 0)
+				mark_required(nodeHie, i);
 		}
 	}
 
@@ -194,6 +197,12 @@ bool cRigData::load(cAssimpLoader& loader) {
 			parIdx = nodeHie[nh.mParentIdx].mJntIdx;
 		}
 		pJoints[idx] = sJointData{ idx, parIdx, nh.mBoneIdx };
+		//dbg_msg("%d %d %d %s\n", idx, parIdx, nh.mBoneIdx, nh.mpNode->mName.C_Str());
+		if (pJoints[idx].skinIdx >= sSkinCBuf::MAX_SKIN_MTX)
+		{
+			dbg_msg("Too many joints");
+			return false;
+		}
 
 		::memcpy(&pMtx[idx], &nh.mpNode->mTransformation, sizeof(pMtx[idx]));
 		pMtx[idx] = DirectX::XMMatrixTranspose(pMtx[idx]);
@@ -299,6 +308,7 @@ void cRig::upload_skin(cRdrContext const& rdrCtx) const {
 		auto pImtx = mpJoints[i].get_inv_mtx();
 		if (!pImtx) { continue; }
 		int skinIdx = mpRigData->mpJoints[i].skinIdx;
+		assert(skinIdx < sSkinCBuf::MAX_SKIN_MTX);
 
 		auto const& pWmtx = mpJoints[i].get_world_mtx();
 
