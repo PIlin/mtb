@@ -92,7 +92,13 @@ void cSceneEditor::show_entity_list(sSceneEditCtx& ctx) {
 
 	std::vector<entt::entity> alive;
 	int selectedIdx = -1;
-	reg.each([&](entt::entity en) { if (en == mSelected) { selectedIdx = (int)alive.size(); } alive.push_back(en); });
+
+	for (auto [en] : reg.storage<entt::entity>().each())
+	{
+		if (en == mSelected) { selectedIdx = (int)alive.size(); } 
+		alive.push_back(en);
+	}
+
 	std::string buffer;
 	auto getter = [&](int i, const char** szText) {
 		if (i < alive.size()) {

@@ -206,9 +206,7 @@ cScene::~cScene() {
 static fs::path get_scene_snapshot_path(const std::string& name) { return cPathManager::build_data_path(name); }
 
 void cScene::create_from_snapshot() {
-	if (!registry.empty()) {
-		registry.clear();
-	}
+	registry.clear();
 
 	for (entt::entity en : snapshot.entityIds) {
 		entt::entity realEn = registry.create(en);
