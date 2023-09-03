@@ -4,7 +4,6 @@
 #include <functional>
 
 #define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <Windows.h>
 
 void winhandle_releaser::operator()(void* p) {

@@ -156,7 +156,7 @@ void cGfx::apply_default_rt_vp(ID3D11DeviceContext* pCtx) {
 
 
 static cShaderBytecode load_shader_file(cstr filepath) {
-	sInputFile file(cPathManager::build_shaders_path(fs::u8path(filepath.p)));
+	sInputFile file(cPathManager::build_shaders_path(fs::path(filepath.p)));
 	if (!file.is_open()) { return cShaderBytecode(); }
 
 	auto pdata = file.read_all();

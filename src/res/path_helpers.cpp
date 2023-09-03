@@ -21,7 +21,7 @@ using sdl_ptr = base_ptr<T, sdl_ptr_releaser>;
 
 static fs::path obtain_base_path() {
 	sdl_ptr<char> szPath(SDL_GetBasePath());
-	return fs::u8path(szPath.p);
+	return fs::path(szPath.p);
 }
 
 
