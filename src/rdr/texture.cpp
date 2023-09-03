@@ -121,7 +121,7 @@ class cTextureStorage::cStorage {
 	std::unordered_map<std::string, cTexture*> mNames;
 public:
 	cTexture* load(ID3D11Device* pDev, const fs::path& filepath) {
-		std::string name = filepath.u8string();
+		std::string name = filepath.string();
 		auto p = find(name);
 		if (p) { return p; }
 

@@ -356,7 +356,7 @@ bool cModelData::load_assimp(cAssimpLoader& loader) {
 		if (mi.mName.starts_with("g ")) {
 			*pNamesItr = &mi.mName.p[2];
 		} else {
-			*pNamesItr = mi.mName;
+			*pNamesItr = mi.mName.string();
 		}
 		
 

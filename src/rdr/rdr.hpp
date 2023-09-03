@@ -1,6 +1,5 @@
 #pragma once
 
-#define NOMINMAX
 #include <d3d11.h>
 
 #include "rdr_buf.hpp"

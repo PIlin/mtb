@@ -4,7 +4,7 @@ if (${CMAKE_GENERATOR_TOOLSET} MATCHES "LLVM-vs")
 	set(MTB_CLANG_CL ON)
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (${MTB_CLANG_CL})
@@ -36,7 +36,7 @@ add_subdirectory("${THIRD_PARTY_DIR}/cereal")
 add_subdirectory("${THIRD_PARTY_DIR}/entt")
 add_subdirectory("${THIRD_PARTY_DIR}/microprofile")
 
-project(mtb)
+project(mtb CXX)
 
 set(SRC
 	src/common.cpp
@@ -147,7 +147,7 @@ source_group("hlsl" FILES ${HLSL})
 add_executable(mtb ${SRC} ${HLSL})
 target_include_directories(mtb PRIVATE "src")
 target_link_libraries(mtb PRIVATE SDL2-static SDL2main imgui imguizmo DirectXTK assimp cereal EnTT microprofile d3d11 d3dcompiler)
-
+target_compile_definitions(mtb PRIVATE NOMINMAX)
 
 set (BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
 set_property(TARGET mtb PROPERTY RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BIN_DIR})

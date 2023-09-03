@@ -2,7 +2,6 @@
 
 #include "common.hpp"
 
-#define NOMINMAX
 #include <d3d11.h>
 
 class cBufferBase : noncopyable {

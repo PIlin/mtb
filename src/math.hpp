@@ -1,5 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
+#include <algorithm>
 
 inline float DEG2RAD(const float deg) {
 	return deg * DirectX::XM_PI / 180.f;

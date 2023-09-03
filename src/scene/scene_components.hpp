@@ -2,6 +2,7 @@
 
 #include "res/path_helpers.hpp"
 #include <entt/fwd.hpp>
+#include <entt/core/type_info.hpp>
 #include <map>
 #include <set>
 #include <vector>
@@ -152,7 +153,7 @@ struct sParamList : iParamList {
 	virtual bool create(entt::registry& reg) const override {
 		bool res = true;
 		for (const auto& [en, paramId] : entityList) {
-			ParamList::const_iterator it = paramList.find(paramId);
+			typename ParamList::const_iterator it = paramList.find(paramId);
 			if (it != paramList.cend()) {
 				const auto& param = it->second;
 				res &= param.create(reg, en);

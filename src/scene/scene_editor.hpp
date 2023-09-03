@@ -1,9 +1,12 @@
 #pragma once
 #include "rdr/camera.hpp"
+#include "scene_components.hpp"
 #include "update_queue.hpp"
 
 #include <entt/fwd.hpp>
+#include <entt/core/type_info.hpp>
 #include <entt/entity/entity.hpp>
+#include <entt/entity/registry.hpp>
 #include <map>
 #include <string>
 

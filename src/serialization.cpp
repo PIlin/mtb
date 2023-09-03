@@ -93,7 +93,7 @@ void load(cereal::JSONInputArchive& arc, fs::path& p) {
 }
 
 void save(cereal::JSONOutputArchive& arc, fs::path const& p) {
-	std::string str = p.u8string();
+	std::string str = p.string();
 	arc(str);
 }
 

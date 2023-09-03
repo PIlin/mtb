@@ -53,7 +53,7 @@ bool cAssimpLoader::load(const fs::path& filepath, uint32_t flags) {
 	pImporter->SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
 		aiPrimitiveType_LINE | aiPrimitiveType_POINT | aiPrimitiveType_POLYGON);
 
-	aiScene const* pScene = pImporter->ReadFile(filepath.u8string(), flags);
+	aiScene const* pScene = pImporter->ReadFile(filepath.string(), flags);
 	if (!pScene) {
 		dbg_msg("cModelData::load_assimp(): assimp import error: %s\n", pImporter->GetErrorString());
 		return false;

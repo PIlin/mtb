@@ -434,7 +434,7 @@ protected:
 	bool get_value_str(Value const& doc, cstr key, std::string& res) {
 		cstr str;
 		if (get_value_str(doc, key, str)) {
-			res = str;
+			res = str.string();
 			return true;
 		}
 		return false;
@@ -491,7 +491,7 @@ void cHouGeoLoader::check_nonempty_groups() {
 
 
 void cHouGeoAttrib::init(cstr name, cstr type, int attribSize, int count) {
-	mName = name;
+	mName = name.string();
 
 	mAttribSize = attribSize;
 	mAttribCount = count;

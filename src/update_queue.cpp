@@ -164,7 +164,7 @@ sUpdateDepRes cUpdateGraph::register_res_impl(cstr nameGroup, cstr nameType) {
 
 	auto it = mResources.find(h);
 	if (mResources.end() == it) {
-		it = mResources.emplace(h, sResource{ h, nameGroup, nameType ? nameType : cstr("") }).first;
+		it = mResources.emplace(h, sResource{ h, nameGroup.string(), (nameType ? nameType : cstr("")).string() }).first;
 	}
 	assert(it->first == it->second.hash);
 	assert(nameGroup.p == it->second.nameGroup);

@@ -1,10 +1,9 @@
 #pragma once
 
-#define NOMINMAX
-
 #include <cassert>
 #include <cstdint>
 #include <algorithm>
+#include <string>
 #include <type_traits>
 
 template <std::size_t N> struct type_of_lenght_helper { typedef char type[N]; };
@@ -28,6 +27,8 @@ public:
 
 	operator char const* () const { return p; }
 	operator bool() const { return !empty(); }
+
+	std::string string() const { return std::string(p); }
 
 	bool empty() const {
 		return !(p && p[0] != '\0');
@@ -202,7 +203,7 @@ public:
 	T& get() { return *reinterpret_cast<T*>(&mData); }
 	T const& get() const { return *reinterpret_cast<T const*>(&mData); }
 
-	operator T const& () const { return Get(); }
+	operator T const& () const { return get(); }
 };
 
 
