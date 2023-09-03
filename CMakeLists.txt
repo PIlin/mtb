@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.2)
+﻿cmake_minimum_required(VERSION 3.27)
 
 if (${CMAKE_GENERATOR_TOOLSET} MATCHES "LLVM-vs")
 	set(MTB_CLANG_CL ON)

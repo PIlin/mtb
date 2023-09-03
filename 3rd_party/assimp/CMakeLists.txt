@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.27)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "")
