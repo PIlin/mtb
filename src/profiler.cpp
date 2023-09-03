@@ -7,7 +7,8 @@
 
 #include "profiler.hpp"
 #include "common.hpp"
-#include "input.hpp"
+
+import input;
 
 //#include <microprofiledraw.h>
 #pragma warning(push)

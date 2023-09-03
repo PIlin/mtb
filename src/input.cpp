@@ -1,5 +1,6 @@
+module;
+
 #include "math.hpp"
-#include "input.hpp"
 #include "common.hpp"
 
 CLANG_DIAG_PUSH
@@ -7,7 +8,11 @@ CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL_events.h>
 CLANG_DIAG_POP
 
+module input;
+
 static_assert(SDL_NUM_SCANCODES == cInputMgr::KEYS_COUNT, "SDL_NUM_SCANCODES != cInputMgr::KEYS_COUNT");
+
+
 
 cInputMgr::cInputMgr() {
 	mTextInputs.reserve(16);

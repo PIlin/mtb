@@ -12,7 +12,6 @@ CLANG_DIAG_POP
 #include "math.hpp"
 #include "rdr/gfx.hpp"
 #include "rdr/rdr.hpp"
-#include "input.hpp"
 #include "rdr/camera.hpp"
 #include "rdr/texture.hpp"
 #include "imgui_impl.hpp"
@@ -23,6 +22,9 @@ CLANG_DIAG_POP
 #include "res/resource_mgr.hpp"
 #include "dbg_ui.hpp"
 #include "rdr/dbg_draw.hpp"
+
+import input;
+
 
 class cSDLInit {
 public:

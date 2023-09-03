@@ -4,10 +4,11 @@
 #include "move_sys.hpp"
 #include "frame_timer.hpp"
 
-#include "input.hpp"
 #include <SDL_scancode.h>
 
 #include <entt/entt.hpp>
+
+import input;
 
 class cInputComp {
 public:

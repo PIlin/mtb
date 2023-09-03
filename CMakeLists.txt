@@ -4,8 +4,10 @@ if (${CMAKE_GENERATOR_TOOLSET} MATCHES "LLVM-vs")
 	set(MTB_CLANG_CL ON)
 endif()
 
+set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "aa1f7df0-828a-4fcd-9afc-2dc80491aca7") # ver 3.27.4: https://github.com/Kitware/CMake/blob/v3.27.4/Help/dev/experimental.rst
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP 1)
 
 if (${MTB_CLANG_CL})
 	add_compile_options(-Wno-unused-command-line-argument)
@@ -49,7 +51,7 @@ set(SRC
 	src/imgui_impl.cpp
 	src/imgui_impl.hpp
 	src/input.cpp
-	src/input.hpp
+	
 	src/json_helpers.cpp
 	src/json_helpers.hpp
 	src/main.cpp
@@ -121,7 +123,10 @@ set(SRC
 	src/scene/scene_mgr.hpp
 )
 
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${SRC})
+set(SRCMOD 
+	src/input.cppm)
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${SRC} ${SRCMOD})
 
 
 set(HLSL_INC
@@ -148,6 +153,10 @@ add_executable(mtb ${SRC} ${HLSL})
 target_include_directories(mtb PRIVATE "src")
 target_link_libraries(mtb PRIVATE SDL2-static SDL2main imgui imguizmo DirectXTK assimp cereal EnTT microprofile d3d11 d3dcompiler)
 target_compile_definitions(mtb PRIVATE NOMINMAX)
+target_sources(mtb
+  PUBLIC
+    FILE_SET cxx_modules TYPE CXX_MODULES FILES ${SRCMOD}
+)
 
 set (BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
 set_property(TARGET mtb PROPERTY RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BIN_DIR})

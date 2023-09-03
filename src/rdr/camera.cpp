@@ -2,7 +2,6 @@
 #include "common.hpp"
 #include "res/path_helpers.hpp"
 #include "camera.hpp"
-#include "input.hpp"
 #include "cbufs.hpp"
 #include "rdr.hpp"
 #include "imgui.hpp"
@@ -11,6 +10,8 @@ CLANG_DIAG_PUSH
 CLANG_DIAG_IGNORE("-Wpragma-pack")
 #include <SDL_keycode.h>
 CLANG_DIAG_POP
+
+import input;
 
 namespace dx = DirectX;
 

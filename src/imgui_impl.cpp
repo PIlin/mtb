@@ -9,7 +9,6 @@
 #include "imgui.hpp"
 #include "imgui_impl.hpp"
 #include "rdr/gfx.hpp"
-#include "input.hpp"
 #include "rdr/camera.hpp"
 #include "profiler.hpp"
 #include "frame_timer.hpp"
@@ -17,6 +16,8 @@
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <ImGuizmo.h>
+
+import input;
 
 namespace dx = DirectX;
 

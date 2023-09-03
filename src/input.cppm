@@ -1,23 +1,26 @@
-#pragma once
+module;
 
 #include "math.hpp"
+#include "common.hpp"
 
 #include <bitset>
 #include <vector>
 
-struct SDL_MouseMotionEvent;
-struct SDL_MouseButtonEvent;
-struct SDL_MouseWheelEvent;
-struct SDL_TextInputEvent;
+CLANG_DIAG_PUSH
+CLANG_DIAG_IGNORE("-Wpragma-pack")
+#include <SDL_events.h>
+CLANG_DIAG_POP
 
-enum class eInputLock {
+export module input;
+
+export enum class eInputLock {
 	None,
 	Profiler,
 	Camera,
 	TextInput
 };
 
-class cInputMgr {
+export class cInputMgr {
 public:
 	enum eMouseBtn {
 		EMBLEFT,
@@ -92,4 +95,4 @@ public:
 	bool is_locked(eInputLock lock) const { return mInputLock == lock; }
 };
 
-cInputMgr& get_input_mgr();
+export cInputMgr& get_input_mgr();
